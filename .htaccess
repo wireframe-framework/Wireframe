@@ -1,0 +1,10 @@
+<IfModule mod_rewrite.c>
+
+  RewriteEngine On
+  RewriteOptions inherit
+  AddDefaultCharset UTF-8
+
+  # Protect LICENSE and other markdown files from direct access
+  RewriteRule "(LICENSE|\.md)$" - [L,R=404]
+
+</IfModule>
