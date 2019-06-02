@@ -3,10 +3,10 @@
 namespace wireframe;
 
 /**
- * Abstract implementation for Controller objects
+ * Abstract base implementation for Controller objects
  * 
- * @version 0.0.8
- * @author Teppo Koivula <teppo.koivula@gmail.com>
+ * @version 0.0.9
+ * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 http://mozilla.org/MPL/2.0/
  */
 abstract class Controller extends \ProcessWire\Wire {
@@ -42,7 +42,7 @@ abstract class Controller extends \ProcessWire\Wire {
      * Instance of ProcessWire
      *
      * Note: this variable is underscore-prefixed in order to stay compatible with the Wire
-     * class from ProcessWire.
+     * class from ProcessWire (which we are extending here).
      *
      * @var \ProcessWire\ProcessWire
      */
@@ -51,7 +51,7 @@ abstract class Controller extends \ProcessWire\Wire {
     /**
      * Instance of View
      *
-     * @var \ProcessWire\TemplateFile
+     * @var View
      */
     protected $view;
 
@@ -76,7 +76,7 @@ abstract class Controller extends \ProcessWire\Wire {
     public function __construct(\ProcessWire\Processwire $wire, \ProcessWire\Page $page, View $view = null) {
 
         // store a reference to ProcessWire
-        $this->wire = $wire;
+        $this->_wire = $wire;
 
         if ($view) {
             // store a reference to View and make View aware of its Controller
@@ -100,7 +100,7 @@ abstract class Controller extends \ProcessWire\Wire {
     public function init() {}
 
     /**
-     * General purpose getter method
+     * PHP magic getter method
      * 
      * Provides access to class methods as properties, and also abstracts away
      * the use of method aliases. Note: __get() is only called when trying to
@@ -112,38 +112,34 @@ abstract class Controller extends \ProcessWire\Wire {
     function __get($name) {
         
         $return = null;
-        
-        if ($name[0] === '_' || in_array($name, $this->disallowed_methods)) {
-            
-            // disallowed method
-            $return = null;
-            
-        } else if (method_exists($this, $name) && is_callable([$this, $name])) {
-            
-            // callable (public) local method
-            $return = $this->$name();
 
-        } else if (method_exists($this, '___' . $name) && is_callable([$this, '___' . $name])) {
+        // only allow access to method names that are not prefixed with an underscore and haven't
+        // been specifically disallowed by adding them to the disallowed_methods array.
+        if (is_string($name) && $name[0] !== '_' && !in_array($name, $this->disallowed_methods)) {
             
-            // callable (public) and hookable local method
-            $return = $this->_callHookMethod($name);
-            
-        } else if (!empty($this->method_aliases[$name])) {
+            if (method_exists($this, $name) && is_callable([$this, $name])) {
+                // callable (public) local method
+                $return = $this->$name();
 
-            // method alias
-            $method_alias = $this->method_aliases[$name];
-            $return = call_user_func_array(
-                $method_alias['callable'],
-                $method_alias['params']
-            );
-            
-        } else {
+            } else if (method_exists($this, '___' . $name) && is_callable([$this, '___' . $name])) {
+                // callable (public) and hookable local method
+                $return = $this->_callHookMethod($name);
 
-            // fall back to parent class getter method
-            $return = parent::__get($name);
+            } else if (!empty($this->method_aliases[$name])) {
+                // method alias
+                $method_alias = $this->method_aliases[$name];
+                $return = call_user_func_array(
+                    $method_alias['callable'],
+                    $method_alias['params']
+                );
 
+            } else {
+                // fall back to parent class getter method
+                $return = parent::__get($name);
+
+            }
         }
-        
+
         return $return;
         
     }
@@ -157,9 +153,7 @@ abstract class Controller extends \ProcessWire\Wire {
      * @return null|array Array if method alias was found or set, otherwise null
      */
     public function alias(string $alias, callable $callable = null, array $params = []): ?array {
-        $return = $callable ? $this->setAlias($alias, $callable, $params) : $this->getAlias($alias);
-        return $return;
-        
+        return $callable ? $this->setAlias($alias, $callable, $params) : $this->getAlias($alias);
     }
 
     /**
@@ -169,8 +163,7 @@ abstract class Controller extends \ProcessWire\Wire {
      * @return null|array Array if method alias is found, otherwise null
      */
     public function getAlias(string $alias): ?array {
-        $return = $this->method_aliases[$alias] ?? null;
-        return $return;
+        return $this->method_aliases[$alias] ?? null;
     }
 
     /**
@@ -186,19 +179,17 @@ abstract class Controller extends \ProcessWire\Wire {
         $return = null;
 
         if ($callable === null) {
-            
             // null method provided, unset alias
             unset($this->method_aliases[$alias]);
-            
+
         } else {
-            
             // callable provided, store as method alias
             $this->method_aliases[$alias] = [
                 'callable' => $callable,
                 'params' => $params,
             ];
             $return = $this->method_aliases[$alias];
-            
+
         }
 
         return $return;
