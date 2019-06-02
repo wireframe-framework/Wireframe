@@ -8,8 +8,8 @@ namespace ProcessWire;
  * Wireframe is an output framework with MVC inspired architecture for ProcessWire CMS/CMF.
  * See README.md or https://wireframe-framework.com for more details.
  * 
- * @version 0.0.12
- * @author Teppo Koivula <teppo.koivula@gmail.com>
+ * @version 0.0.13
+ * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 http://mozilla.org/MPL/2.0/
  */
 class wireframe extends WireData implements Module {
@@ -68,6 +68,7 @@ class wireframe extends WireData implements Module {
      *
      * @param array $settings Array of additional settings (optional)
      * @return wireframe Self-reference
+     *
      * @throws WireException if no valid Page object is found
      */
     public function ___init(array $settings = []): wireframe {
@@ -207,6 +208,8 @@ class wireframe extends WireData implements Module {
     /**
      * Attach hooks
      *
+     * @see pageLayout() for the Page::layout implementation
+     * @see pageView() for the Page::view implementation
      */
     protected function addHooks() {
         
@@ -271,7 +274,8 @@ class wireframe extends WireData implements Module {
      * This method initializes the View object and the $view API variable.
      *
      * @return \wireframe\View View object
-     * @throws WireException if no valid Page is provided
+     *
+     * @throws WireException if no valid Page has been defined
      */
     public function ___initView(): \wireframe\View {
 
@@ -304,7 +308,8 @@ class wireframe extends WireData implements Module {
      * instantiate an object from it.
      *
      * @return \wireframe\Controller|null Controller object or null
-     * @throws WireException if no valid Page is provided
+     *
+     * @throws WireException if no valid Page has been defined
      */
     public function ___initController(): ?\wireframe\Controller {
 
@@ -330,7 +335,7 @@ class wireframe extends WireData implements Module {
      * Choose the view script to use
      *
      * Default value is 'default', but view() method of the $page object or GET param
-     * 'view' can also be used to set the view script.
+     * 'view' (if configured) can be used to override the default value.
      */
     public function ___initViewScript() {
 
@@ -385,9 +390,10 @@ class wireframe extends WireData implements Module {
     /**
      * Render the Page with specified View and Layout
      *
-     * Note: this method can return null if view script and layout are unspecified.
+     * Note: this method returns null if neither view script nor layout have
+     * been defined.
      *
-     * @param array $data Array of data to send to View (optional)
+     * @param array $data Array of data to send to View
      * @return string|null Rendered Page markup or null
      */
     public function ___render(array $data = []): ?string {
@@ -427,27 +433,12 @@ class wireframe extends WireData implements Module {
     }
 
     /**
-     * Helper method for getting or setting page view
-     * 
-     * Example: <?= $page->view('json')->render() ?>
-     *
-     * @param HookEvent $event
-     */
-    public function pageView(HookEvent $event) {
-        if (!isset($event->arguments[0])) {
-            $event->return = $event->object->_wireframe_view;
-        } else {
-            $event->object->_wireframe_view = $event->arguments[0];
-            $event->return = $event->object;
-        }
-    }
-
-    /**
      * Helper method for getting or setting page layout
      * 
      * Example: <?= $page->layout('default')->render() ?>
      *
      * @param HookEvent $event
+     * @see addHooks() for the code that attaches wireframe hooks
      */
     public function pageLayout(HookEvent $event) {
         if (!isset($event->arguments[0])) {
@@ -459,7 +450,26 @@ class wireframe extends WireData implements Module {
     }
 
     /**
-     * Alias for the get() method
+     * Helper method for getting or setting page view
+     * 
+     * Example: <?= $page->view('json')->render() ?>
+     *
+     * @param HookEvent $event
+     * @see addHooks() for the code that attaches wireframe hooks
+     */
+    public function pageView(HookEvent $event) {
+        if (!isset($event->arguments[0])) {
+            $event->return = $event->object->_wireframe_view;
+        } else {
+            $event->object->_wireframe_view = $event->arguments[0];
+            $event->return = $event->object;
+        }
+    }
+
+    /**
+     * PHP magic getter method
+     *
+     * This is an alias for the get() method.
      *
      * @param string $key Name of the variable
      * @return mixed Value of the variable, or null if it doesn't exist
@@ -469,8 +479,28 @@ class wireframe extends WireData implements Module {
     }
 
     /**
+     * PHP magic setter method
      *
+     * This is an alias for the set() method.
      *
+     * @param string $key Name of the variable
+     * @param string $value Value for the variable
+     * @return wireframe Self-reference
+     */
+    public function __set($key, $value): wireframe {
+        return $this->set($key, $value);
+    }
+
+    /**
+	 * Getter method for specific class properties
+     *
+     * Note that this differs notably from the parent class' get() method: unlike
+     * in WireData, here we limit the scope of the method to specific, predefined
+     * class properties instead of returning any index from the "data" array. We
+     * also don't support pipe ("|") separated strings or objects as arguments.
+     *
+     * @param string $key Name of property you want to retrieve
+     * @return mixed Property value, or null if requested property is unrecognized
      */
     public function get($key) {
         $return = null;
@@ -487,22 +517,12 @@ class wireframe extends WireData implements Module {
     }
 
     /**
-     * Alias for the set() method
-     *
-     * @param string $key Name of the variable
-     * @param string $value Value for the variable
-     * @return wireframe Self-reference
-     */
-    public function __set($key, $value): wireframe {
-        return $this->set($key, $value);
-    }
-
-    /**
      * General purpose setter method
      *
      * @param string $key Name of the variable
      * @param string $value Value for the variable
      * @return wireframe Self-reference
+     *
      * @throws WireException if trying to set value to unrecognized property
      * @throws WireException if trying to set invalid value to a property
      */
@@ -539,7 +559,10 @@ class wireframe extends WireData implements Module {
     /**
      * Set values from an array
      *
-     * @param array $values
+     * This method is a wrapper for the set() method, with support for multiple
+     * values as an associative array.
+     *
+     * @param array $values Values as an associative array
      * @return wireframe Self-reference
      */
     public function setArray(array $values = []): wireframe {
@@ -553,6 +576,10 @@ class wireframe extends WireData implements Module {
 
     /**
      * Fetch a list of files recursively
+     *
+     * This is a helper method used for fetching a list of files and folders
+     * recursively and returning the result as an object. Originally added
+     * for storing partial file references in an easy to access way.
      *
      * @param string $path Base directory
      * @param string $ext File extension
