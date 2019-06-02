@@ -6,7 +6,7 @@ namespace wireframe;
  * Container for View Placeholders
  * 
  * @version 0.0.3
- * @author Teppo Koivula <teppo.koivula@gmail.com>
+ * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 http://mozilla.org/MPL/2.0/
  */
 class ViewPlaceholders {
@@ -55,6 +55,7 @@ class ViewPlaceholders {
      * @param string $scripts_dir Scripts directory
      * @param string $ext Extension for view scripts
      * @param string|null $template Template name (optional)
+     *
      * @throws Exception if view scripts directory is missing or unreadable
      * @throws Exception if invalid format is used for view script extension
      * @throws Exception if invalid format is used for template name
