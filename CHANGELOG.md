@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.15] - 2019-06-17
+
+### Added
+- Added $config->urls->dist, by default pointing to /site/assets/dist/.
+
+### Changed
+- Renamed default resources (assets) directory from "static" to "resources".
+- Changed recommended image resources directory name from "img" to "images".
+
 ## [0.0.14] - 2019-06-16
 
 ### Changed

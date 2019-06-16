@@ -170,9 +170,9 @@ anything along those lines, third party libraries (except those loaded with Comp
 - /views/ contains everything related to the display side of your site: /views/scripts/ contains
 view scripts, /views/layouts/ contains layout files, and /views/partials/ contains partials.
 
-- /static/ contains all your static assets, such as CSS, JavaScript, font, and image files. It is
+- /resources/ contains all your regular assets, such as CSS, JavaScript, fonts, and images. It is
 recommended that you create subdirectories for different types of files, but that is obviously up
-to you to decide.
+to you.
 
 Here's the entire (default) directory structure:
 
@@ -184,10 +184,10 @@ Here's the entire (default) directory structure:
 ├── errors
 │   └── 500.html
 ├── lib
-├── static
+├── resources
 │   ├── css
 │   │    └── main.css
-│   ├── img
+│   ├── images
 │   └── js
 │       └── main.js
 ├── views
