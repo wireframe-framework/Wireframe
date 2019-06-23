@@ -8,7 +8,7 @@ namespace ProcessWire;
  * Wireframe is an output framework with MVC inspired architecture for ProcessWire CMS/CMF.
  * See README.md or https://wireframe-framework.com for more details.
  *
- * @version 0.1.0
+ * @version 0.2.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 http://mozilla.org/MPL/2.0/
  */
@@ -143,10 +143,9 @@ class Wireframe extends WireData implements Module {
             // ],
             'paths' => [
                 'lib' => $this->wire('config')->paths->templates . "lib/",
-                'view' => $this->wire('config')->paths->templates . "view/",
-                'views' => $this->wire('config')->paths->templates . "view/views/",
-                'layouts' => $this->wire('config')->paths->templates . "view/layouts/",
-                'partials' => $this->wire('config')->paths->templates . "view/partials/",
+                'views' => $this->wire('config')->paths->templates . "views/",
+                'layouts' => $this->wire('config')->paths->templates . "layouts/",
+                'partials' => $this->wire('config')->paths->templates . "partials/",
                 'controllers' => $this->wire('config')->paths->templates . "controllers/",
             ],
             'urls' => [
@@ -189,7 +188,7 @@ class Wireframe extends WireData implements Module {
      */
     protected function setIncludePath() {
         $include_paths = [
-            $this->paths->views,
+            $this->wire('config')->paths->templates,
         ];
         if (!empty($this->config['include_paths'])) {
             $include_paths = array_merge(
