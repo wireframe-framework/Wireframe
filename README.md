@@ -1,16 +1,16 @@
-wireframe ProcessWire module and output framework
+Wireframe ProcessWire module and output framework
 -------------------------------------------------
 
 Wireframe is, in the lack of a better term, an output framework for the ProcessWire CMS/CMF. It
 loosely follows the MVC (Model-View-Controller) architecture by providing a View component, and
 (optionally) template specific Controllers.
 
-Wireframe is implemented as a combination of a ProcessWire module called wireframe, and a set of
+Wireframe is implemented as a combination of a ProcessWire module called Wireframe, and a set of
 related classes found form the lib directory. This README file contains basic information about
 the framework, and instructions on setting it up and getting started with site development.
 
-Check out https://github.com/teppokoivula/wireframe-profile/ for a boilerplate site profile built
-on top of wireframe.
+Check out https://github.com/wireframe-framework/site-wireframe-boilerplate/ for a boilerplate site
+profile built on top of Wireframe.
 
 WARNING: this project is in an alpha state. If may or may not work as expected, and the API (such
 as hookable methods and method names in general) may still change.
@@ -18,12 +18,12 @@ as hookable methods and method names in general) may still change.
 ## A bit of history
 
 Wireframe is based on an earlier project called pw-mvc. Both projects share similar base concepts,
-but wireframe is more modern – and more complete – solution in many ways. If you're using pw-mvc,
-you may want to migrate to wireframe eventually.
+but Wireframe is more modern – and more complete – solution in many ways. If you're using pw-mvc,
+you may want to migrate to Wireframe eventually.
 
 One reason behind the name change is to avoid unnecessary confusion caused by the "MVC" part of
 the name. The goal was never to produce a "real" MVC solution, but rather borrow some ideas and
-implement them in a way that makes most sense in the context of ProcessWire. Hence wireframe: the
+implement them in a way that makes most sense in the context of ProcessWire. Hence Wireframe: the
 frame(work) for your site.
 
 ## Basic concepts
@@ -33,24 +33,24 @@ web. That being said, as long as you know that MVC is a pattern promoting separa
 (data, business logic, and user interface), and that there are many variants of it floating around,
 you'll do just fine.
 
-Just like most of those variants, wireframe is also nowhere near a 100% accurate MVC implementation.
-One particularly notable difference to many other projects, as of this writing, is that wireframe
+Just like most of those variants, Wireframe is also nowhere near a 100% accurate MVC implementation.
+One particularly notable difference to many other projects, as of this writing, is that Wireframe
 doesn't have a separate Model component.
 
 The reasoning behind this design decision is that in the context of a ProcessWire site, ProcessWire
-itself *is* the real Model layer. As a result, wireframe Controllers tend to contain more business
+itself *is* the real Model layer. As a result, Wireframe Controllers tend to contain more business
 logic than they do in many other MVC applications and frameworks.
 
 Below you'll find a quick breakdown of the core concepts used within this project.
 
 ### Wireframe bootstrap file
 
-The wireframe bootstrap file is a single file in your /site/templates/ directory, typically called
+The Wireframe bootstrap file is a single file in your /site/templates/ directory, typically called
 wireframe.php. This file is inserted into the Alternate Template File setting for templates you want
-to utilize wireframe for, and it is responsible for bootstrapping the wireframe framework, and also
+to utilize Wireframe for, and it is responsible for bootstrapping the Wireframe framework, and also
 providing it with any general-purpose settings (such as a site name or language) you may need.
 
-You'll find the default (boilerplate) wireframe bootstrap file from the wireframe module directory.
+You'll find the default (boilerplate) Wireframe bootstrap file from the Wireframe module directory.
 
 ### View
 
@@ -75,7 +75,7 @@ Note that Controllers are optional: if a Page can be rendered without complex bu
 means that you just need basic control structures, loops, and echo/print statements) it is perfectly
 fine to leave Controllers outt of the equation and request data directly from ProcessWire's API.
 
-When a Page is rendered, wireframe will check if it can find and instantiate a template-specific
+When a Page is rendered, Wireframe will check if it can find and instantiate a template-specific
 Controller class. If it can't, it'll just continue rendering the Page.
 
 ### Layouts
@@ -84,7 +84,7 @@ A layout is essentially a wrapper or container for page content. Most sites will
 one or two layouts, but this of course depends a lot on the site in question. Page-specific content
 can be rendered using View Scripts and then injected within the Layouts using View Placeholders.
 
-Layouts are recommended but optional in wireframe. If you find that many of your pages include an
+Layouts are recommended but optional in Wireframe. If you find that many of your pages include an
 identical basic structure, such as a common header and footer, one option is to include files for
 these on each view script – but that's also where layouts come in handy. By moving those shared
 parts of the page markup into a layout file you avoid unnecessary repetition in view scripts.
@@ -126,7 +126,7 @@ After which you can read the value in a Layout file:
 
 You can also define placeholders using view scripts: create a view script matching the name of the
 intended placeholder, such as /site/templates/views/scripts/home/title.php, and use the placeholder
-variable in a layout – just like we did in the example above. When you do that, wireframe renders
+variable in a layout – just like we did in the example above. When you do that, Wireframe renders
 the page using that view script and populates the variable with the rendered output.
 
 ### Partials
@@ -156,7 +156,7 @@ component has it's place in the tree, and each directory exists for a reason:
 
 - /controllers/ contains your optional Controller files, each of which applies to a single template.
 You can have Controllers for all of your templates, some of them, or none of them. Controller files
-should be named after the template they apply to and contain a class extending wireframe\Controller:
+should be named after the template they apply to and contain a class extending Wireframe\Controller:
 
     - Controller class for home template should be named HomeController and placed in a file called
       /site/templates/controllers/HomeController.php.
@@ -211,9 +211,9 @@ Here's the entire (default) directory structure:
 1. User requests an URL, which points to a Page on the site.
 2. ProcessWire figures out the basic requirements to fulfil the request: which page it is for, which
    template to use, which template file to use, etc.
-3. When the Alternate Template Filename points to the wireframe bootstrap file (wireframe.php in the
-   /site/templates/ directory) wireframe gets bootstrapped and initiated (configured).
-4. First wireframe checks for redirects: if a matching redirect rule is found, user is redirected to
+3. When the Alternate Template Filename points to the Wireframe bootstrap file (wireframe.php in the
+   /site/templates/ directory) Wireframe gets bootstrapped and initiated (configured).
+4. First Wireframe checks for redirects: if a matching redirect rule is found, user is redirected to
    the target location instead of the Page getting rendered.
 5. If no redirect was found, View component gets initialized with default parameters: layout, view
    script, object ontaining partial paths, data arguments, and placeholders. $view API variable is
@@ -228,33 +228,33 @@ Here's the entire (default) directory structure:
       b) If allow_get_view configuration setting has been enabled, GET parameters can be used to set
          the view script, but only to the extent allowed by said configuration setting.
       c) If view script has been set programmatically (in Controller or a hook) this value is used.
-8. Bootstrap file calls the render() method of wireframe, which renders the Page using the Layout
+8. Bootstrap file calls the render() method of Wireframe, which renders the Page using the Layout
    and view script set for the View component, and outputs resulting markup.
 
 Controllers, layouts and view scripts are entirely up to the developer, but if you need to modify
 the program flow in some other way, you can do that by hooking into various points of the program
-flow described above. You can check which methods are hookable from the wireframe module file.
+flow described above. You can check which methods are hookable from the Wireframe module file.
 
 ## Getting started
 
-1. Install the wireframe ProcessWire module.
+1. Install the Wireframe ProcessWire module.
 
-2. Set up the wireframe directories within the /site/templates/ directory, or install a new site
-using the wireframe-site boilerplate site profile.
+2. Set up the Wireframe directories within the /site/templates/ directory, or install a new site
+using the site-wireframe-boilerplate boilerplate site profile.
 
 If your site already has identically named files or folders, you can rename the included files to
 something else, as long as you also adjust the paths in config settings ($config->wireframe)
 accordingly. See wireframe.module.php for more details.
 
-3. Copy wireframe.php from the wireframe module directory to /site/templates/.
+3. Copy wireframe.php from the Wireframe module directory to /site/templates/.
 
-This is the file that bootstraps wireframe. If you want to pass variables to wireframe during init
+This is the file that bootstraps Wireframe. If you want to pass variables to Wireframe during init
 or render phases, you can directly modify this file.
 
 4. Set the value of the Alternate Template Filename setting of templates you want to route through
-wireframe to 'wireframe'.
+Wireframe to 'wireframe'.
 
-This will redirect requests for pages using those templates through the wireframe bootstrap file.
+This will redirect requests for pages using those templates through the Wireframe bootstrap file.
 
 Since this solution is based on the Alternate Template Filename setting, you can use it for only a
 subset of your templates. In case you want to use other output strategies for other templates,

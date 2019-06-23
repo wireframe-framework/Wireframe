@@ -1,11 +1,11 @@
 <?php
 
-namespace wireframe;
+namespace Wireframe;
 
 /**
  * Abstract base implementation for Controller objects
  * 
- * @version 0.0.9
+ * @version 0.1.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 http://mozilla.org/MPL/2.0/
  */
@@ -71,9 +71,9 @@ abstract class Controller extends \ProcessWire\Wire {
      * 
      * @param \ProcessWire\ProcessWire $wire Instance of ProcessWire
      * @param \ProcessWire\Page $page Page object
-     * @param View $view View component (optional)
+     * @param View|null $view View component (optional)
      */
-    public function __construct(\ProcessWire\Processwire $wire, \ProcessWire\Page $page, View $view = null) {
+    public function __construct(\ProcessWire\Processwire $wire, \ProcessWire\Page $page, ?View $view = null) {
 
         // store a reference to ProcessWire
         $this->_wire = $wire;

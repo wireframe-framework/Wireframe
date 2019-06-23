@@ -1,14 +1,14 @@
 <?php
 
-namespace wireframe;
+namespace Wireframe;
 
 /**
- * wireframe View component
+ * Wireframe View component
  *
- * This class is essentially a wrapper for the ProcessWire TemplateFile class,
- * with some additional features and the wireframe namespace.
+ * This class is a wrapper for the ProcessWire TemplateFile class with some additional features and
+ * the Wireframe namespace.
  *
- * @version 0.0.5
+ * @version 0.1.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 http://mozilla.org/MPL/2.0/
  *
@@ -24,35 +24,35 @@ class View extends \ProcessWire\TemplateFile {
     protected $controller;
 
     /**
-     * Local data, made available to layouts and view scripts
+     * Local data, made available to layouts and views
      *
      * @var array
      */
     protected $data = [];
 
     /**
-     * View placeholders
+     * View placeholders object
      *
      * @var ViewPlaceholders
      */
     protected $placeholders;
 
     /**
-     * Partials
+     * Partials object
      *
      * @var stdClass
      */
     protected $partials;
 
     /**
-     * View script name
+     * View file name
      *
      * @param string
      */
-    protected $script;
+    protected $view;
 
     /**
-     * Layout name
+     * Layout file name
      *
      * @param string
      */
@@ -87,7 +87,7 @@ class View extends \ProcessWire\TemplateFile {
     }
 
     /**
-     * Setter method for Controller
+     * Setter method for the Controller class
      *
      * @param Controller|null Controller instance or null
      * @return View Self-reference
@@ -98,9 +98,9 @@ class View extends \ProcessWire\TemplateFile {
     }
 
     /**
-     * Setter method for layout
+     * Setter method for the layout file
      *
-     * @param string|null
+     * @param string|null $layout Layout file name
      * @return View Self-reference
      */
     public function setLayout(?string $layout): View {
@@ -109,20 +109,20 @@ class View extends \ProcessWire\TemplateFile {
     }
 
     /**
-     * Setter method for view script
+     * Setter method for the view file
      *
-     * @param string|null
+     * @param string|null $view View file name
      * @return View Self-reference
      */
-    public function setScript(?string $script): View {
-        $this->script = $script;
+    public function setView(?string $view): View {
+        $this->view = $view;
         return $this;
     }
 
     /**
-     * Setter method for template
+     * Setter method for the template
      *
-     * @param string|null
+     * @param string|null $template Template name
      * @return View Self-reference
      */
     public function setTemplate(?string $template): View {
@@ -131,9 +131,9 @@ class View extends \ProcessWire\TemplateFile {
     }
 
     /**
-     * Setter method for placeholders
+     * Setter method for view placeholders
      *
-     * @param ViewPlaceholders|null wireframe ViewPlaceholders instance or null
+     * @param ViewPlaceholders|null ViewPlaceholders instance or null
      * @return View Self-reference
      */
     public function setPlaceholders(?ViewPlaceholders $placeholders): View {
@@ -142,7 +142,7 @@ class View extends \ProcessWire\TemplateFile {
     }
 
     /**
-     * Setter method for partials
+     * Setter method for the partials object
      *
      * @param \stdClass|null Object containing partial paths or null
      * @return View Self-reference
@@ -153,7 +153,7 @@ class View extends \ProcessWire\TemplateFile {
     }
 
     /**
-     * Setter method for the data array
+     * Setter method for the view data array
      *
      * @param array $data Data array
      * @return View Self-reference
@@ -164,7 +164,7 @@ class View extends \ProcessWire\TemplateFile {
     }
 
     /**
-     * Add new data
+     * Add new data to the view data array
      *
      * @param array $data Data array
      * @return View Self-reference
@@ -178,11 +178,11 @@ class View extends \ProcessWire\TemplateFile {
     }
     
     /**
-     * Get an array of all variables accessible (locally scoped) to layouts and view scripts
+     * Get an array of all variables accessible (locally scoped) to layouts and views
      *
      * We're overriding parent class method here so that we can add some additional variables to the
-     * mix. Essentially all protected or private properties we want layouts and view scripts to see
-     * need to be included here.
+     * mix. Basically all protected or private properties we want layouts and views to see need to
+     * be included here.
      *
      * @return array
      */
@@ -199,7 +199,7 @@ class View extends \ProcessWire\TemplateFile {
      * @param string $key Name of the variable
      * @return mixed Value of the key or null
      */
-    function get($key) {
+    public function get($key) {
         if (isset($this->data[$key])) {
             return $this->data[$key];
         }

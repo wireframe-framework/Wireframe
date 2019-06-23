@@ -3,93 +3,93 @@
 namespace ProcessWire;
 
 /**
- * wireframe ProcessWire module
+ * Wireframe ProcessWire module
  *
  * Wireframe is an output framework with MVC inspired architecture for ProcessWire CMS/CMF.
  * See README.md or https://wireframe-framework.com for more details.
- * 
- * @version 0.0.15
+ *
+ * @version 0.1.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 http://mozilla.org/MPL/2.0/
  */
-class wireframe extends WireData implements Module {
+class Wireframe extends WireData implements Module {
 
     /**
-     * Placeholder for config settings
+     * Config settings
      *
      * @var object
      */
     protected $config;
 
     /**
-     * Placeholder for paths
+     * Paths from config
      *
      * @var object
      */
     protected $paths;
 
     /**
-     * Placeholder for view script extension
+     * The extension for view, layout, and partial files
      *
      * @var string
      */
     protected $ext;
 
     /**
-     * Placeholder for Page
+     * Current Page object
      *
      * @var Page
      */
     protected $page;
 
     /**
-     * Placeholder for View
+     * View object
      *
-     * @var \wireframe\View
+     * @var \Wireframe\View
      */
     protected $view;
 
     /**
-     * Placeholder for Controller
+     * Controller object
      *
-     * @var \wireframe\Controller
+     * @var \Wireframe\Controller
      */
     protected $controller;
 
     /**
-     * Placeholder for View data
+     * View data
      *
      * @var array
      */
     protected $data = [];
 
     /**
-     * Initialize wireframe
+     * Initialize Wireframe
      *
      * @param array $settings Array of additional settings (optional)
-     * @return wireframe Self-reference
+     * @return Wireframe Self-reference
      *
      * @throws WireException if no valid Page object is found
      */
-    public function ___init(array $settings = []): wireframe {
+    public function ___init(array $settings = []): Wireframe {
 
         // initialize config settings
         $this->initConfig();
 
         // set any additional settings
         $this->setArray($settings);
-        
+
         // make sure that we have a valid Page
         $this->page = $this->page ?? $this->wire('page');
         if (!$this->page || !$this->page->id) {
             throw new WireException('No valid Page object found');
         }
-        
+
         // store paths and template extension as local variables
         $this->paths = (object) $this->config['paths'];
         $this->ext = "." . $this->wire('config')->templateExtension;
 
-        // add wireframe namespaces to ProcessWire's classLoader
+        // add Wireframe namespaces to ProcessWire's classLoader
         $this->addNamespaces();
 
         // set PHP include path
@@ -100,17 +100,17 @@ class wireframe extends WireData implements Module {
 
         // check for redirects
         $this->checkRedirects();
-        
+
         // initialize View and Controller
         $this->initView();
         $this->initController();
 
-        // choose a view script
-        $this->initViewScript();
+        // choose the view to use
+        $this->setView();
 
         // return self-reference
         return $this;
-        
+
     }
 
     /**
@@ -143,10 +143,10 @@ class wireframe extends WireData implements Module {
             // ],
             'paths' => [
                 'lib' => $this->wire('config')->paths->templates . "lib/",
-                'views' => $this->wire('config')->paths->templates . "views/",
-                'scripts' => $this->wire('config')->paths->templates . "views/scripts/",
-                'layouts' => $this->wire('config')->paths->templates . "views/layouts/",
-                'partials' => $this->wire('config')->paths->templates . "views/partials/",
+                'view' => $this->wire('config')->paths->templates . "view/",
+                'views' => $this->wire('config')->paths->templates . "view/views/",
+                'layouts' => $this->wire('config')->paths->templates . "view/layouts/",
+                'partials' => $this->wire('config')->paths->templates . "view/partials/",
                 'controllers' => $this->wire('config')->paths->templates . "controllers/",
             ],
             'urls' => [
@@ -170,13 +170,13 @@ class wireframe extends WireData implements Module {
     }
 
     /**
-     * Add wireframe namespaces to ProcessWire's classLoader
+     * Add Wireframe namespaces to ProcessWire's classLoader
      *
      */
     protected function addNamespaces() {
         $namespaces = [
-            'wireframe' => $this->wire('config')->paths->wireframe . 'lib/',
-            'wireframe\controller' => $this->paths->controllers,
+            'Wireframe' => $this->wire('config')->paths->Wireframe . 'lib/',
+            'Wireframe\Controller' => $this->paths->controllers,
         ];
         foreach ($namespaces as $namespace => $path) {
             $this->wire('classLoader')->addNamespace($namespace, $path);
@@ -213,7 +213,7 @@ class wireframe extends WireData implements Module {
      * @see pageView() for the Page::view implementation
      */
     protected function addHooks() {
-        
+
         // helper method for getting or setting page layout
         $this->addHookMethod('Page::layout', $this, 'pageLayout');
 
@@ -274,11 +274,11 @@ class wireframe extends WireData implements Module {
      *
      * This method initializes the View object and the $view API variable.
      *
-     * @return \wireframe\View View object
+     * @return \Wireframe\View View object
      *
      * @throws WireException if no valid Page has been defined
      */
-    public function ___initView(): \wireframe\View {
+    public function ___initView(): \Wireframe\View {
 
         // params
         $page = $this->page;
@@ -287,15 +287,15 @@ class wireframe extends WireData implements Module {
         $data = $this->data;
 
         // initialize the View object
-        $view = new \wireframe\View;
+        $view = new \Wireframe\View;
         $view->setLayout($page->layout() === null ? 'default' : $page->layout());
-        $view->setScript($page->view());
+        $view->setView($page->view());
         $view->setData($data);
         $view->setPartials($this->getFilesRecursive($paths->partials . "*", $ext));
-        $view->setPlaceholders(new \wireframe\ViewPlaceholders($page, $paths->scripts, $ext));
+        $view->setPlaceholders(new \Wireframe\ViewPlaceholders($page, $paths->views, $ext));
         $this->view = $view;
 
-        // define $view API variable
+        // define the $view API variable
         $this->wire('view', $view);
 
         return $view;
@@ -305,14 +305,14 @@ class wireframe extends WireData implements Module {
     /**
      * Initialization method for the Controller
      *
-     * Controller is optional, but if a Controller file is found, we'll attempt to
-     * instantiate an object from it.
+     * Controller is optional component in Wireframe, but if a Controller file is found, we'll
+     * attempt to instantiate an object from it.
      *
-     * @return \wireframe\Controller|null Controller object or null
+     * @return \Wireframe\Controller|null Controller object or null
      *
      * @throws WireException if no valid Page has been defined
      */
-    public function ___initController(): ?\wireframe\Controller {
+    public function ___initController(): ?\Wireframe\Controller {
 
         // params
         $page = $this->page;
@@ -321,24 +321,25 @@ class wireframe extends WireData implements Module {
         // define template name and Controller class name
         $controller = null;
         $controller_name = $this->wire('sanitizer')->pascalCase($page->template);
-        $controller_class = '\wireframe\controller\\' . $controller_name . 'Controller';
+        $controller_class = '\Wireframe\Controller\\' . $controller_name . 'Controller';
 
         if (class_exists($controller_class)) {
             $controller = new $controller_class($this->wire(), $page, $view);
         }
 
         $this->controller = $controller;
+
         return $controller;
 
     }
 
     /**
-     * Choose the view script to use
+     * Set current view
      *
      * Default value is 'default', but view() method of the $page object or GET param
      * 'view' (if configured) can be used to override the default value.
      */
-    public function ___initViewScript() {
+    public function ___setView() {
 
         // params
         $config = $this->config;
@@ -354,8 +355,8 @@ class wireframe extends WireData implements Module {
         $get_view = null;
         if ($input->get->view && $allow_get_view = $config['allow_get_view']) {
             if (is_array($allow_get_view)) {
-                // allowing *any* view script to be used via a GET param might not be
-                // appropriate; using a whitelist allows us to configure valid values
+                // allowing *any* view to be accessed via a GET param might not be
+                // appropriate; using a whitelist lets us define the allowed values
                 foreach ($allow_get_view as $get_template => $get_value) {
                     if (is_string($get_template) && is_array($get_value) && $template == $get_template) {
                         $get_view = in_array($input->get->view, $get_value) ? $input->get->view : null;
@@ -369,15 +370,15 @@ class wireframe extends WireData implements Module {
                 $get_view = $input->get->view;
             }
         }
-        $view->setScript(basename($view->script ?: ($page->view() ?: ($get_view ?: 'default'))));
-        if ($view->script != 'default' && !is_file($paths->scripts . $template . '/' . $view->script . $ext)) {
-            $view->setScript('default');
+        $view->setView(basename($view->view ?: ($page->view() ?: ($get_view ?: 'default'))));
+        if ($view->view != 'default' && !is_file($paths->views . $template . '/' . $view->view . $ext)) {
+            $view->setView('default');
         }
-        if ($view->script != 'default' || is_file($paths->scripts . $template . '/' . $view->script . $ext)) {
-            $view->setFilename($paths->scripts . $template . "/" . $view->script . $ext);
+        if ($view->view != 'default' || is_file($paths->views . $template . '/' . $view->view . $ext)) {
+            $view->setFilename($paths->views . $template . "/" . $view->view . $ext);
             if ($page->_wireframe_context != 'placeholder') {
-                if ($view->script != 'default' && !$view->allow_cache) {
-                    // not using the default view script, disable page cache
+                if ($view->view != 'default' && !$view->allow_cache) {
+                    // not using the default view, disable page cache
                     $this->wire('session')->PageRenderNoCachePage = $page->id;
                 } else if ($this->wire('session')->PageRenderNoCachePage === $page->id) {
                     // make sure that page cache isn't skipped unnecessarily
@@ -391,8 +392,7 @@ class wireframe extends WireData implements Module {
     /**
      * Render the Page with specified View and Layout
      *
-     * Note: this method returns null if neither view script nor layout have
-     * been defined.
+     * Note: this method returns null if both view and layout file are undefined.
      *
      * @param array $data Array of data to send to View
      * @return string|null Rendered Page markup or null
@@ -419,7 +419,7 @@ class wireframe extends WireData implements Module {
             $out = $view->render();
             if ($filename = basename($view->layout)) {
                 // layouts make it possible to define a common base structure for
-                // multiple otherwise separate templates and view scripts (DRY)
+                // multiple otherwise separate template and view files (DRY)
                 $view->setFilename($paths->layouts . $filename . $ext);
                 if (!$view->placeholders->default) {
                     $view->placeholders->default = $out;
@@ -427,7 +427,7 @@ class wireframe extends WireData implements Module {
                 $out = $view->render();
             }
         }
-        
+
         // return rendered output
         return $out;
 
@@ -435,11 +435,11 @@ class wireframe extends WireData implements Module {
 
     /**
      * Helper method for getting or setting page layout
-     * 
+     *
      * Example: <?= $page->layout('default')->render() ?>
      *
      * @param HookEvent $event
-     * @see addHooks() for the code that attaches wireframe hooks
+     * @see addHooks() for the code that attaches Wireframe hooks
      */
     public function pageLayout(HookEvent $event) {
         if (!isset($event->arguments[0])) {
@@ -452,11 +452,11 @@ class wireframe extends WireData implements Module {
 
     /**
      * Helper method for getting or setting page view
-     * 
+     *
      * Example: <?= $page->view('json')->render() ?>
      *
      * @param HookEvent $event
-     * @see addHooks() for the code that attaches wireframe hooks
+     * @see addHooks() for the code that attaches Wireframe hooks
      */
     public function pageView(HookEvent $event) {
         if (!isset($event->arguments[0])) {
@@ -486,9 +486,9 @@ class wireframe extends WireData implements Module {
      *
      * @param string $key Name of the variable
      * @param string $value Value for the variable
-     * @return wireframe Self-reference
+     * @return Wireframe Self-reference
      */
-    public function __set($key, $value): wireframe {
+    public function __set($key, $value): Wireframe {
         return $this->set($key, $value);
     }
 
@@ -522,12 +522,12 @@ class wireframe extends WireData implements Module {
      *
      * @param string $key Name of the variable
      * @param string $value Value for the variable
-     * @return wireframe Self-reference
+     * @return Wireframe Self-reference
      *
      * @throws WireException if trying to set value to unrecognized property
      * @throws WireException if trying to set invalid value to a property
      */
-    public function set($key, $value): wireframe {
+    public function set($key, $value): Wireframe {
         $invalid_value = true;
         switch ($key) {
             case 'data':
@@ -564,9 +564,9 @@ class wireframe extends WireData implements Module {
      * values as an associative array.
      *
      * @param array $values Values as an associative array
-     * @return wireframe Self-reference
+     * @return Wireframe Self-reference
      */
-    public function setArray(array $values = []): wireframe {
+    public function setArray(array $values = []): Wireframe {
         if (!empty($values)) {
             foreach ($values as $key => $value) {
                 $this->set($key, $value);
@@ -584,7 +584,7 @@ class wireframe extends WireData implements Module {
      *
      * @param string $path Base directory
      * @param string $ext File extension
-     * @return stdClass
+     * @return \stdClass
      */
     protected function getFilesRecursive(string $path, string $ext): \stdClass {
         $files = [];

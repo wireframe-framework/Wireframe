@@ -1,18 +1,24 @@
 <?php namespace ProcessWire;
 
 /**
- * wireframe bootstrap file
+ * Wireframe bootstrap file
  *
  * Copy this file to the /site/templates/ directory and modify it to fit your needs. You can provide
  * an associative array as a parameter to the render() method and use its contents as variables in
- * in your layout files and view scripts.
+ * in your layout, view, and partial files.
  *
- * @version 0.0.1
- * @author Teppo Koivula <teppo.koivula@gmail.com>
+ * @version 0.1.0
+ * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 http://mozilla.org/MPL/2.0/
  */
 
-// init wireframe and render the page
-$wireframe = $modules->get('wireframe');
+// init Wireframe
+$wireframe = $modules->get('Wireframe');
 $wireframe->init();
-echo $wireframe->render();
+
+// render the page
+echo $wireframe->render([
+    // 'site_name' => 'Lorem Ipsum',
+    // 'lang' => 'en',
+    // 'home' => $pages->get(1),
+]);
