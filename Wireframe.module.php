@@ -8,11 +8,11 @@ namespace ProcessWire;
  * Wireframe is an output framework with MVC inspired architecture for ProcessWire CMS/CMF.
  * See README.md or https://wireframe-framework.com for more details.
  *
- * @version 0.2.1
+ * @version 0.3.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 http://mozilla.org/MPL/2.0/
  */
-class Wireframe extends WireData implements Module {
+class Wireframe extends WireData implements Module, ConfigurableModule {
 
     /**
      * Config settings
@@ -64,6 +64,36 @@ class Wireframe extends WireData implements Module {
     protected $data = [];
 
     /**
+     * Create directories automatically?
+     *
+     * This property is only used by the module configuration screen. Contains an array of
+     * directories to create automatically.
+     *
+     * @var array
+     */
+    protected $create_directories = [];
+
+    /**
+     * Return inputfields necessary to configure the module
+     *
+     * @param array $data Data array.
+     * @return InputfieldWrapper
+     */
+    public function getModuleConfigInputfields(array $data) {
+
+        // init necessary parts of Wireframe
+        $this->setConfig();
+        $this->setPaths();
+        $this->addNamespaces();
+
+        // instantiate Wireframe Config and get all config inputfields
+        $config = new \Wireframe\Config($this->wire(), $this);
+        $fields = $config->getAllFields();
+
+        return $fields;
+    }
+
+    /**
      * Initialize Wireframe
      *
      * @param array $settings Array of additional settings (optional)
@@ -73,8 +103,8 @@ class Wireframe extends WireData implements Module {
      */
     public function ___init(array $settings = []): Wireframe {
 
-        // initialize config settings
-        $this->initConfig();
+        // set config settings
+        $this->setConfig();
 
         // set any additional settings
         $this->setArray($settings);
@@ -85,9 +115,11 @@ class Wireframe extends WireData implements Module {
             throw new WireException('No valid Page object found');
         }
 
-        // store paths and template extension as local variables
-        $this->paths = (object) $this->config['paths'];
-        $this->ext = "." . $this->wire('config')->templateExtension;
+        // store paths locally
+        $this->setPaths();
+
+        // store template extension locally
+        $this->setExt();
 
         // add Wireframe namespaces to ProcessWire's classLoader
         $this->addNamespaces();
@@ -114,11 +146,12 @@ class Wireframe extends WireData implements Module {
     }
 
     /**
-     * Initialize config settings
+     * Define runtime config settings
      *
      * @param array $config Optional configuration settings array
+     * @return Wireframe Self-reference
      */
-    public function ___initConfig(array $config = []) {
+    public function ___setConfig(array $config = []): Wireframe {
 
         // default config settings; if you need to customize or override any of
         // these, copy this array to /site/config.php as $config->wireframe
@@ -166,6 +199,29 @@ class Wireframe extends WireData implements Module {
             $this->wire('config')->urls->set($key, $value);
         }
 
+        return $this;
+    }
+
+    /**
+     * Store paths in a class property
+     *
+     * @param array $paths Paths array for overriding the default value.
+     * @return Wireframe Self-reference
+     */
+    public function setPaths(array $paths = []): Wireframe {
+        $this->paths = (object) $this->config['paths'];
+        return $this;
+    }
+
+    /**
+     * Store template extension in a class property
+     *
+     * @param string|null $ext Extension string for overriding the default value.
+     * @return Wireframe Self-reference
+     */
+    public function setExt(string $ext = null): Wireframe {
+        $this->ext = "." . ($ext ?? $this->wire('config')->templateExtension);
+        return $this;
     }
 
     /**
@@ -229,33 +285,42 @@ class Wireframe extends WireData implements Module {
      */
     public function ___checkRedirects() {
 
-        // params
-        $config = $this->config;
+        // redirect fields from Wireframe runtime configuration
+        $redirect_fields = $this->config['redirect_fields'] ?? null;
+        if (empty($redirect_fields)) return;
+
+        // current Page object
         $page = $this->page;
 
-        if (!empty($config['redirect_fields'])) {
-            foreach ($config['redirect_fields'] as $field => $options) {
-                if (is_int($field) && is_string($options)) {
-                    $field = $options;
+        foreach ($redirect_fields as $field => $options) {
+
+            // redirect_fields may be an indexed array
+            if (is_int($field) && is_string($options)) {
+                $field = $options;
+            }
+
+            // get URL from a page field
+            $url = $page->get($field);
+            if (empty($url)) continue;
+
+            // default to non-permanent redirect (302)
+            $permanent = false;
+
+            // if options is an array, read contained settings
+            if (is_array($options)) {
+                if (!empty($options['property'])) {
+                    $url = $url->$options['property'];
                 }
-                if ($page->$field) {
-                    $url = $page->$field;
-                    $permanent = false;
-                    if (is_array($options)) {
-                        if (isset($options['property'])) {
-                            $url = $url->$options['property'];
-                        }
-                        if (isset($options['permanent'])) {
-                            $permanent = (bool) $options['permanent'];
-                        }
-                    }
-                    if (is_string($url) && $url != $page->url && $this->wire('sanitizer')->url($url)) {
-                        $this->redirect($url, $permanent);
-                    }
+                if (!empty($options['permanent'])) {
+                    $permanent = (bool) $options['permanent'];
                 }
             }
-        }
 
+            // if target URL is valid and doesn't belong to current page, perform a redirect
+            if (is_string($url) && $url != $page->url && $this->wire('sanitizer')->url($url)) {
+                $this->redirect($url, $permanent);
+            }
+        }
     }
 
     /**
@@ -298,7 +363,6 @@ class Wireframe extends WireData implements Module {
         $this->wire('view', $view);
 
         return $view;
-
     }
 
     /**
@@ -329,7 +393,6 @@ class Wireframe extends WireData implements Module {
         $this->controller = $controller;
 
         return $controller;
-
     }
 
     /**
@@ -385,7 +448,6 @@ class Wireframe extends WireData implements Module {
                 }
             }
         }
-
     }
 
     /**
@@ -413,23 +475,21 @@ class Wireframe extends WireData implements Module {
         }
 
         // render output
-        $out = null;
+        $output = null;
         if ($view->filename || $view->layout) {
-            $out = $view->render();
+            $output = $view->render();
             if ($filename = basename($view->layout)) {
                 // layouts make it possible to define a common base structure for
                 // multiple otherwise separate template and view files (DRY)
                 $view->setFilename($paths->layouts . $filename . $ext);
                 if (!$view->placeholders->default) {
-                    $view->placeholders->default = $out;
+                    $view->placeholders->default = $output;
                 }
-                $out = $view->render();
+                $output = $view->render();
             }
         }
 
-        // return rendered output
-        return $out;
-
+        return $output;
     }
 
     /**
@@ -438,6 +498,7 @@ class Wireframe extends WireData implements Module {
      * Example: <?= $page->layout('default')->render() ?>
      *
      * @param HookEvent $event
+     *
      * @see addHooks() for the code that attaches Wireframe hooks
      */
     public function pageLayout(HookEvent $event) {
@@ -455,6 +516,7 @@ class Wireframe extends WireData implements Module {
      * Example: <?= $page->view('json')->render() ?>
      *
      * @param HookEvent $event
+     *
      * @see addHooks() for the code that attaches Wireframe hooks
      */
     public function pageView(HookEvent $event) {
@@ -492,7 +554,7 @@ class Wireframe extends WireData implements Module {
     }
 
     /**
-	 * Getter method for specific class properties
+     * Getter method for specific class properties
      *
      * Note that this differs notably from the parent class' get() method: unlike
      * in WireData, here we limit the scope of the method to specific, predefined
@@ -527,19 +589,32 @@ class Wireframe extends WireData implements Module {
      * @throws WireException if trying to set invalid value to a property
      */
     public function set($key, $value): Wireframe {
+
+        // value is invalid until proven valid
         $invalid_value = true;
+
         switch ($key) {
             case 'data':
                 if (is_array($value)) {
-                    $this->$key = $value;
                     $invalid_value = false;
+                    $this->$key = $value;
                 }
                 break;
             case 'page':
                 if ($value instanceof Page && $value->id) {
-                    $this->$key = $value;
                     $invalid_value = false;
+                    $this->$key = $value;
                 }
+                break;
+            case 'create_directories':
+                // module config (saved values)
+                $invalid_value = false;
+                $this->$key = $value;
+                break;
+            case 'uninstall':
+            case 'submit_save_module':
+                // module config (skipped values)
+                $invalid_value = false;
                 break;
             default:
                 throw new WireException(sprintf(
@@ -547,12 +622,15 @@ class Wireframe extends WireData implements Module {
                     $key
                 ));
         }
+
+        // if value is invalid, throw an exception
         if ($invalid_value) {
             throw new WireException(sprintf(
                 'Invalid value provided for "%s"',
                 $key
             ));
         }
+
         return $this;
     }
 

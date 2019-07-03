@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2019-07-03
+
+### Added
+- New Wireframe Config class was added and Wireframe was made configurable.
+- Support for automatically creating Wireframe directories via module config screen in case ProcessWire has necessary write access.
+
+### Changed
+- Some refactoring, including changes to method names and return values, for better readability and more consistent API.
+- In Wireframe::init() paths and ext are now set by separate methods, not directly in the init() method itself.
+
 ## [0.2.1] - 2019-06-30
 
 ### Changed
