@@ -77,7 +77,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      * Return inputfields necessary to configure the module
      *
      * @param array $data Data array.
-     * @return InputfieldWrapper
+     * @return InputfieldWrapper Wrapper with inputfields needed to configure the module.
      */
     public function getModuleConfigInputfields(array $data) {
 
@@ -96,10 +96,10 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     /**
      * Initialize Wireframe
      *
-     * @param array $settings Array of additional settings (optional)
-     * @return Wireframe Self-reference
+     * @param array $settings Array of additional settings (optional).
+     * @return Wireframe Self-reference.
      *
-     * @throws WireException if no valid Page object is found
+     * @throws WireException if no valid Page object is found.
      */
     public function ___init(array $settings = []): Wireframe {
 
@@ -121,7 +121,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         // store template extension locally
         $this->setExt();
 
-        // add Wireframe namespaces to ProcessWire's classLoader
+        // add Wireframe namespaces to ProcessWire's class autoloader
         $this->addNamespaces();
 
         // set PHP include path
@@ -148,8 +148,8 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     /**
      * Define runtime config settings
      *
-     * @param array $config Optional configuration settings array
-     * @return Wireframe Self-reference
+     * @param array $config Optional configuration settings array.
+     * @return Wireframe Self-reference.
      */
     public function ___setConfig(array $config = []): Wireframe {
 
@@ -206,7 +206,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      * Store paths in a class property
      *
      * @param array $paths Paths array for overriding the default value.
-     * @return Wireframe Self-reference
+     * @return Wireframe Self-reference.
      */
     public function setPaths(array $paths = []): Wireframe {
         $this->paths = (object) $this->config['paths'];
@@ -217,7 +217,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      * Store template extension in a class property
      *
      * @param string|null $ext Extension string for overriding the default value.
-     * @return Wireframe Self-reference
+     * @return Wireframe Self-reference.
      */
     public function setExt(string $ext = null): Wireframe {
         $this->ext = "." . ($ext ?? $this->wire('config')->templateExtension);
@@ -225,8 +225,16 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     }
 
     /**
-     * Add Wireframe namespaces to ProcessWire's classLoader
+     * Add Wireframe namespaces to ProcessWire's class autoloader
      *
+     * This method makes ProcessWire's class autoloader aware of the Wireframe namespaces, which
+     * enables us to instantiate – or call static methods from – Wireframe objects without first
+     * requiring the related PHP file.
+     *
+     * If you need to add additional namespaces (or additional paths for namespaces added here),
+     * access the $classLoader API variable directly from your own code. If you want to override
+     * these definitions, you should first call $classLoader->removeNamespace($namespace, $path)
+     * – and then re-add the same namespace with your own path.
      */
     protected function addNamespaces() {
         $namespaces = [
@@ -264,8 +272,8 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     /**
      * Attach hooks
      *
-     * @see pageLayout() for the Page::layout implementation
-     * @see pageView() for the Page::view implementation
+     * @see pageLayout() for the Page::layout implementation.
+     * @see pageView() for the Page::view implementation.
      */
     protected function addHooks() {
 
@@ -326,8 +334,8 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     /**
      * Perform a redirect
      *
-     * @param string $url Redirect URL
-     * @param bool $permanent Is this a ermanent (301) redirect?
+     * @param string $url Redirect URL.
+     * @param bool $permanent Is this a permanent (301) redirect?
      */
     public function ___redirect(string $url, bool $permanent) {
         $this->wire('session')->redirect($url, $permanent);
@@ -338,9 +346,9 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      *
      * This method initializes the View object and the $view API variable.
      *
-     * @return \Wireframe\View View object
+     * @return \Wireframe\View View object.
      *
-     * @throws WireException if no valid Page has been defined
+     * @throws WireException if no valid Page has been defined.
      */
     public function ___initView(): \Wireframe\View {
 
@@ -371,9 +379,9 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      * Controller is optional component in Wireframe, but if a Controller file is found, we'll
      * attempt to instantiate an object from it.
      *
-     * @return \Wireframe\Controller|null Controller object or null
+     * @return \Wireframe\Controller|null Controller object or null.
      *
-     * @throws WireException if no valid Page has been defined
+     * @throws WireException if no valid Page has been defined.
      */
     public function ___initController(): ?\Wireframe\Controller {
 
@@ -455,8 +463,8 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      *
      * Note: this method returns null if both view and layout file are undefined.
      *
-     * @param array $data Array of data to send to View
-     * @return string|null Rendered Page markup or null
+     * @param array $data Array of data to send to View.
+     * @return string|null Rendered Page markup or null.
      */
     public function ___render(array $data = []): ?string {
 
@@ -497,9 +505,9 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      *
      * Example: <?= $page->layout('default')->render() ?>
      *
-     * @param HookEvent $event
+     * @param HookEvent $event The ProcessWire HookEvent object.
      *
-     * @see addHooks() for the code that attaches Wireframe hooks
+     * @see addHooks() for the code that attaches Wireframe hooks.
      */
     public function pageLayout(HookEvent $event) {
         if (!isset($event->arguments[0])) {
@@ -515,9 +523,9 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      *
      * Example: <?= $page->view('json')->render() ?>
      *
-     * @param HookEvent $event
+     * @param HookEvent $event The ProcessWire HookEvent object.
      *
-     * @see addHooks() for the code that attaches Wireframe hooks
+     * @see addHooks() for the code that attaches Wireframe hooks.
      */
     public function pageView(HookEvent $event) {
         if (!isset($event->arguments[0])) {
@@ -533,8 +541,8 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      *
      * This is an alias for the get() method.
      *
-     * @param string $key Name of the variable
-     * @return mixed Value of the variable, or null if it doesn't exist
+     * @param string $key Name of the variable.
+     * @return mixed Value of the variable, or null if it doesn't exist.
      */
     public function __get($key) {
         return $this->get($key);
@@ -545,9 +553,9 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      *
      * This is an alias for the set() method.
      *
-     * @param string $key Name of the variable
-     * @param string $value Value for the variable
-     * @return Wireframe Self-reference
+     * @param string $key Name of the variable.
+     * @param string $value Value for the variable.
+     * @return Wireframe Self-reference.
      */
     public function __set($key, $value): Wireframe {
         return $this->set($key, $value);
@@ -561,8 +569,8 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      * class properties instead of returning any index from the "data" array. We
      * also don't support pipe ("|") separated strings or objects as arguments.
      *
-     * @param string $key Name of property you want to retrieve
-     * @return mixed Property value, or null if requested property is unrecognized
+     * @param string $key Name of property you want to retrieve.
+     * @return mixed Property value, or null if requested property is unrecognized.
      */
     public function get($key) {
         $return = null;
@@ -581,12 +589,12 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     /**
      * General purpose setter method
      *
-     * @param string $key Name of the variable
-     * @param string $value Value for the variable
-     * @return Wireframe Self-reference
+     * @param string $key Name of the variable.
+     * @param string $value Value for the variable.
+     * @return Wireframe Self-reference.
      *
-     * @throws WireException if trying to set value to unrecognized property
-     * @throws WireException if trying to set invalid value to a property
+     * @throws WireException if trying to set value to unrecognized property.
+     * @throws WireException if trying to set invalid value to a property.
      */
     public function set($key, $value): Wireframe {
 
@@ -640,8 +648,8 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      * This method is a wrapper for the set() method, with support for multiple
      * values as an associative array.
      *
-     * @param array $values Values as an associative array
-     * @return Wireframe Self-reference
+     * @param array $values Values as an associative array.
+     * @return Wireframe Self-reference.
      */
     public function setArray(array $values = []): Wireframe {
         if (!empty($values)) {
@@ -659,9 +667,9 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      * recursively and returning the result as an object. Originally added
      * for storing partial file references in an easy to access way.
      *
-     * @param string $path Base directory
-     * @param string $ext File extension
-     * @return \stdClass
+     * @param string $path Base directory.
+     * @param string $ext File extension.
+     * @return \stdClass An object containing list of files as its properties.
      */
     protected function getFilesRecursive(string $path, string $ext): \stdClass {
         $files = [];
