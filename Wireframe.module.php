@@ -8,7 +8,7 @@ namespace ProcessWire;
  * Wireframe is an output framework with MVC inspired architecture for ProcessWire CMS/CMF.
  * See README.md or https://wireframe-framework.com for more details.
  *
- * @version 0.4.0
+ * @version 0.5.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 http://mozilla.org/MPL/2.0/
  */
@@ -64,6 +64,13 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     protected $data = [];
 
     /**
+     * Settings hash for comparison purposes
+     *
+     * @var string
+     */
+    protected $settings_hash;
+
+    /**
      * Create directories automatically?
      *
      * This property is only used by the module configuration screen. Contains an array of
@@ -94,6 +101,20 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     }
 
     /**
+     * General purpose cache array
+     *
+     * @var array
+     */
+    protected $cache = [];
+
+    /**
+     * Keep track of whether Wireframe has already been initialized
+     *
+     * @var bool
+     */
+    protected $initialized = false;
+
+    /**
      * Initialize Wireframe
      *
      * @param array $settings Array of additional settings (optional).
@@ -103,32 +124,20 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      */
     public function ___init(array $settings = []): Wireframe {
 
-        // set config settings
-        $this->setConfig();
+        // perform init tasks that should only run once
+        $this->initOnce();
 
         // set any additional settings
         $this->setArray($settings);
 
         // make sure that we have a valid Page
-        $this->page = $this->page ?? $this->wire('page');
+        $this->page = $settings['page'] ?? $this->wire('page');
         if (!$this->page || !$this->page->id) {
             throw new WireException('No valid Page object found');
         }
 
-        // store paths locally
-        $this->setPaths();
-
         // store template extension locally
         $this->setExt();
-
-        // add Wireframe namespaces to ProcessWire's class autoloader
-        $this->addNamespaces();
-
-        // set PHP include path
-        $this->setIncludePath();
-
-        // attach hooks
-        $this->addHooks();
 
         // check for redirects
         $this->checkRedirects();
@@ -142,6 +151,39 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
 
         // return self-reference
         return $this;
+
+    }
+
+    /**
+     * This method performs init tasks that should only run once
+     *
+     * @return bool True on first run, false if already initialized.
+     */
+    protected function initOnce(): bool {
+
+        // bail out early if already initialized
+        if ($this->initialized) return false;
+
+        // set config settings
+        $this->setConfig();
+
+        // store paths locally (unless already manually defined)
+        if (empty($this->paths)) $this->setPaths();
+
+        // add Wireframe namespaces to ProcessWire's class autoloader
+        $this->addNamespaces();
+
+        // set PHP include path
+        $this->setIncludePath();
+
+        // attach hooks
+        $this->addHooks();
+
+        // remember that this method has been run and return true
+        $this->initialized = true;
+
+        // return true on first run
+        return true;
 
     }
 
@@ -474,6 +516,20 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         $paths = $this->paths;
         $ext = $this->ext;
 
+        // attempt to return prerendered value from cache
+        $cache_key = implode(':', [
+            'render',
+            $this->page->id,
+            $this->settings_hash,
+            empty($data) ? '' : md5(json_encode($data)),
+            $view->filename,
+            $view->layout,
+            $ext,
+        ]);
+        if (isset($this->cache[$cache_key])) {
+            return $this->cache[$cache_key];
+        }
+
         // process optional data array
         if (!empty($data)) {
             $this->set('data', array_merge(
@@ -497,6 +553,9 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
                 $output = $view->render();
             }
         }
+
+        // store value in cache
+        $this->cache[$cache_key] = $output;
 
         return $output;
     }
@@ -654,6 +713,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      */
     public function setArray(array $values = []): Wireframe {
         if (!empty($values)) {
+            $this->settings_hash = md5(serialize($values));
             foreach ($values as $key => $value) {
                 $this->set($key, $value);
             }
@@ -673,17 +733,22 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      * @return \stdClass An object containing list of files as its properties.
      */
     protected function getFilesRecursive(string $path, string $ext): \stdClass {
-        $files = [];
-        foreach (glob($path) as $file) {
-            $name = basename($file);
-            if (strpos($name, ".") === 0) continue;
-            if (is_dir($file)) {
-                $files[$name] = $this->getFilesRecursive("{$file}/*", $ext);
-            } else if (strrpos($name, $ext) === strlen($name)-strlen($ext)) {
-                $files[substr($name, 0, strrpos($name, "."))] = $file;
+        $cache_key = 'files:' . $path . ':' . $ext;
+        $files = $this->cache[$cache_key] ?? [];
+        if (empty($files)) {
+            foreach (glob($path) as $file) {
+                $name = basename($file);
+                if (strpos($name, ".") === 0) continue;
+                if (is_dir($file)) {
+                    $files[$name] = $this->getFilesRecursive("{$file}/*", $ext);
+                } else if (strrpos($name, $ext) === strlen($name)-strlen($ext)) {
+                    $files[substr($name, 0, strrpos($name, "."))] = $file;
+                }
             }
+            $files = (object) $files;
+            $this->cache[$cache_key] = $files;
         }
-        return (object) $files;
+        return $files;
     }
 
 }
