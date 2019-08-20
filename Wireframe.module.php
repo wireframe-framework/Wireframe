@@ -8,7 +8,7 @@ namespace ProcessWire;
  * Wireframe is an output framework with MVC inspired architecture for ProcessWire CMS/CMF.
  * See README.md or https://wireframe-framework.com for more details.
  *
- * @version 0.5.0
+ * @version 0.6.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 http://mozilla.org/MPL/2.0/
  */
@@ -315,16 +315,20 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     /**
      * Attach hooks
      *
-     * @see pageLayout() for the Page::layout implementation.
-     * @see pageView() for the Page::view implementation.
+     * @see pageLayout() for the Page::layout(), Page::getLayout(), and Page::setLayout() implementation.
+     * @see pageView() for the Page::view(), Page::getView(), and Page::setView() implementation.
      */
     protected function addHooks() {
 
-        // helper method for getting or setting page layout
+        // helper methods for getting or setting page layout
         $this->addHookMethod('Page::layout', $this, 'pageLayout');
+        $this->addHookMethod('Page::getLayout', $this, 'pageLayout');
+        $this->addHookMethod('Page::setLayout', $this, 'pageLayout');
 
-        // helper method for getting or setting page view
+        // helper methods for getting or setting page view
         $this->addHookMethod('Page::view', $this, 'pageView');
+        $this->addHookMethod('Page::getView', $this, 'pageView');
+        $this->addHookMethod('Page::setView', $this, 'pageView');
 
     }
 
@@ -403,8 +407,8 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
 
         // initialize the View object
         $view = new \Wireframe\View;
-        $view->setLayout($page->layout() === null ? 'default' : $page->layout());
-        $view->setView($page->view());
+        $view->setLayout($page->getLayout() === null ? 'default' : $page->getLayout());
+        $view->setView($page->getView());
         $view->setData($data);
         $view->setPartials($this->getFilesRecursive($paths->partials . "*", $ext));
         $view->setPlaceholders(new \Wireframe\ViewPlaceholders($page, $paths->views, $ext));
@@ -561,37 +565,61 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     }
 
     /**
-     * Helper method for getting or setting page layout
+     * This method is used by Page::layout(), Page::getLayout(), and Page::setLayout()
      *
-     * Example: <?= $page->layout('default')->render() ?>
+     * Example use with combined getter/setter method:
+     *
+     * ```
+     * The layout for current page is "<?= $page->layout() ?>".
+     * <?= $page->layout('another-layout')->render() ?>
+     * ```
+     *
+     * Example use with dedicated getter/setter methods:
+     *
+     * ```
+     * The layout for current page is "<?= $page->getLayout() ?>".
+     * <?= $page->setLayout('another-layout')->render() ?>
+     * ```
      *
      * @param HookEvent $event The ProcessWire HookEvent object.
      *
      * @see addHooks() for the code that attaches Wireframe hooks.
      */
     public function pageLayout(HookEvent $event) {
-        if (!isset($event->arguments[0])) {
+        if ($event->method == 'getLayout' || $event->method == 'layout' && !isset($event->arguments[0])) {
             $event->return = $event->object->_wireframe_layout;
         } else {
-            $event->object->_wireframe_layout = $event->arguments[0];
+            $event->object->_wireframe_layout = $event->arguments[0] ?? '';
             $event->return = $event->object;
         }
     }
 
     /**
-     * Helper method for getting or setting page view
+     * This method is used by Page::view(), Page::getView(), and Page::setView()
      *
-     * Example: <?= $page->view('json')->render() ?>
+     * Example use with combined getter/setter method:
+     *
+     * ```
+     * The view for current page is "<?= $page->view() ?>".
+     * <?= $page->view('json')->render() ?>
+     * ```
+     *
+     * Example use with dedicated getter/setter methods:
+     *
+     * ```
+     * The view for current page is "<?= $page->getView() ?>".
+     * <?= $page->setView('json')->render() ?>
+     * ```
      *
      * @param HookEvent $event The ProcessWire HookEvent object.
      *
      * @see addHooks() for the code that attaches Wireframe hooks.
      */
     public function pageView(HookEvent $event) {
-        if (!isset($event->arguments[0])) {
+        if ($event->method == 'getView' || $event->method == 'view' && !isset($event->arguments[0])) {
             $event->return = $event->object->_wireframe_view;
         } else {
-            $event->object->_wireframe_view = $event->arguments[0];
+            $event->object->_wireframe_view = $event->arguments[0] ?? '';
             $event->return = $event->object;
         }
     }
