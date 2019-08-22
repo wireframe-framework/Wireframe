@@ -364,7 +364,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             // if options is an array, read contained settings
             if (is_array($options)) {
                 if (!empty($options['property'])) {
-                    $url = $url->$options['property'];
+                    $url = $url->get($options['property']);
                 }
                 if (!empty($options['permanent'])) {
                     $permanent = (bool) $options['permanent'];

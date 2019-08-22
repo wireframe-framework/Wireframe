@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - New Page methods Page::getLayout, Page::setLayout(), Page::getView(), and Page::setView().
 
+## [0.5.1] - 2019-08-22
+
+### Fixed
+- Fix an issue where the redirect feature wasn't working properly when using a Page Reference field.
+
 ## [0.5.0] - 2019-08-15
 
 ### Added
