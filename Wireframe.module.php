@@ -10,7 +10,7 @@ namespace ProcessWire;
  *
  * @version 0.6.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
- * @license Mozilla Public License v2.0 http://mozilla.org/MPL/2.0/
+ * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
 class Wireframe extends WireData implements Module, ConfigurableModule {
 
@@ -409,9 +409,10 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         $view = new \Wireframe\View;
         $view->setLayout($page->getLayout() === null ? 'default' : $page->getLayout());
         $view->setView($page->getView());
+        $view->setTemplate($page->template);
         $view->setData($data);
         $view->setPartials($this->getFilesRecursive($paths->partials . "*", $ext));
-        $view->setPlaceholders(new \Wireframe\ViewPlaceholders($page, $paths->views, $ext));
+        $view->setPlaceholders(new \Wireframe\ViewPlaceholders($page, $paths->views, $ext, $view));
         $this->view = $view;
 
         // define the $view API variable
@@ -526,6 +527,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             $this->page->id,
             $this->settings_hash,
             empty($data) ? '' : md5(json_encode($data)),
+            $view->template,
             $view->filename,
             $view->layout,
             $ext,

@@ -10,9 +10,9 @@ namespace Wireframe;
  *
  * @version 0.1.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
- * @license Mozilla Public License v2.0 http://mozilla.org/MPL/2.0/
+ * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  *
- * @todo bodyClasses helper (template, delegated-template, others?
+ * @todo bodyClasses helper (template, delegated-template, others?)
  */
 class View extends \ProcessWire\TemplateFile {
 
