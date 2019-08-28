@@ -8,9 +8,9 @@ namespace ProcessWire;
  * Wireframe is an output framework with MVC inspired architecture for ProcessWire CMS/CMF.
  * See README.md or https://wireframe-framework.com for more details.
  *
- * @version 0.5.1
+ * @version 0.5.2
  * @author Teppo Koivula <teppo@wireframe-framework.com>
- * @license Mozilla Public License v2.0 http://mozilla.org/MPL/2.0/
+ * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
 class Wireframe extends WireData implements Module, ConfigurableModule {
 
@@ -405,9 +405,10 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         $view = new \Wireframe\View;
         $view->setLayout($page->layout() === null ? 'default' : $page->layout());
         $view->setView($page->view());
+        $view->setTemplate($page->template);
         $view->setData($data);
         $view->setPartials($this->getFilesRecursive($paths->partials . "*", $ext));
-        $view->setPlaceholders(new \Wireframe\ViewPlaceholders($page, $paths->views, $ext));
+        $view->setPlaceholders(new \Wireframe\ViewPlaceholders($page, $paths->views, $ext, $view));
         $this->view = $view;
 
         // define the $view API variable
@@ -522,6 +523,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             $this->page->id,
             $this->settings_hash,
             empty($data) ? '' : md5(json_encode($data)),
+            $view->template,
             $view->filename,
             $view->layout,
             $ext,

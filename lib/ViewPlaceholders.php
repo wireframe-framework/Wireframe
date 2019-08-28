@@ -5,78 +5,74 @@ namespace Wireframe;
 /**
  * Container for View Placeholders
  * 
- * @version 0.1.0
+ * @version 0.2.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
- * @license Mozilla Public License v2.0 http://mozilla.org/MPL/2.0/
+ * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
 class ViewPlaceholders {
-    
+
+    /**
+     * View instance
+     *
+     * @var View
+     */
+    protected $view;
+
     /**
      * The Page instance associated with current placeholders object
      *
      * @var ProcessWire\Page
      */
-    private $page;
+    protected $page;
     
     /**
      * Directory containing view files
      *
      * @var string
      */
-    private $views;
+    protected $views_path;
 
-    /**
-     * Template name
-     *
-     * Optional. If provided, this overrides the template of the Page instance.
-     *
-     * @var string|null
-     */
-    private $template;
-    
     /**
      * View file extension
      *
      * @var string
      */
-    private $ext;
+    protected $ext;
 
     /**
      * Container for data
      *
      * @var array
      */
-    private $data = [];
+    protected $data = [];
     
     /**
      * Constructor method
      * 
-     * @param ProcessWire\Page $page
-     * @param string $views_dir Views directory
-     * @param string $ext Extension for view files
-     * @param string|null $template Template name (optional)
+     * @param ProcessWire\Page $page Current page.
+     * @param string $views_path Path to the views directory.
+     * @param string $ext Extension for view files.
+     * @param View $view View object.
      *
-     * @throws Exception if views directory is missing or unreadable
-     * @throws Exception if invalid format is used for view file extension
-     * @throws Exception if invalid format is used for template name
-     * @throws Exception if template name doesn't match expected format
+     * @throws Exception if path to the views directory is missing or unreadable.
+     * @throws Exception if invalid format is used for view file extension.
      */
-    public function __construct(\ProcessWire\Page $page, string $views, string $ext, ?string $template = null) {
+    public function __construct(\ProcessWire\Page $page, string $views_path, string $ext, View $view) {
 
         // Set page
         $this->page = $page;
 
-        // Set, validate, and format views directory
-        if (!is_dir($views)) {
+        // Set, validate, and format path to the views directory
+        if (!is_dir($views_path)) {
             throw new \Exception(sprintf(
-                'Missing or unreadable views directory: "%"',
-                $views
+                'Missing or unreadable path to the views directory: "%"',
+                $views_path
             ));
         }
-        if (strrpos($views, '/') !== 0) {
-            $views .= "/";
+        if (strrpos($views_path, '/') !== 0) {
+            $views_path .= "/";
         }
-        $this->views = $views;
+        $this->views_path = $views_path;
 
         // Set, validate, and format view file extension
         $this->ext = $ext;
@@ -90,15 +86,8 @@ class ViewPlaceholders {
             $this->ext = '.' . $this->ext;
         }
 
-        // Set and validate template
-        $this->template = $template ?: $page->template;
-        if ($this->template !== null && basename($this->template) != $this->template) {
-            throw new \Exception(sprintf(
-                'Template name does not match expected format: "%s".',
-                $this->template
-            ));
-        }
-
+	// Set View
+	$this->view = $view;
     }
     
     /**
@@ -113,7 +102,7 @@ class ViewPlaceholders {
     public function __get(string $key) {
         $return = $this->data[$key] ?? null;
         if (is_null($return) && basename($key) === $key) {
-            if (is_file($this->views . $this->template . '/' . $key . $this->ext)) {
+            if (is_file($this->views_path . $this->view->template . '/' . $key . $this->ext)) {
                 $page_layout = $this->page->layout();
                 $page_view = $this->page->view();
                 $this->page->_wireframe_context = 'placeholder';
