@@ -8,7 +8,7 @@ namespace Wireframe;
  * This class is a wrapper for the ProcessWire TemplateFile class with some additional features and
  * the Wireframe namespace.
  *
- * @version 0.1.0
+ * @version 0.2.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  *
@@ -66,6 +66,27 @@ class View extends \ProcessWire\TemplateFile {
     protected $template;
 
     /**
+     * Path to the views directory
+     *
+     * @var string
+     */
+    protected $views_path;
+
+    /**
+     * The extension for view, layout, and partial files
+     *
+     * @var string
+     */
+    protected $ext;
+
+    /**
+     * Current Page object
+     *
+     * @var Page
+     */
+    protected $page;
+
+    /**
      * PHP's magic __get() method
      *
      * This method provides access to protected/private properties of current
@@ -116,6 +137,21 @@ class View extends \ProcessWire\TemplateFile {
      */
     public function setView(?string $view): View {
         $this->view = $view;
+        if ($this->view != 'default' && !is_file($this->views_path . $this->template . '/' . $this->view . $this->ext)) {
+            $this->setView('default');
+        }
+        if ($this->view != 'default' || is_file($this->views_path . $this->template . '/' . $this->view . $this->ext)) {
+            $this->setFilename($this->views_path . $this->template . "/" . $this->view . $this->ext);
+            if ($this->page->_wireframe_context != 'placeholder') {
+                if ($this->view != 'default' && !$this->allow_cache) {
+                    // not using the default view, disable page cache
+                    $this->wire('session')->PageRenderNoCachePage = $this->page->id;
+                } else if ($this->wire('session')->PageRenderNoCachePage === $this->page->id) {
+                    // make sure that page cache isn't skipped unnecessarily
+                    $this->wire('session')->remove('PageRenderNoCachePage');
+                }
+            }
+        }
         return $this;
     }
 
@@ -127,6 +163,60 @@ class View extends \ProcessWire\TemplateFile {
      */
     public function setTemplate(?string $template): View {
         $this->template = $template;
+        return $this;
+    }
+
+    /**
+     * Set, validate, and format path to the views directory
+     *
+     * @param string $views_path Path to the views directory.
+     * @return View Self-reference
+     * @throws Exception if path to the views directory is missing or unreadable.
+     */
+    public function setViewsPath(string $views_path): View {
+        if (!is_dir($views_path)) {
+            throw new \Exception(sprintf(
+                'Missing or unreadable path to the views directory: "%"',
+                $views_path
+            ));
+        }
+        if (strrpos($views_path, '/') !== 0) {
+            $views_path .= "/";
+        }
+        $this->views_path = $views_path;
+        return $this;
+    }
+
+    /**
+     * Set, validate, and format view file extension
+     *
+     * @param string $ext File extension
+     * @return View Self-reference
+     *
+     * @throws Exception if invalid format is used for view file extension.
+     */
+    public function setExt(string $ext): View {
+        if (basename($ext) !== $ext) {
+            throw new \Exception(sprintf(
+                'View file extension does not match expected format: "%s".',
+                $ext
+            ));
+        }
+        if (strpos($ext, '.') !== 0) {
+            $ext = '.' . $ext;
+        }
+        $this->ext = $ext;
+        return $this;
+    }
+
+    /**
+     * Setter method for current Page object
+     *
+     * @param \ProcessWire\Page $page Page object
+     * @return View Self-reference
+     */
+    public function setPage(\ProcessWire\Page $page): View {
+        $this->page = $page;
         return $this;
     }
 

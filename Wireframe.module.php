@@ -410,9 +410,12 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         $view->setLayout($page->getLayout() === null ? 'default' : $page->getLayout());
         $view->setView($page->getView());
         $view->setTemplate($page->template);
+        $view->setViewsPath($paths->views);
+        $view->setExt($ext);
+        $view->setPage($this->page);
         $view->setData($data);
         $view->setPartials($this->getFilesRecursive($paths->partials . "*", $ext));
-        $view->setPlaceholders(new \Wireframe\ViewPlaceholders($page, $paths->views, $ext, $view));
+        $view->setPlaceholders(new \Wireframe\ViewPlaceholders($view));
         $this->view = $view;
 
         // define the $view API variable
@@ -461,11 +464,9 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
 
         // params
         $config = $this->config;
-        $paths = $this->paths;
         $page = $this->page;
         $view = $this->view;
         $template = $view->template ?: $page->template;
-        $ext = $this->ext;
 
         // ProcessWire's $input API variable
         $input = $this->wire('input');
@@ -488,22 +489,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
                 $get_view = $input->get->view;
             }
         }
-        $view->setView(basename($view->view ?: ($page->view() ?: ($get_view ?: 'default'))));
-        if ($view->view != 'default' && !is_file($paths->views . $template . '/' . $view->view . $ext)) {
-            $view->setView('default');
-        }
-        if ($view->view != 'default' || is_file($paths->views . $template . '/' . $view->view . $ext)) {
-            $view->setFilename($paths->views . $template . "/" . $view->view . $ext);
-            if ($page->_wireframe_context != 'placeholder') {
-                if ($view->view != 'default' && !$view->allow_cache) {
-                    // not using the default view, disable page cache
-                    $this->wire('session')->PageRenderNoCachePage = $page->id;
-                } else if ($this->wire('session')->PageRenderNoCachePage === $page->id) {
-                    // make sure that page cache isn't skipped unnecessarily
-                    $this->wire('session')->remove('PageRenderNoCachePage');
-                }
-            }
-        }
+        $view->setView(basename($view->view ?: ($page->getView() ?: ($get_view ?: 'default'))));
     }
 
     /**
@@ -543,6 +529,11 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
                 $data
             ));
             $view->addData($this->data);
+        }
+
+        // execute optional Controller::render()
+        if (!empty($this->controller) && method_exists($this->controller, 'render')) {
+            $this->controller->render();
         }
 
         // render output

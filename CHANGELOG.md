@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - New Page methods Page::getLayout, Page::setLayout(), Page::getView(), and Page::setView().
+- New Controller::render() method, executed right before a page is actually rendered.
+
+### Changed
+- Various View-related responsibilities moved from Wireframe module and ViewPlaceholders class to the View class.
 
 ## [0.5.2] - 2019-08-28
 

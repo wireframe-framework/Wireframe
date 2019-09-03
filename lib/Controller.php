@@ -5,7 +5,7 @@ namespace Wireframe;
 /**
  * Abstract base implementation for Controller objects
  * 
- * @version 0.1.0
+ * @version 0.2.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -98,6 +98,13 @@ abstract class Controller extends \ProcessWire\Wire {
      * This method is called automatically when this class gets instantiated.
      */
     public function init() {}
+
+    /**
+     * Render method
+     *
+     * This method is called automatically right before a page is rendered.
+     */
+    public function render() {}
 
     /**
      * PHP magic getter method
