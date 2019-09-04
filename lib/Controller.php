@@ -95,14 +95,22 @@ abstract class Controller extends \ProcessWire\Wire {
     /**
      * Init method
      *
-     * This method is called automatically when this class gets instantiated.
+     * This method is called automatically when this class gets instantiated. As such this is a
+     * good place to perform checks that need to run as early as possible: custom redirects, or
+     * perhaps make sure that the user is logged in.
+     *
+     * Note that this method may get called multiple times even if the page isn't rendered. If
+     * you perform resource-intensive tasks here, it is highly recommended that you cache their
+     * results in local (object) properties.
      */
     public function init() {}
 
     /**
      * Render method
      *
-     * This method is called automatically right before a page is rendered.
+     * This method is called automatically right before a page is rendered. This is where you can,
+     * for an example, pass data (properties/variables) to the View, so that you can later access
+     * said data as locally scoped variables in your view files and layouts.
      */
     public function render() {}
 
