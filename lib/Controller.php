@@ -4,7 +4,7 @@ namespace Wireframe;
 
 /**
  * Abstract base implementation for Controller objects
- * 
+ *
  * @version 0.2.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
@@ -68,7 +68,7 @@ abstract class Controller extends \ProcessWire\Wire {
      * Note that a Controller can exist without a View. In such a case it is the
      * responsibility of the developer to make sure that the Controller doesn't
      * assume that a View is always available.
-     * 
+     *
      * @param \ProcessWire\ProcessWire $wire Instance of ProcessWire
      * @param \ProcessWire\Page $page Page object
      * @param View|null $view View component (optional)
@@ -112,18 +112,18 @@ abstract class Controller extends \ProcessWire\Wire {
      * Provides access to class methods as properties, and also abstracts away
      * the use of method aliases. Note: __get() is only called when trying to
      * access a non-existent or non-local and non-public property.
-     * 
+     *
      * @param string $name
      * @return mixed
      */
     function __get($name) {
-        
+
         $return = null;
 
         // only allow access to method names that are not prefixed with an underscore and haven't
         // been specifically disallowed by adding them to the disallowed_methods array.
         if (is_string($name) && $name[0] !== '_' && !in_array($name, $this->disallowed_methods)) {
-            
+
             if (method_exists($this, $name) && is_callable([$this, $name])) {
                 // callable (public) local method
                 $return = $this->$name();
@@ -148,12 +148,11 @@ abstract class Controller extends \ProcessWire\Wire {
         }
 
         return $return;
-        
     }
 
     /**
      * Shorthand for getting or setting alias methods
-     * 
+     *
      * @param string $alias Name of the method alias
      * @param null|string|callable $real_method Name of the method that being aliased or a callable. Optional, only needed if using this method as a setter.
      * @param array $params Optional array of parameters to pass to the alias method. Optional, discarded unless using this method as a setter.
@@ -165,7 +164,7 @@ abstract class Controller extends \ProcessWire\Wire {
 
     /**
      * Get the value of a method alias
-     * 
+     *
      * @param string $alias Name of the method alias
      * @return null|array Array if method alias is found, otherwise null
      */
@@ -175,7 +174,7 @@ abstract class Controller extends \ProcessWire\Wire {
 
     /**
      * Set method alias
-     * 
+     *
      * @param string $alias Name of the alias.
      * @param null|callable $callable Callable to set as alias method, or null to unset alias method.
      * @param array $params Optional array of parameters to pass to the alias method.
@@ -200,7 +199,6 @@ abstract class Controller extends \ProcessWire\Wire {
         }
 
         return $return;
-
     }
 
     /**
