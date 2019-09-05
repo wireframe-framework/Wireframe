@@ -408,11 +408,11 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         // initialize the View object
         $view = new \Wireframe\View;
         $view->setLayout($page->getLayout() === null ? 'default' : $page->getLayout());
-        $view->setView($page->getView());
         $view->setTemplate($page->template);
         $view->setViewsPath($paths->views);
         $view->setExt($ext);
         $view->setPage($this->page);
+        $view->setView($page->getView());
         $view->setData($data);
         $view->setPartials($this->getFilesRecursive($paths->partials . "*", $ext));
         $view->setPlaceholders(new \Wireframe\ViewPlaceholders($view));
@@ -466,7 +466,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         $config = $this->config;
         $page = $this->page;
         $view = $this->view;
-        $template = $view->template ?: $page->template;
+        $template = $view->getTemplate() ?: $page->template;
 
         // ProcessWire's $input API variable
         $input = $this->wire('input');
@@ -513,10 +513,10 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             $this->page->id,
             $this->settings_hash,
             empty($data) ? '' : md5(json_encode($data)),
-            $view->template,
-            $view->filename,
-            $view->layout,
-            $ext,
+            $view->getTemplate(),
+            $view->getFilename(),
+            $view->getLayout(),
+            $view->getExt(),
         ]);
         if (isset($this->cache[$cache_key])) {
             return $this->cache[$cache_key];
@@ -538,9 +538,9 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
 
         // render output
         $output = null;
-        if ($view->filename || $view->layout) {
+        if ($view->getFilename() || $view->getLayout()) {
             $output = $view->render();
-            if ($filename = basename($view->layout)) {
+            if ($filename = basename($view->getLayout())) {
                 // layouts make it possible to define a common base structure for
                 // multiple otherwise separate template and view files (DRY)
                 $view->setFilename($paths->layouts . $filename . $ext);

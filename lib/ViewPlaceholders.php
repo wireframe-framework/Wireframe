@@ -46,17 +46,22 @@ class ViewPlaceholders {
     public function __get(string $key) {
         $return = $this->data[$key] ?? null;
         if (is_null($return) && basename($key) === $key) {
-            if (is_file($this->view->views_path . $this->view->template . '/' . $key . $this->view->ext)) {
-                $page_layout = $this->view->page->getLayout();
-                $page_view = $this->view->page->getView();
-                $this->view->page->_wireframe_context = 'placeholder';
-                $return = $this->view->page->setLayout('')->setView($key)->render();
-                unset($this->view->page->_wireframe_context);
+
+            // params
+            $page = $this->view->getPage();
+            $file = $this->view->getViewFilename($key);
+
+            if (is_file($file)) {
+                $page_layout = $page->getLayout();
+                $page_view = $page->getView();
+                $page->_wireframe_context = 'placeholder';
+                $return = $page->setLayout('')->setView($key)->render();
+                unset($page->_wireframe_context);
                 if ($page_layout !== '') {
-                    $this->view->page->setLayout($page_layout);
+                    $page->setLayout($page_layout);
                 }
                 if ($page_view !== $key) {
-                    $this->view->page->setView($page_view);
+                    $page->setView($page_view);
                 }
             }
         }

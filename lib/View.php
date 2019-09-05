@@ -8,7 +8,10 @@ namespace Wireframe;
  * This class is a wrapper for the ProcessWire TemplateFile class with some additional features and
  * the Wireframe namespace.
  *
- * @version 0.2.0
+ * @property ViewPlaceholders|null $placeholders ViewPlaceholders object.
+ * @property \stdClass|null $partials Object containing partial paths.
+ *
+ * @version 0.3.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  *
@@ -17,11 +20,11 @@ namespace Wireframe;
 class View extends \ProcessWire\TemplateFile {
 
     /**
-     * Controller instance
+     * Wireframe View Data object
      *
-     * @var Controller
+     * @var ViewData
      */
-    protected $controller;
+    protected $_wireframe_view_data;
 
     /**
      * Local data, made available to layouts and views
@@ -31,78 +34,66 @@ class View extends \ProcessWire\TemplateFile {
     protected $data = [];
 
     /**
-     * View placeholders object
+     * Partials object
+     *
+     * @var \stdClass
+     */
+    protected $partials;
+
+    /**
+     * View Placeholders object
      *
      * @var ViewPlaceholders
      */
     protected $placeholders;
 
     /**
-     * Partials object
-     *
-     * @var stdClass
+     * Constructor method
      */
-    protected $partials;
+    public function __construct() {
+        $this->_wireframe_view_data = new ViewData();
+        parent::__construct();
+    }
 
     /**
-     * View file name
+     * Magic __set() method
      *
-     * @param string
-     */
-    protected $view;
-
-    /**
-     * Layout file name
+     * This method provides access to certain predefined properties of the ViewData object.
      *
-     * @param string
+     * @param string $key Name of the variable
+     * @param mixed $value Value for the variable
+     * @return void
      */
-    protected $layout;
-
-    /**
-     * Template name
-     *
-     * @param string
-     */
-    protected $template;
-
-    /**
-     * Path to the views directory
-     *
-     * @var string
-     */
-    protected $views_path;
-
-    /**
-     * The extension for view, layout, and partial files
-     *
-     * @var string
-     */
-    protected $ext;
-
-    /**
-     * Current Page object
-     *
-     * @var Page
-     */
-    protected $page;
+    public function __set($key, $value) {
+        if ($key == 'placeholders') {
+            $this->setPlaceholders($value);
+        } else if ($key == 'partials') {
+            $this->setPartials($value);
+        }
+        parent::__set($key, $value);
+    }
 
     /**
      * PHP's magic __get() method
      *
-     * This method provides access to protected/private properties of current
-     * instance, variables in the data array of current instance or variables
-     * of the Controller instance.
+     * This method provides access to variables stored in the data array or the ViewData object,
+     * some predefined protected properties, and the properties of the linked Controller instance.
      *
      * @param string $key Name of the Controller method
      * @return mixed Value of the key or null
      */
     public function __get($key) {
-        $value = $this->$key ?? null;
-        if (!$value) {
-            $value = $this->get($key);
+        if ($key == 'placeholders') {
+            return $this->getPlaceholders();
+        } else if ($key == 'partials') {
+            return $this->getPartials();
         }
-        if (!$value && $this->controller) {
-            $value = $this->controller->$key;
+        $value = $this->get($key);
+        if (!$value) {
+            $controller = $this->getController();
+            if ($controller) {
+                $value = $controller->$key;
+            }
         }
         return $value;
     }
@@ -114,8 +105,17 @@ class View extends \ProcessWire\TemplateFile {
      * @return View Self-reference
      */
     public function setController(?Controller $controller): View {
-        $this->controller = $controller;
+        $this->setViewData('controller', $controller);
         return $this;
+    }
+
+    /**
+     * Getter method for the Controller class
+     *
+     * @return Controller|null Controller instance or null
+     */
+    public function getController(): ?Controller {
+        return $this->getViewData('controller');
     }
 
     /**
@@ -125,8 +125,30 @@ class View extends \ProcessWire\TemplateFile {
      * @return View Self-reference
      */
     public function setLayout(?string $layout): View {
-        $this->layout = $layout;
+        $this->setViewData('layout', $layout);
         return $this;
+    }
+
+    /**
+     * Getter method for the layout file
+     *
+     * @return string|null Layout file name
+     */
+    public function getLayout(): ?string {
+        return $this->getViewData('layout');
+    }
+
+    /**
+     * Getter method for the view file filename
+     *
+     * Note that this is the filename required by TemplateFile, which we're extending with current
+     * class. As such, it's not the same thing as the view file filename in ViewData, which can be
+     * accessed (internally) via View::getViewFilename() and View::setViewFilename().
+     *
+     * @return string|null View file filename
+     */
+    public function getFilename(): ?string {
+        return $this->filename;
     }
 
     /**
@@ -136,23 +158,44 @@ class View extends \ProcessWire\TemplateFile {
      * @return View Self-reference
      */
     public function setView(?string $view): View {
-        $this->view = $view;
-        if ($this->view != 'default' && !is_file($this->views_path . $this->template . '/' . $this->view . $this->ext)) {
-            $this->setView('default');
+
+        // set view file name
+        $this->setViewData('view', $view);
+
+        // view data
+        $page = $this->getViewData('page');
+        $view = $this->getViewData('view');
+        $view_filename = $this->getViewFilename();
+
+        // if we're trying to use non-existing, non-default view file, fall back to default
+        if ($view != 'default' && !is_file($view_filename)) {
+            return $this->setView('default');
         }
-        if ($this->view != 'default' || is_file($this->views_path . $this->template . '/' . $this->view . $this->ext)) {
-            $this->setFilename($this->views_path . $this->template . "/" . $this->view . $this->ext);
-            if ($this->page->_wireframe_context != 'placeholder') {
-                if ($this->view != 'default' && !$this->allow_cache) {
+
+        // if using existing, non-default view file, set filename and handle page caching
+        if ($view != 'default' || is_file($view_filename)) {
+            $this->setFilename($view_filename);
+            if ($page->_wireframe_context != 'placeholder') {
+                if ($view != 'default' && !$this->allow_cache) {
                     // not using the default view, disable page cache
-                    $this->wire('session')->PageRenderNoCachePage = $this->page->id;
-                } else if ($this->wire('session')->PageRenderNoCachePage === $this->page->id) {
+                    $this->wire('session')->PageRenderNoCachePage = $page->id;
+                } else if ($this->wire('session')->PageRenderNoCachePage === $page->id) {
                     // make sure that page cache isn't skipped unnecessarily
                     $this->wire('session')->remove('PageRenderNoCachePage');
                 }
             }
         }
+
         return $this;
+    }
+
+    /**
+     * Getter method for the view file
+     *
+     * @return string|null View file name
+     */
+    public function getView(): ?string {
+        return $this->getViewData('view');
     }
 
     /**
@@ -162,14 +205,25 @@ class View extends \ProcessWire\TemplateFile {
      * @return View Self-reference
      */
     public function setTemplate(?string $template): View {
-        $this->template = $template;
+        $this->setViewData('template', $template);
         return $this;
+    }
+
+    /**
+     * Getter method for the template
+     *
+     * @return string|null Template name
+     */
+    public function getTemplate(): ?string {
+        return $this->getViewData('template');
     }
 
     /**
      * Set, validate, and format path to the views directory
      *
-     * @param string $views_path Path to the views directory.
+     * @internal
+     *
+     * @param string $views_path Path to the views directory
      * @return View Self-reference
      * @throws Exception if path to the views directory is missing or unreadable.
      */
@@ -180,11 +234,40 @@ class View extends \ProcessWire\TemplateFile {
                 $views_path
             ));
         }
-        if (strrpos($views_path, '/') !== 0) {
-            $views_path .= "/";
-        }
-        $this->views_path = $views_path;
+        $views_path = rtrim($views_path, '/') . '/';
+        $this->setViewData('views_path', $views_path);
         return $this;
+    }
+
+    /**
+     * Getter for the path to the views directory
+     *
+     * @internal
+     *
+     * @return string Path to the views directory
+     */
+    public function getViewsPath(): string {
+        return $this->getViewData('views_path');
+    }
+
+    /**
+     * Getter for complete view file path
+     *
+     * @internal
+     *
+     * @param string $view Optional name of the view file
+     * @param string $template Optional name of the template
+     * @return string View file path
+     */
+    public function getViewFilename(string $view = null): string {
+
+        // view data
+        $views_path = $this->getViewData('views_path');
+        $template = $this->getViewData('template');
+        $view = $view ?: $this->getViewData('view');
+        $ext = $this->getViewData('ext');
+
+        return $views_path . $template . '/' . $view . $ext;
     }
 
     /**
@@ -205,8 +288,16 @@ class View extends \ProcessWire\TemplateFile {
         if (strpos($ext, '.') !== 0) {
             $ext = '.' . $ext;
         }
-        $this->ext = $ext;
-        return $this;
+        return $this->setViewData('ext', $ext);
+    }
+
+    /**
+     * Getter for view file extension
+     *
+     * @return string File extension
+     */
+    public function getExt(): string {
+        return $this->getViewData('ext');
     }
 
     /**
@@ -216,8 +307,16 @@ class View extends \ProcessWire\TemplateFile {
      * @return View Self-reference
      */
     public function setPage(\ProcessWire\Page $page): View {
-        $this->page = $page;
-        return $this;
+        return $this->setViewData('page', $page);
+    }
+
+    /**
+     * Getter method for current Page object
+     *
+     * @return \ProcessWire\Page Page object
+     */
+    public function getPage(): \ProcessWire\Page {
+        return $this->getViewData('page');
     }
 
     /**
@@ -232,6 +331,15 @@ class View extends \ProcessWire\TemplateFile {
     }
 
     /**
+     * Getter method for view placeholders
+     *
+     * @return ViewPlaceholders|null ViewPlaceholders instance or null
+     */
+    public function getPlaceholders(): ?ViewPlaceholders {
+        return $this->placeholders;
+    }
+
+    /**
      * Setter method for the partials object
      *
      * @param \stdClass|null Object containing partial paths or null
@@ -243,7 +351,16 @@ class View extends \ProcessWire\TemplateFile {
     }
 
     /**
-     * Setter method for the view data array
+     * Getter method for the partials object
+     *
+     * @return \stdClass|null Object containing partial paths or null
+     */
+    public function getPartials(): ?\stdClass {
+        return $this->partials;
+    }
+
+    /**
+     * Setter method for the data array
      *
      * @param array $data Data array
      * @return View Self-reference
@@ -251,6 +368,28 @@ class View extends \ProcessWire\TemplateFile {
     public function setData(array $data = []): View {
         $this->data = $data;
         return $this;
+    }
+
+    /**
+     * Setter method for view data values
+     *
+     * @param string $key View data key
+     * @param mixed $value View data value
+     * @return View Self-reference
+     */
+    protected function setViewData(string $key, $value): View {
+        $this->_wireframe_view_data->$key = $value;
+        return $this;
+    }
+
+    /**
+     * Getter method for view data values
+     *
+     * @param string $key View data key
+     * @return mixed View data value
+     */
+    protected function getViewData(string $key) {
+        return $this->_wireframe_view_data->$key ?? null;
     }
 
     /**
@@ -266,7 +405,7 @@ class View extends \ProcessWire\TemplateFile {
         );
         return $this;
     }
-    
+
     /**
      * Get an array of all variables accessible (locally scoped) to layouts and views
      *
@@ -281,45 +420,6 @@ class View extends \ProcessWire\TemplateFile {
             'placeholders' => $this->placeholders,
             'partials' => $this->partials,
         ]);
-    }
-
-    /**
-     * General purpose getter method
-     *
-     * @param string $key Name of the variable
-     * @return mixed Value of the key or null
-     */
-    public function get($key) {
-        if (isset($this->data[$key])) {
-            return $this->data[$key];
-        }
-        return parent::get($key);
-    }
-
-    /**
-     * General purpose setter method
-     *
-     * @param string $key Name of the variable
-     * @param mixed $value Value for the variable
-     * @return View Self-reference
-     */
-    public function set($key, $value): View {
-        $setter = 'set' . ucfirst($key);
-        if (method_exists($this, $setter) && is_callable($this, $setter)) {
-            return $this->{$setter}($value);
-        }
-        return parent::set($key, $value);
-    }
-
-    /**
-     * Magic __set() method as an alias for set()
-     *
-     * @param string $key Name of the variable
-     * @param mixed $value Value for the variable
-     * @return View Self-reference
-     */
-    public function __set($key, $value): View {
-        return $this->set($key, $value);
     }
 
 }

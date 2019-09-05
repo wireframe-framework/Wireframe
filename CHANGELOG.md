@@ -10,9 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - New Page methods Page::getLayout, Page::setLayout(), Page::getView(), and Page::setView().
 - New Controller::render() method, executed right before a page is actually rendered.
+- New ViewData class for storing (internal) data required by the View class.
+- New getter/setter methods for ViewData properties for the View class.
 
 ### Changed
-- Various View-related responsibilities moved from Wireframe module and ViewPlaceholders class to the View class.
+- Various View-related features moved from Wireframe module and ViewPlaceholders class to the View class.
+- Removed access to local get* and set* methods via the PHP's magic setter method __set() and getter method __get() in the View class.
+- Improvements to PHPDoc comments.
 
 ## [0.5.2] - 2019-08-28
 
