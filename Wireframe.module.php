@@ -17,9 +17,9 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     /**
      * Config settings
      *
-     * @var object
+     * @var array
      */
-    protected $config;
+    protected $config = [];
 
     /**
      * Paths from config
@@ -245,6 +245,15 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     }
 
     /**
+     * Getter for runtime config settings
+     *
+     * @return array Config settings.
+     */
+    public function getConfig(): array {
+        return $this->config;
+    }
+
+    /**
      * Store paths in a class property
      *
      * @param array $paths Paths array for overriding the default value.
@@ -356,6 +365,9 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
 
             // get URL from a page field
             $url = $page->get($field);
+            if ($url instanceof WireArray) {
+                $url = $url->count() ? $url->first() : null;
+            }
             if (empty($url)) continue;
 
             // default to non-permanent redirect (302)
@@ -363,7 +375,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
 
             // if options is an array, read contained settings
             if (is_array($options)) {
-                if (!empty($options['property'])) {
+                if (!empty($options['property']) && is_object($url)) {
                     $url = $url->get($options['property']);
                 }
                 if (!empty($options['permanent'])) {

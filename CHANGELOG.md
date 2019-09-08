@@ -12,10 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New Controller::render() method, executed right before a page is actually rendered.
 - New ViewData class for storing (internal) data required by the View class.
 - New getter/setter methods for ViewData properties for the View class.
+- New method Wireframe::getConfig() for getting current config settings.
 
 ### Changed
 - Various View-related features moved from Wireframe module and ViewPlaceholders class to the View class.
 - Removed access to local get* and set* methods via the PHP's magic setter method __set() and getter method __get() in the View class.
+- Redirect feature no longer fails if provided with a WireArray data type; in these cases the first item is used as the redirect target.
 - Improvements to PHPDoc comments.
 
 ### Fixed
