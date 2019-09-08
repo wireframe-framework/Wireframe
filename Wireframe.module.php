@@ -489,7 +489,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
                 $get_view = $input->get->view;
             }
         }
-        $view->setView(basename($view->view ?: ($page->getView() ?: ($get_view ?: 'default'))));
+        $view->setView(basename($view->getView() ?: ($page->getView() ?: ($get_view ?: 'default'))));
     }
 
     /**
