@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed access to local get* and set* methods via the PHP's magic setter method __set() and getter method __get() in the View class.
 - Improvements to PHPDoc comments.
 
+### Fixed
+- An issue with Config class where the "all directories exist" message was sometimes displayed unintentionally.
+
 ## [0.5.2] - 2019-08-28
 
 ### Fixed

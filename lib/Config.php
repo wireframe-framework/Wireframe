@@ -5,7 +5,7 @@ namespace Wireframe;
 /**
  * Configuration helper for the Wireframe module
  *
- * @version 0.1.0
+ * @version 0.1.1
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -65,33 +65,32 @@ class Config extends \ProcessWire\Wire {
             // paths are defined, iterate and check existence and writability one by one
             foreach ($paths as $key => $path) {
                 $attributes = [
-                    'selected' => false,
+                    'selected' => file_exists($path),
+                    'disabled' => true,
                 ];
-                $parent_dir = dirname($path);
-                if (is_writable($parent_dir) && !file_exists($path)) {
-                    // writable parent and non-existing directory
-                    if (is_array($this->wire('input')->post->create_directories) && in_array($key, $this->wire('input')->post->create_directories)) {
-                        // attempt to create a directory
-                        $path_created = \ProcessWire\wireMkDir($path);
-                        if ($path_created) {
-                            // directory created succesfully
-                            $this->message(sprintf($this->_('Path created: %s'), $path));
-                            $attributes['selected'] = true;
-                        } else {
-                            // creating directory failed
-                            $this->error(sprintf($this->_('Creating path failed: %s'), $path));
+                if (!$attributes['selected']) {
+                    $parent_dir = dirname($path);
+                    if (is_writable($parent_dir)) {
+                        // writable parent and non-existing directory
+                        $attributes['disabled'] = false;
+                        if (is_array($this->wire('input')->post->create_directories) && in_array($key, $this->wire('input')->post->create_directories)) {
+                            // attempt to create a directory
+                            $path_created = \ProcessWire\wireMkDir($path);
+                            if ($path_created) {
+                                // directory created succesfully
+                                $this->message(sprintf($this->_('Path created: %s'), $path));
+                                $attributes['selected'] = true;
+                                $attributes['disabled'] = true;
+                            } else {
+                                // creating directory failed
+                                $this->error(sprintf($this->_('Creating path failed: %s'), $path));
+                            }
                         }
                     }
-                } else {
-                    // non-writable parent or existing directory
-                    $attributes['disabled'] = true;
-                    if (file_exists($path)) {
-                        $attributes['selected'] = true;
-                    } else {
-                        $all_directories_exist = false;
-                    }
                 }
-
+                if (!$attributes['selected']) {
+                    $all_directories_exist = false;
+                }
                 $field->addOption($key, $path, $attributes);
             }
 
