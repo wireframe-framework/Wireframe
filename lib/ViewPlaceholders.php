@@ -5,7 +5,7 @@ namespace Wireframe;
 /**
  * Container for View Placeholders
  *
- * @version 0.2.0
+ * @version 0.3.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -78,6 +78,19 @@ class ViewPlaceholders {
     public function __set(string $key, $value): ViewPlaceholders {
         $this->data[$key] = $value;
         return $this;
+    }
+
+    /**
+     * Check if View Placeholder value has been set.
+     *
+     * This method can be used to check if a value has already been set. Requesting a placeholder
+     * value by calling `$placeholders->name` attempts to populate said placeholder automatically,
+     * while this method returns boolean `false` unless said placeholder is already populated.
+     *
+     * @return bool
+     */
+    public function has(string $key): bool {
+        return !empty($this->data[$key]);
     }
 
 }

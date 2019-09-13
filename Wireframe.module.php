@@ -424,7 +424,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         $view->setViewsPath($paths->views);
         $view->setExt($ext);
         $view->setPage($this->page);
-        $view->setView($page->getView());
+        $view->setView($page->getView() === null ? 'default' : $page->getView());
         $view->setData($data);
         $view->setPartials($this->getFilesRecursive($paths->partials . "*", $ext));
         $view->setPlaceholders(new \Wireframe\ViewPlaceholders($view));
@@ -550,13 +550,16 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
 
         // render output
         $output = null;
-        if ($view->getFilename() || $view->getLayout()) {
-            $output = $view->render();
+        $filename = $view->getFilename();
+        if ($filename || $view->getLayout()) {
+            if ($filename) {
+                $output = $view->render();
+            }
             if ($filename = basename($view->getLayout())) {
                 // layouts make it possible to define a common base structure for
                 // multiple otherwise separate template and view files (DRY)
                 $view->setFilename($paths->layouts . $filename . $ext);
-                if (!$view->placeholders->default) {
+                if (!$view->placeholders->has('default')) {
                     $view->placeholders->default = $output;
                 }
                 $output = $view->render();

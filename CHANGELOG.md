@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New ViewData class for storing (internal) data required by the View class.
 - New getter/setter methods for ViewData properties for the View class.
 - New method Wireframe::getConfig() for getting current config settings.
+- New method ViewPlaceholders::has() for checking if a placeholder has already been populated.
 
 ### Changed
 - Various View-related features moved from Wireframe module and ViewPlaceholders class to the View class.
@@ -22,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - An issue with Config class where the "all directories exist" message was sometimes displayed unintentionally.
+- An issue where View Placeholder values might've been overwritten because existence of earlier value was checked inproperly.
+- An issue where empty / null view file would be automatically replaced with value "default".
 
 ## [0.5.2] - 2019-08-28
 

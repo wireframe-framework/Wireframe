@@ -11,7 +11,7 @@ namespace Wireframe;
  * @property ViewPlaceholders|null $placeholders ViewPlaceholders object.
  * @property \stdClass|null $partials Object containing partial paths.
  *
- * @version 0.3.0
+ * @version 0.4.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  *
@@ -161,6 +161,15 @@ class View extends \ProcessWire\TemplateFile {
 
         // set view file name
         $this->setViewData('view', $view);
+
+        // bail out early if view is empty (halt to make sure that we won't return any markup)
+        if (empty($view)) {
+            $this->halt();
+            return $this;
+        }
+
+        // make sure that halt hasn't been called earlier
+        $this->halt(false);
 
         // view data
         $page = $this->getViewData('page');
