@@ -8,7 +8,7 @@ namespace ProcessWire;
  * Wireframe is an output framework with MVC inspired architecture for ProcessWire CMS/CMF.
  * See README.md or https://wireframe-framework.com for more details.
  *
- * @version 0.5.2
+ * @version 0.6.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -17,9 +17,9 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     /**
      * Config settings
      *
-     * @var object
+     * @var array
      */
-    protected $config;
+    protected $config = [];
 
     /**
      * Paths from config
@@ -245,6 +245,15 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     }
 
     /**
+     * Getter for runtime config settings
+     *
+     * @return array Config settings.
+     */
+    public function getConfig(): array {
+        return $this->config;
+    }
+
+    /**
      * Store paths in a class property
      *
      * @param array $paths Paths array for overriding the default value.
@@ -315,16 +324,20 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     /**
      * Attach hooks
      *
-     * @see pageLayout() for the Page::layout implementation.
-     * @see pageView() for the Page::view implementation.
+     * @see pageLayout() for the Page::layout(), Page::getLayout(), and Page::setLayout() implementation.
+     * @see pageView() for the Page::view(), Page::getView(), and Page::setView() implementation.
      */
     protected function addHooks() {
 
-        // helper method for getting or setting page layout
+        // helper methods for getting or setting page layout
         $this->addHookMethod('Page::layout', $this, 'pageLayout');
+        $this->addHookMethod('Page::getLayout', $this, 'pageLayout');
+        $this->addHookMethod('Page::setLayout', $this, 'pageLayout');
 
-        // helper method for getting or setting page view
+        // helper methods for getting or setting page view
         $this->addHookMethod('Page::view', $this, 'pageView');
+        $this->addHookMethod('Page::getView', $this, 'pageView');
+        $this->addHookMethod('Page::setView', $this, 'pageView');
 
     }
 
@@ -352,6 +365,9 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
 
             // get URL from a page field
             $url = $page->get($field);
+            if ($url instanceof WireArray) {
+                $url = $url->count() ? $url->first() : null;
+            }
             if (empty($url)) continue;
 
             // default to non-permanent redirect (302)
@@ -359,7 +375,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
 
             // if options is an array, read contained settings
             if (is_array($options)) {
-                if (!empty($options['property'])) {
+                if (!empty($options['property']) && is_object($url)) {
                     $url = $url->get($options['property']);
                 }
                 if (!empty($options['permanent'])) {
@@ -403,12 +419,15 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
 
         // initialize the View object
         $view = new \Wireframe\View;
-        $view->setLayout($page->layout() === null ? 'default' : $page->layout());
-        $view->setView($page->view());
+        $view->setLayout($page->getLayout() === null ? 'default' : $page->getLayout());
         $view->setTemplate($page->template);
+        $view->setViewsPath($paths->views);
+        $view->setExt($ext);
+        $view->setPage($this->page);
+        $view->setView($page->getView() === null ? 'default' : $page->getView());
         $view->setData($data);
         $view->setPartials($this->getFilesRecursive($paths->partials . "*", $ext));
-        $view->setPlaceholders(new \Wireframe\ViewPlaceholders($page, $paths->views, $ext, $view));
+        $view->setPlaceholders(new \Wireframe\ViewPlaceholders($view));
         $this->view = $view;
 
         // define the $view API variable
@@ -457,11 +476,9 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
 
         // params
         $config = $this->config;
-        $paths = $this->paths;
         $page = $this->page;
         $view = $this->view;
-        $template = $view->template ?: $page->template;
-        $ext = $this->ext;
+        $template = $view->getTemplate() ?: $page->template;
 
         // ProcessWire's $input API variable
         $input = $this->wire('input');
@@ -484,22 +501,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
                 $get_view = $input->get->view;
             }
         }
-        $view->setView(basename($view->view ?: ($page->view() ?: ($get_view ?: 'default'))));
-        if ($view->view != 'default' && !is_file($paths->views . $template . '/' . $view->view . $ext)) {
-            $view->setView('default');
-        }
-        if ($view->view != 'default' || is_file($paths->views . $template . '/' . $view->view . $ext)) {
-            $view->setFilename($paths->views . $template . "/" . $view->view . $ext);
-            if ($page->_wireframe_context != 'placeholder') {
-                if ($view->view != 'default' && !$view->allow_cache) {
-                    // not using the default view, disable page cache
-                    $this->wire('session')->PageRenderNoCachePage = $page->id;
-                } else if ($this->wire('session')->PageRenderNoCachePage === $page->id) {
-                    // make sure that page cache isn't skipped unnecessarily
-                    $this->wire('session')->remove('PageRenderNoCachePage');
-                }
-            }
-        }
+        $view->setView(basename($view->getView() ?: ($page->getView() ?: ($get_view ?: 'default'))));
     }
 
     /**
@@ -523,10 +525,10 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             $this->page->id,
             $this->settings_hash,
             empty($data) ? '' : md5(json_encode($data)),
-            $view->template,
-            $view->filename,
-            $view->layout,
-            $ext,
+            $view->getTemplate(),
+            $view->getFilename(),
+            $view->getLayout(),
+            $view->getExt(),
         ]);
         if (isset($this->cache[$cache_key])) {
             return $this->cache[$cache_key];
@@ -541,15 +543,23 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             $view->addData($this->data);
         }
 
+        // execute optional Controller::render()
+        if (!empty($this->controller) && method_exists($this->controller, 'render')) {
+            $this->controller->render();
+        }
+
         // render output
         $output = null;
-        if ($view->filename || $view->layout) {
-            $output = $view->render();
-            if ($filename = basename($view->layout)) {
+        $filename = $view->getFilename();
+        if ($filename || $view->getLayout()) {
+            if ($filename) {
+                $output = $view->render();
+            }
+            if ($filename = basename($view->getLayout())) {
                 // layouts make it possible to define a common base structure for
                 // multiple otherwise separate template and view files (DRY)
                 $view->setFilename($paths->layouts . $filename . $ext);
-                if (!$view->placeholders->default) {
+                if (!$view->placeholders->has('default')) {
                     $view->placeholders->default = $output;
                 }
                 $output = $view->render();
@@ -563,37 +573,61 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     }
 
     /**
-     * Helper method for getting or setting page layout
+     * This method is used by Page::layout(), Page::getLayout(), and Page::setLayout()
      *
-     * Example: <?= $page->layout('default')->render() ?>
+     * Example use with combined getter/setter method:
+     *
+     * ```
+     * The layout for current page is "<?= $page->layout() ?>".
+     * <?= $page->layout('another-layout')->render() ?>
+     * ```
+     *
+     * Example use with dedicated getter/setter methods:
+     *
+     * ```
+     * The layout for current page is "<?= $page->getLayout() ?>".
+     * <?= $page->setLayout('another-layout')->render() ?>
+     * ```
      *
      * @param HookEvent $event The ProcessWire HookEvent object.
      *
      * @see addHooks() for the code that attaches Wireframe hooks.
      */
     public function pageLayout(HookEvent $event) {
-        if (!isset($event->arguments[0])) {
+        if ($event->method == 'getLayout' || $event->method == 'layout' && !isset($event->arguments[0])) {
             $event->return = $event->object->_wireframe_layout;
         } else {
-            $event->object->_wireframe_layout = $event->arguments[0];
+            $event->object->_wireframe_layout = $event->arguments[0] ?? '';
             $event->return = $event->object;
         }
     }
 
     /**
-     * Helper method for getting or setting page view
+     * This method is used by Page::view(), Page::getView(), and Page::setView()
      *
-     * Example: <?= $page->view('json')->render() ?>
+     * Example use with combined getter/setter method:
+     *
+     * ```
+     * The view for current page is "<?= $page->view() ?>".
+     * <?= $page->view('json')->render() ?>
+     * ```
+     *
+     * Example use with dedicated getter/setter methods:
+     *
+     * ```
+     * The view for current page is "<?= $page->getView() ?>".
+     * <?= $page->setView('json')->render() ?>
+     * ```
      *
      * @param HookEvent $event The ProcessWire HookEvent object.
      *
      * @see addHooks() for the code that attaches Wireframe hooks.
      */
     public function pageView(HookEvent $event) {
-        if (!isset($event->arguments[0])) {
+        if ($event->method == 'getView' || $event->method == 'view' && !isset($event->arguments[0])) {
             $event->return = $event->object->_wireframe_view;
         } else {
-            $event->object->_wireframe_view = $event->arguments[0];
+            $event->object->_wireframe_view = $event->arguments[0] ?? '';
             $event->return = $event->object;
         }
     }
