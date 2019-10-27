@@ -5,7 +5,7 @@ namespace Wireframe;
 /**
  * Abstract base implementation for Controller objects
  *
- * @version 0.2.0
+ * @version 0.3.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -37,6 +37,24 @@ abstract class Controller extends \ProcessWire\Wire {
      * @var array
      */
     protected $disallowed_methods = [];
+
+    /**
+     * Cache for method return values
+     *
+     * @var array
+     */
+    protected $method_cache = [];
+
+    /**
+     * Methods that should never be cached
+     *
+     * The default behaviour is to cache method return values on first query. If you need a method
+     * to always return a fresh value, i.e. the value should never be cached, define this array in
+     * a Controller class and add the method name to it.
+     *
+     * @var array
+     */
+    protected $uncacheable_methods = [];
 
     /**
      * Instance of ProcessWire
@@ -127,10 +145,16 @@ abstract class Controller extends \ProcessWire\Wire {
     function __get($name) {
 
         $return = null;
+        $cacheable = !in_array($name, $this->uncacheable_methods);
 
         // only allow access to method names that are not prefixed with an underscore and haven't
         // been specifically disallowed by adding them to the disallowed_methods array.
         if (is_string($name) && $name[0] !== '_' && !in_array($name, $this->disallowed_methods)) {
+
+            if ($cacheable && isset($this->method_cache[$name])) {
+                // cached return value
+                return $this->method_cache[$name];
+            }
 
             if (method_exists($this, $name) && is_callable([$this, $name])) {
                 // callable (public) local method
@@ -151,8 +175,14 @@ abstract class Controller extends \ProcessWire\Wire {
             } else {
                 // fall back to parent class getter method
                 $return = parent::__get($name);
+                $cacheable = false;
 
             }
+        }
+
+        if ($cacheable) {
+            // cache return value
+            $this->method_cache[$name] = $return;
         }
 
         return $return;
