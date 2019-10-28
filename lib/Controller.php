@@ -39,13 +39,6 @@ abstract class Controller extends \ProcessWire\Wire {
     protected $disallowed_methods = [];
 
     /**
-     * Cache for method return values
-     *
-     * @var array
-     */
-    protected $method_cache = [];
-
-    /**
      * Methods that should never be cached
      *
      * The default behaviour is to cache method return values on first query. If you need a method
@@ -55,6 +48,13 @@ abstract class Controller extends \ProcessWire\Wire {
      * @var array
      */
     protected $uncacheable_methods = [];
+
+    /**
+     * Runtime cache for method return values
+     *
+     * @var array
+     */
+    private $method_return_value_cache = [];
 
     /**
      * Instance of ProcessWire
@@ -151,9 +151,9 @@ abstract class Controller extends \ProcessWire\Wire {
         // been specifically disallowed by adding them to the disallowed_methods array.
         if (is_string($name) && $name[0] !== '_' && !in_array($name, $this->disallowed_methods)) {
 
-            if ($cacheable && isset($this->method_cache[$name])) {
+            if ($cacheable && isset($this->method_return_value_cache[$name])) {
                 // cached return value
-                return $this->method_cache[$name];
+                return $this->method_return_value_cache[$name];
             }
 
             if (method_exists($this, $name) && is_callable([$this, $name])) {
@@ -182,7 +182,7 @@ abstract class Controller extends \ProcessWire\Wire {
 
         if ($cacheable) {
             // cache return value
-            $this->method_cache[$name] = $return;
+            $this->method_return_value_cache[$name] = $return;
         }
 
         return $return;

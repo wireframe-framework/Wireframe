@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Caching support for Controller method return values. Values are cached in Controller::$method_cache *unless* the name of the method is found from Controller::$uncacheable_methods.
+- Runtime caching support for Controller method return values. Values are cached *unless* the name of the method is found from Controller::$uncacheable_methods.
 
 ### Changed
 - In the View class all internal requests for Controller properties are routed through View::getFromController().
