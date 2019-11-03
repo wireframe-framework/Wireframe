@@ -60,8 +60,8 @@ abstract class Controller extends \ProcessWire\Wire {
      *
      * ```
      * protected $cacheable_methods = [
-     *     'method_name' => 3600; // store in persistent cache for an hour
-     * ]
+     *     'method_name' => 3600, // store in persistent cache for an hour
+     * ];
      * ```
      *
      * @var array
