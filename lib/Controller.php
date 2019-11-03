@@ -17,12 +17,14 @@ abstract class Controller extends \ProcessWire\Wire {
      * This parameter is an array containing callables and their optional parameters. The format of
      * the $method_aliases array is following:
      *
-     * $method_aliases = [
+     * ```
+     * protected $method_aliases = [
      *     'method_name' => [
      *         'callable' => callable $callable,
      *         'params' => array $params = [],
      *     ],
      * ];
+     * ```
      *
      * @var array
      */
@@ -48,6 +50,23 @@ abstract class Controller extends \ProcessWire\Wire {
      * @var array
      */
     protected $uncacheable_methods = [];
+
+    /**
+     * Cacheable methods with special rules
+     *
+     * The default behaviour is to cache method return values on first query in a non-persistent
+     * runtime cache. This array can be used to define methods that have special caching rules,
+     * such as those that can be persistently cached using WireCache.
+     *
+     * ```
+     * protected $cacheable_methods = [
+     *     'method_name' => 3600; // store in persistent cache for an hour
+     * ]
+     * ```
+     *
+     * @var array
+     */
+    protected $cacheable_methods = [];
 
     /**
      * Runtime cache for method return values
@@ -145,6 +164,7 @@ abstract class Controller extends \ProcessWire\Wire {
     function __get($name) {
 
         $return = null;
+        $cache_name = null;
         $cacheable = !in_array($name, $this->uncacheable_methods);
 
         // only allow access to method names that are not prefixed with an underscore and haven't
@@ -152,8 +172,21 @@ abstract class Controller extends \ProcessWire\Wire {
         if (is_string($name) && $name[0] !== '_' && !in_array($name, $this->disallowed_methods)) {
 
             if ($cacheable && isset($this->method_return_value_cache[$name])) {
-                // cached return value
+                // return value from temporary runtime cache
                 return $this->method_return_value_cache[$name];
+            }
+
+            if (!empty($this->cacheable_methods[$name])) {
+                // attempt to return value from persistent cache (WireCache)
+                $cache_name = 'wireframe'
+                            . '/controller=' . static::class
+                            . '/method=' . $name
+                            . '/page=' . $this->wire('page');
+                $return = $this->wire('cache')->get($cache_name, $this->cacheable_methods[$name]);
+                if (!is_null($return)) {
+                    $this->method_return_value_cache[$name] = $return;
+                    return $return;
+                }
             }
 
             if (method_exists($this, $name) && is_callable([$this, $name])) {
@@ -181,8 +214,13 @@ abstract class Controller extends \ProcessWire\Wire {
         }
 
         if ($cacheable) {
-            // cache return value
+            // store return value in temporary runtime cache
             $this->method_return_value_cache[$name] = $return;
+        }
+
+        if (!empty($cache_name) && !is_null($return)) {
+            // store return value in persistent cache (WireCache)
+            $this->wire('cache')->save($cache_name, $return, $this->cacheable_methods[$name]);
         }
 
         return $return;
