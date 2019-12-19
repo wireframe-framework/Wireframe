@@ -8,7 +8,7 @@ namespace ProcessWire;
  * Wireframe is an output framework with MVC inspired architecture for ProcessWire CMS/CMF.
  * See README.md or https://wireframe-framework.com for more details.
  *
- * @version 0.7.0
+ * @version 0.8.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -221,6 +221,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
                 'views' => $this->wire('config')->paths->templates . "views/",
                 'layouts' => $this->wire('config')->paths->templates . "layouts/",
                 'partials' => $this->wire('config')->paths->templates . "partials/",
+                'components' => $this->wire('config')->paths->templates . "components/",
                 'controllers' => $this->wire('config')->paths->templates . "controllers/",
             ],
             'urls' => [
@@ -290,6 +291,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     protected function addNamespaces() {
         $namespaces = [
             'Wireframe' => $this->wire('config')->paths->Wireframe . 'lib/',
+            'Wireframe\Component' => $this->paths->components,
             'Wireframe\Controller' => $this->paths->controllers,
             'Wireframe\Lib' => $this->paths->lib,
         ];
@@ -785,6 +787,36 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             $this->cache[$cache_key] = $files;
         }
         return $files;
+    }
+
+    /**
+     * Static getter (factory) method for Components
+     *
+     * Note: keep in mind that due to file system differences and the use of an autoloader, name
+     * of the component should *always* be treated as case sensitive. If class is `Card` and the
+     * name is provided as `card`, it will likely work in some environments, but not in others.
+     *
+     * @param string $component_name Component name.
+     * @param array $args Arguments for the Component.
+     * @return \Wireframe\Component Instance of the Component.
+     *
+     * @throws WireException if Component class isn't found.
+     */
+    public static function component(string $component_name, array $args = []): \Wireframe\Component {
+        $component = null;
+        $component_class = '\Wireframe\Component\\' . $component_name;
+
+        if (class_exists($component_class)) {
+            $reflector = new \ReflectionClass($component_class);
+            $component = $reflector->newInstanceArgs($args);
+        } else {
+            throw new WireException(sprintf(
+                'Component class %s was not found.',
+                $component_class
+            ));
+        }
+
+        return $component;
     }
 
 }

@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Support for Components, along with a new static factory method Wireframe::component($component_name, $args).
+
 ## [0.7.0] - 2019-11-04
 
 ### Added
