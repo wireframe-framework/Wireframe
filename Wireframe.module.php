@@ -73,8 +73,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     /**
      * Create directories automatically?
      *
-     * This property is only used by the module configuration screen. Contains an array of
-     * directories to create automatically.
+     * Used by the module configuration screen. Contains an array of directories that should be automatically created.
      *
      * @var array
      */
@@ -112,7 +111,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      *
      * @var bool
      */
-    protected $initialized = false;
+    protected static $initialized = false;
 
     /**
      * Initialize Wireframe
@@ -159,10 +158,10 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      *
      * @return bool True on first run, false if already initialized.
      */
-    protected function initOnce(): bool {
+    public function initOnce(): bool {
 
         // bail out early if already initialized
-        if ($this->initialized) return false;
+        if (static::$initialized) return false;
 
         // set config settings
         $this->setConfig();
@@ -180,11 +179,20 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         $this->addHooks();
 
         // remember that this method has been run and return true
-        $this->initialized = true;
+        static::$initialized = true;
 
         // return true on first run
         return true;
 
+    }
+
+    /**
+     * Check if Wireframe has already been initialized
+     *
+     * @return bool True if initialized, false if not.
+     */
+    public static function isInitialized(): bool {
+        return static::$initialized;
     }
 
     /**
@@ -195,8 +203,8 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      */
     public function ___setConfig(array $config = []): Wireframe {
 
-        // default config settings; if you need to customize or override any of
-        // these, copy this array to /site/config.php as $config->wireframe
+        // default config settings; if you need to customize or override any of these, copy this array to
+        // your site config file (/site/config.php) as $config->wireframe
         $config_defaults = [
             'include_paths' => [
                 // '/path/to/shared/libraries/',
@@ -279,14 +287,12 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     /**
      * Add Wireframe namespaces to ProcessWire's class autoloader
      *
-     * This method makes ProcessWire's class autoloader aware of the Wireframe namespaces, which
-     * enables us to instantiate – or call static methods from – Wireframe objects without first
-     * requiring the related PHP file.
+     * This method makes ProcessWire's class autoloader aware of the Wireframe namespaces, which enables us to
+     * instantiate – or call static methods from – Wireframe objects without first requiring the related PHP file.
      *
-     * If you need to add additional namespaces (or additional paths for namespaces added here),
-     * access the $classLoader API variable directly from your own code. If you want to override
-     * these definitions, you should first call $classLoader->removeNamespace($namespace, $path)
-     * – and then re-add the same namespace with your own path.
+     * If you want to add additional namespaces (or additional paths for the namespaces added here), you can access
+     * the $classLoader API variable directly via your own code. If you want to override namespaces added here, you
+     * should call $classLoader->removeNamespace($namespace, $path) before re-adding the namespace with a new path.
      */
     protected function addNamespaces() {
         $namespaces = [
@@ -328,6 +334,8 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      *
      * @see pageLayout() for the Page::layout(), Page::getLayout(), and Page::setLayout() implementation.
      * @see pageView() for the Page::view(), Page::getView(), and Page::setView() implementation.
+     *
+     * @todo Page::getViewTemplate + Page::setViewTemplate
      */
     protected function addHooks() {
 
@@ -346,8 +354,8 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     /**
      * Check if a redirect should occur
      *
-     * Look for redirect fields within config settings. If present, check if the
-     * page has a value in one of those and if a redirect should be performed.
+     * Look for redirect fields within config settings. If present, check if the page has a value in one of those and
+     * if a redirect should be performed.
      */
     public function ___checkRedirects() {
 
@@ -441,8 +449,8 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     /**
      * Initialization method for the Controller
      *
-     * Controller is optional component in Wireframe, but if a Controller file is found, we'll
-     * attempt to instantiate an object from it.
+     * Controller is optional component in Wireframe, but if a Controller file is found, we'll attempt to instantiate
+     * an object from it.
      *
      * @return \Wireframe\Controller|null Controller object or null.
      *
@@ -471,8 +479,10 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     /**
      * Set current view
      *
-     * Default value is 'default', but view() method of the $page object or GET param
-     * 'view' (if configured) can be used to override the default value.
+     * Default value is 'default', but the setView() method of the $page object or GET param 'view' (if configured so)
+     * can be used to override the default value.
+     *
+     * @todo Page::getViewTemplate()
      */
     public function ___setView() {
 
@@ -630,6 +640,9 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             $event->return = $event->object->_wireframe_view;
         } else {
             $event->object->_wireframe_view = $event->arguments[0] ?? '';
+            $event->object = Wireframe::page($event->object, [
+                'instance' => $this,
+            ]);
             $event->return = $event->object;
         }
     }
@@ -662,9 +675,8 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     /**
      * Getter method for specific class properties
      *
-     * Note that this differs notably from the parent class' get() method: unlike
-     * in WireData, here we limit the scope of the method to specific, predefined
-     * class properties instead of returning any index from the "data" array. We
+     * Note that this differs notably from the parent class' get() method: unlike in WireData, here we limit the scope
+     * of the method to specific, predefined class properties instead of returning any index from the "data" array. We
      * also don't support pipe ("|") separated strings or objects as arguments.
      *
      * @param string $key Name of property you want to retrieve.
@@ -743,8 +755,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     /**
      * Set values from an array
      *
-     * This method is a wrapper for the set() method, with support for multiple
-     * values as an associative array.
+     * This method is a wrapper for the set() method, with support for multiple values as an associative array.
      *
      * @param array $values Values as an associative array.
      * @return Wireframe Self-reference.
@@ -762,9 +773,8 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     /**
      * Fetch a list of files recursively
      *
-     * This is a helper method used for fetching a list of files and folders
-     * recursively and returning the result as an object. Originally added
-     * for storing partial file references in an easy to access way.
+     * This is a helper method used for fetching a list of files and folders recursively and returning the result as an
+     * object. Originally added for storing partial file references in an easy to access way.
      *
      * @param string $path Base directory.
      * @param string $ext File extension.
@@ -792,9 +802,9 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     /**
      * Static getter (factory) method for Components
      *
-     * Note: keep in mind that due to file system differences and the use of an autoloader, name
-     * of the component should *always* be treated as case sensitive. If class is `Card` and the
-     * name is provided as `card`, it will likely work in some environments, but not in others.
+     * Note: keep in mind that due to file system differences and the use of an autoloader, the name of the component
+     * should *always* be treated as case sensitive. If actual class name is `Card` and the name is provided for this
+     * method as `card`, this will fail in some environments, resulting in an exception.
      *
      * @param string $component_name Component name.
      * @param array $args Arguments for the Component.
@@ -803,6 +813,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      * @throws WireException if Component class isn't found.
      */
     public static function component(string $component_name, array $args = []): \Wireframe\Component {
+
         $component = null;
         $component_class = '\Wireframe\Component\\' . $component_name;
 
@@ -817,6 +828,131 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         }
 
         return $component;
+    }
+
+    /**
+     * Static getter (factory) method for Pages
+     *
+     * This utility method can be used to render Page objects via Wireframe even if they don't have the expected
+     * altFilename Template setting in place. Particularly useful for cases where you don't want a page to be publicly
+     * viewable, but you still want to render it manually on some occasion (e.g. content that is only shown in lists.)
+     *
+     * Note that this method will accept different types of parameters, and the return value also depends on provided
+     * parameters. Basic usage:
+     *
+     * ```
+     * <?= Wireframe::page('id=1234', ['layout' => null, 'view' => 'list-item'])->render() ?>
+     * ```
+     *
+     * Or a shorter version with string provided for args:
+     *
+     * ```
+     * <?= Wireframe::page('id=1234', 'list-item') ?>
+     * ```
+     *
+     * @param int|string|Page $source Page object, Page ID (integer), or selector string (string).
+     * @param array|string $args Optional arguments. If the value is a string, it is assumed to be the name of a view
+     *                           file and the default value for layout is set to `null` – except if the string contains
+     *                           a forward slash in it, in which case it is assumed to hold both layout and view file
+     *                           names ([layout]/[view]). If the value is an array, following options are supported:
+     *                           - parent [Page]: the page on/for which current page is being rendered
+     *                           - instance [Wireframe]: an instance of the Wireframe module
+     *                           - filename [string]: template file, defaults to 'wireframe'
+     *                           - ext [string]: extension for the template file, defaults to '.php'
+     *                           - layout [string]: layout to render the page with, defaults to 'default'
+     *                           - view [string]: view file to render the page with, defaults to 'default'
+     *                           - render [bool]: defines if we should return rendered content, defaults to 'false'
+     * @return string|Page|NullPage Returns string if 'render' option was 'true' **or** the args param was a string,
+     *                              otherwise returns a Page, or NullPage (if page wasn't found).
+     *
+     * @throws WireException if source param is of an unexpected type.
+     * @throws WireException if args param is of an unexpected type.
+     */
+    public static function page($source, $args = []) {
+
+        // get a page
+        $page = null;
+        if ($source instanceof Page) {
+            $page = $source;
+        } else if (is_int($source) || is_string($source)) {
+            $page = wire('pages')->get($source);
+        } else {
+            throw new WireException(sprintf(
+                'Invalid argument type supplied for param source (%s)',
+                gettype($source) . (is_object($source) ? ' ' . get_class($source) : '')
+            ));
+        }
+
+        // bail out early if page wasn't found
+        if ($page instanceof NullPage) return $page;
+
+        // parse arguments and merge with defaults
+        if (is_string($args)) {
+            $args = [
+                'layout' => null,
+                'view' => $args,
+                'render' => true,
+            ];
+            if (strpos($args['view'], '/') !== false) {
+                $args_parts = explode('/', $args['view']);
+                $args = [
+                    'layout' => $args_parts[0],
+                    'view' => $args_parts[1],
+                    'render' => true,
+                ];
+            }
+        }
+        if (is_array($args)) {
+            $args = array_merge([
+                'parent' => null,
+                'instance' => null,
+                'filename' => null,
+                'ext' => '.php',
+                'layout' => 'default',
+                'view' => 'default',
+                'render' => false,
+            ], $args);
+        } else {
+            throw new WireException(sprintf(
+                'Invalid argument type supplied for param args (%s)',
+                gettype($args) . (is_object($args) ? ' ' . get_class($args) : '')
+            ));
+        }
+
+        // make sure that the page gets rendered with Wireframe
+        $page->_wireframe_filename = $args['filename'] ?? 'wireframe';
+        if (empty($args['filename']) && !empty($args['parent'])) {
+            $page->_wireframe_filename = $args['parent']->template->altFilename;
+        }
+        if (empty($page->template->altFilename) || $page->template->altFilename != $page->_wireframe_filename) {
+            $page->addHookBefore('render', function(HookEvent $event) use ($args) {
+                if (!empty($event->object->_wireframe_filename) && empty($event->object->template->altFilename)) {
+                    $options = $event->arguments[0] ?? [];
+                    if (empty($options['filename'])) {
+                        $options['filename'] = $event->object->_wireframe_filename . $args['ext'];
+                        $event->arguments(0, $options);
+                    }
+                }
+            });
+            if (!empty($args['instance']) && !empty($args['parent'])) {
+                $page->addHookAfter('render', function(HookEvent $event) use ($args) {
+                    if (!empty($event->object->_wireframe_page)) {
+                        $args['instance']->page = $args['parent'];
+                    }
+                });
+            }
+        }
+
+        // make sure that basic Wireframe features have been intiialized
+        if (!Wireframe::isInitialized()) {
+            wire('modules')->get('Wireframe')->initOnce();
+        }
+
+        // set view and layout
+        if ($args['layout'] != 'default') $page->setLayout($args['layout']);
+        if ($args['view'] != 'default') $page->setView($args['view']);
+
+        return $args['render'] ? $page->render() : $page;
     }
 
 }

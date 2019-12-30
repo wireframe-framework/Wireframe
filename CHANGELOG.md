@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Support for Components, along with a new static factory method Wireframe::component($component_name, $args).
+- Support for rendering pages that have not been "routed" to Wireframe using the altFilename template setting.
+- New static getter/factory/utility method Wireframe::page($source, $args).
+- New static utility method Wireframe::isInitialized().
+
+### Changed
+- Wireframe::$initialized is now a static property. This was a necessary change so that Wireframe::isInitialized() could be implemented effectively.
 
 ## [0.7.0] - 2019-11-04
 
