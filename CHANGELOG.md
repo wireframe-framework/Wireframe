@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2019-01-06
+
 ### Added
 - Support for Components, along with a new static factory method Wireframe::component($component_name, $args).
 - Support for rendering pages that have not been "routed" to Wireframe using the altFilename template setting.
