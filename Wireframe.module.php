@@ -868,7 +868,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      *                           - parent [Page]: the page on/for which current page is being rendered
      *                           - wireframe [Wireframe]: an instance of the Wireframe module
      *                           - wire [ProcessWire]: an instance of ProcessWire, defaults to Page's Wire instance if
-     *                             $page is a Page object, or the Wire instance returned by wire() method if not.
+     *                             $source is a Page object, or the Wire instance returned by wire() method if not.
      *                           - filename [string]: template file, defaults to 'wireframe'
      *                           - ext [string]: extension for the template file, defaults to '.php'
      *                           - layout [string]: layout to render the page with, defaults to 'default'
@@ -883,7 +883,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     public static function page($source, $args = []) {
 
         // ProcessWire instance
-        $wire = $args['wire'] ?? ($page instanceof Page ? $page->getWire() : wire());
+        $wire = $args['wire'] ?? ($source instanceof Page ? $source->getWire() : wire());
 
         // get a page
         $page = null;
