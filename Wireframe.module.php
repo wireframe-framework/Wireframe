@@ -109,9 +109,12 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     /**
      * Keep track of whether Wireframe has already been initialized
      *
-     * @var bool
+     * This information is stored in an array for it to work properly with multi-instance support;
+     * in such cases we need to make sure that initOnce() is run once per ProcessWire instance.
+     *
+     * @var array
      */
-    protected static $initialized = false;
+    protected static $initialized = [];
 
     /**
      * Initialize Wireframe
@@ -161,7 +164,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     public function initOnce(): bool {
 
         // bail out early if already initialized
-        if (static::$initialized) return false;
+        if (static::isInitialized($this->wire()->instanceID)) return false;
 
         // set config settings
         $this->setConfig();
@@ -179,7 +182,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         $this->addHooks();
 
         // remember that this method has been run and return true
-        static::$initialized = true;
+        static::$initialized[] = $this->wire()->instanceID;
 
         // return true on first run
         return true;
@@ -189,10 +192,17 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     /**
      * Check if Wireframe has already been initialized
      *
+     * As long as $instanceID is provided, this method will work on a multi-instance ProcessWire
+     * setup. If $instanceID is left out (null), we get it from the wire() function instead.
+     *
+     * @param null|int $instanceID ProcessWire instance ID. This parameter is optional but recommended.
      * @return bool True if initialized, false if not.
      */
-    public static function isInitialized(): bool {
-        return static::$initialized;
+    public static function isInitialized(int $instanceID = null): bool {
+        return in_array(
+            is_null($instanceID) ? wire()->instanceID : $instanceID,
+            static::$initialized
+        );
     }
 
     /**
@@ -641,7 +651,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         } else {
             $event->object->_wireframe_view = $event->arguments[0] ?? '';
             $event->object = Wireframe::page($event->object, [
-                'instance' => $this,
+                'wireframe' => $this,
             ]);
             $event->return = $event->object;
         }
@@ -856,7 +866,9 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      *                           a forward slash in it, in which case it is assumed to hold both layout and view file
      *                           names ([layout]/[view]). If the value is an array, following options are supported:
      *                           - parent [Page]: the page on/for which current page is being rendered
-     *                           - instance [Wireframe]: an instance of the Wireframe module
+     *                           - wireframe [Wireframe]: an instance of the Wireframe module
+     *                           - wire [ProcessWire]: an instance of ProcessWire, defaults to Page's Wire instance if
+     *                             $page is a Page object, or the Wire instance returned by wire() method if not.
      *                           - filename [string]: template file, defaults to 'wireframe'
      *                           - ext [string]: extension for the template file, defaults to '.php'
      *                           - layout [string]: layout to render the page with, defaults to 'default'
@@ -870,12 +882,15 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      */
     public static function page($source, $args = []) {
 
+        // ProcessWire instance
+        $wire = $args['wire'] ?? ($page instanceof Page ? $page->getWire() : wire());
+
         // get a page
         $page = null;
         if ($source instanceof Page) {
             $page = $source;
         } else if (is_int($source) || is_string($source)) {
-            $page = wire('pages')->get($source);
+            $page = $wire->pages->get($source);
         } else {
             throw new WireException(sprintf(
                 'Invalid argument type supplied for param source (%s)',
@@ -905,7 +920,8 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         if (is_array($args)) {
             $args = array_merge([
                 'parent' => null,
-                'instance' => null,
+                'wireframe' => null,
+                'wire' => $wire,
                 'filename' => null,
                 'ext' => '.php',
                 'layout' => 'default',
@@ -934,18 +950,18 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
                     }
                 }
             });
-            if (!empty($args['instance']) && !empty($args['parent'])) {
+            if (!empty($args['wireframe']) && !empty($args['parent'])) {
                 $page->addHookAfter('render', function(HookEvent $event) use ($args) {
                     if (!empty($event->object->_wireframe_page)) {
-                        $args['instance']->page = $args['parent'];
+                        $args['wireframe']->page = $args['parent'];
                     }
                 });
             }
         }
 
         // make sure that basic Wireframe features have been intiialized
-        if (!Wireframe::isInitialized()) {
-            wire('modules')->get('Wireframe')->initOnce();
+        if (!Wireframe::isInitialized($wire->instanceID)) {
+           ($args['wireframe'] ?? $wire->modules->get('Wireframe'))->initOnce();
         }
 
         // set view and layout
