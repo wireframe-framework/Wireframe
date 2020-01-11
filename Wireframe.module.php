@@ -820,6 +820,8 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      * @param array $args Arguments for the Component.
      * @return \Wireframe\Component Instance of the Component.
      *
+     * @since 0.8.0
+     *
      * @throws WireException if Component class isn't found.
      */
     public static function component(string $component_name, array $args = []): \Wireframe\Component {
@@ -876,6 +878,8 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      *                           - render [bool]: defines if we should return rendered content, defaults to 'false'
      * @return string|Page|NullPage Returns string if 'render' option was 'true' **or** the args param was a string,
      *                              otherwise returns a Page, or NullPage (if page wasn't found).
+     *
+     * @since 0.8.0
      *
      * @throws WireException if source param is of an unexpected type.
      * @throws WireException if args param is of an unexpected type.
