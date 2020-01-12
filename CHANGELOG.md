@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Controller::init() and Controller::ready() are now hookable methods.
+
 ## [0.8.0] - 2019-01-06
 
 ### Added

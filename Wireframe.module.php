@@ -8,7 +8,7 @@ namespace ProcessWire;
  * Wireframe is an output framework with MVC inspired architecture for ProcessWire CMS/CMF.
  * See README.md or https://wireframe-framework.com for more details.
  *
- * @version 0.8.0
+ * @version 0.8.1
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -566,7 +566,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         }
 
         // execute optional Controller::render()
-        if (!empty($this->controller) && method_exists($this->controller, 'render')) {
+        if (!empty($this->controller)) {
             $this->controller->render();
         }
 
