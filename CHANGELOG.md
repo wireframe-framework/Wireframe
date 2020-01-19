@@ -7,8 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- New trait EventListenerTrait, which currently adds support for Components to listening and emitting events.
+
 ### Changed
 - Controller::init() and Controller::ready() are now hookable methods.
+- Component::setView() and Component::getView() are now final methods, preventing accidental overrides.
 
 ## [0.8.0] - 2019-01-06
 

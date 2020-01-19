@@ -5,11 +5,13 @@ namespace Wireframe;
 /**
  * Abstract base implementation for Component objects
  *
- * @version 0.0.1
+ * @version 0.1.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
 abstract class Component extends \ProcessWire\WireData {
+
+    use EventListenerTrait;
 
     /**
      * Default view file for the Component
@@ -53,9 +55,12 @@ abstract class Component extends \ProcessWire\WireData {
      * Set the view file name for the Component
      *
      * @param string $view View file name.
+     * @return Component Self-reference.
      */
-    public function setView(string $view) {
+    final public function setView(string $view): Component {
+        $this->emit('setView', ['view' => $view]);
         $this->view = $view;
+        return $this;
     }
 
     /**
@@ -63,7 +68,7 @@ abstract class Component extends \ProcessWire\WireData {
      *
      * @return string View file name.
      */
-    public function getView(): string {
+    final public function getView(): string {
         return $this->view;
     }
 
