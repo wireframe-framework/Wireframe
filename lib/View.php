@@ -10,8 +10,9 @@ namespace Wireframe;
  *
  * @property ViewPlaceholders|null $placeholders ViewPlaceholders object.
  * @property \stdClass|null $partials Object containing partial paths.
+ * @property \ProcessWire\Module|null $renderer Renderer object.
  *
- * @version 0.4.1
+ * @version 0.5.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  *
@@ -48,11 +49,39 @@ class View extends \ProcessWire\TemplateFile {
     protected $placeholders;
 
     /**
+     * Renderer object
+     *
+     * @var null|\ProcessWire\Module
+     */
+    protected $renderer;
+
+    /**
      * Constructor method
      */
     public function __construct() {
         $this->_wireframe_view_data = new ViewData();
         parent::__construct();
+    }
+
+    /**
+     * Render method
+     *
+     * @return string Rendered markup for the View.
+     */
+    public function ___render() {
+
+        // attempt to render markup using a renderer
+        $renderer = $this->getRenderer();
+        if ($renderer && substr($this->filename, -strlen($renderer->getExt())) == $renderer->getExt()) {
+            // since the filename we have stored locally matches the extension expected by the renderer, we can assume
+            // that this renderer can be used to render said file
+            $view_path = $this->getViewData('context') == 'layout' ? 'layouts_path' : 'views_path';
+            $view_file = substr($this->filename, strlen($this->getViewData($view_path)));
+            $view_context = array_merge($this->getArray(), self::$globals);
+            return $renderer->render($this->getViewData('context'), $view_file, $view_context);
+        }
+
+        return parent::___render();
     }
 
     /**
@@ -151,6 +180,35 @@ class View extends \ProcessWire\TemplateFile {
     }
 
     /**
+     * Setter method for the (rendering) context
+     *
+     * Context is used to identify exactly what it is that we're currently rendering: layout, view,
+     * or something else. This is used (for an example) when figuring out the view or layout name
+     * that should be passed to a renderer module.
+     *
+     * @internal
+     *
+     * @param string $context Context identifier.
+     * @return View Self-reference.
+     */
+    public function setContext(string $context): View {
+        $this->setViewData('context', $context);
+        return $this;
+    }
+
+    /**
+     * Getter method for the (rendering) context
+     *
+     * @internal
+     *
+     * @return string|null Context identifier.
+     * @see View::setContext() for more details.
+     */
+    public function getContext(): ?string {
+        return $this->getViewData('context');
+    }
+
+    /**
      * Getter method for the view file filename
      *
      * Note that this is the filename required by TemplateFile, which we're extending with current
@@ -193,7 +251,7 @@ class View extends \ProcessWire\TemplateFile {
             return $this->setView('default');
         }
 
-        // if using existing, non-default view file, set filename and handle page caching
+        // set (template file) filename and handle page caching
         if ($view != 'default' || is_file($view_filename)) {
             $this->setFilename($view_filename);
             if ($page->_wireframe_context != 'placeholder') {
@@ -240,6 +298,31 @@ class View extends \ProcessWire\TemplateFile {
     }
 
     /**
+     * Setter method for the layouts directory
+     *
+     * @param string|null $layouts_path Path to the layouts directory
+     * @return View Self-reference
+     */
+    public function setLayoutsPath(string $layouts_path = null): View {
+        if (!empty($layouts_path) && is_dir($layouts_path)) {
+            $layouts_path = rtrim($layouts_path, '/') . '/';
+            $this->setViewData('layouts_path', $layouts_path);
+        }
+        return $this;
+    }
+
+    /**
+     * Getter for the path to the layouts directory
+     *
+     * @internal
+     *
+     * @return string|null Path to the layouts directory or null
+     */
+    public function getLayoutsPath(): ?string {
+        return $this->getViewData('layouts_path');
+    }
+
+    /**
      * Set, validate, and format path to the views directory
      *
      * @internal
@@ -274,21 +357,35 @@ class View extends \ProcessWire\TemplateFile {
     /**
      * Getter for complete view file path
      *
+     * This method is used internally by setView() to define the TemplateFile filename.
+     *
+     * Note: when custom file extension is used (such as one defined in a renderer), we'll check
+     * if the file exists and fall back to default file extension (.php) if necessary.
+     *
      * @internal
      *
      * @param string $view Optional name of the view file
-     * @param string $template Optional name of the template
+     * @param string $ext Optional view file extension
      * @return string View file path
      */
-    public function getViewFilename(string $view = null): string {
+    public function getViewFilename(string $view = null, string $ext = null): string {
 
         // view data
         $views_path = $this->getViewData('views_path');
         $template = $this->getViewData('template');
         $view = $view ?: $this->getViewData('view');
-        $ext = $this->getViewData('ext');
+        $ext = $ext ?: $this->getViewData('ext');
 
-        return $views_path . $template . '/' . $view . $ext;
+        // validate filename and fall back to default file extension (.php) if necessary
+        $filename = $views_path . $template . '/' . $view . $ext;
+        if ($this->getViewData('ext') != '.php' && !is_file($filename)) {
+            $fallback_filename = $views_path . $template . '/' . $view . '.php';
+            if (is_file($fallback_filename)) {
+                $filename = $fallback_filename;
+            }
+        }
+
+        return $filename;
     }
 
     /**
@@ -378,6 +475,38 @@ class View extends \ProcessWire\TemplateFile {
      */
     public function getPartials(): ?\stdClass {
         return $this->partials;
+    }
+
+    /**
+     * Setter method for the renderer object
+     *
+     * @param \ProcessWire\Module|string|null $renderer Renderer module, name of a renderer module, or null to unset.
+     * @param array $settings Optional array of settings for the renderer module.
+     * @return View Self-reference
+     */
+    public function setRenderer($renderer, array $settings = []): View {
+        $needs_init = !empty($settings);
+        if (is_null($renderer)) {
+            $this->renderer = null;
+        } else if (is_string($renderer)) {
+            $renderer = $this->wire('modules')->get($renderer);
+            $needs_init = true;
+        }
+        if ($renderer instanceof \ProcessWire\Module) {
+            if ($needs_init) $renderer->init($settings);
+            $this->renderer = $renderer;
+            $this->setExt($renderer->getExt());
+        }
+        return $this;
+    }
+
+    /**
+     * Getter method for the renderer object
+     *
+     * @return \ProcessWire\Module|null Renderer object or null
+     */
+    public function getRenderer(): ?\ProcessWire\Module {
+        return $this->renderer;
     }
 
     /**
