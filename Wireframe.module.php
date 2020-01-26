@@ -289,17 +289,17 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     }
 
     /**
-     * Getter method for View related paths
+     * Getter method for View paths
      *
-     * @return array|null Paths array or null.
+     * @return array Paths array.
      */
-    public function getViewPaths(): ?array {
+    public function getViewPaths(): array {
         return $this->paths ? [
             'view' => $this->paths->views,
             'layout' => $this->paths->layouts,
             'partial' => $this->paths->partials,
             'component' => $this->paths->components,
-        ] : null;
+        ] : [];
     }
 
     /**
@@ -337,7 +337,9 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             if ($needs_init) $renderer->init($settings);
             $this->renderer = $renderer;
             $this->setExt($renderer->getExt());
-            if ($this->view) $this->view->setRenderer($renderer);
+            if ($this->view && $this->view->getRenderer() != $renderer) {
+                $this->view->setRenderer($renderer);
+            }
         }
         return $this;
     }
