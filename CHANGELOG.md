@@ -10,9 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.9.0] - 2020-02-02
 
 ### Added
-- New EventListenerTrait. Currently used by Components only. Adds support for listening and emitting events.
+- New EventListenerTrait. Currently used by Components only. Adds support for listening to and emitting events.
 - Support for Renderer modules for adding templating engine support for view files, component view files, etc.
 - New Page methods Page::viewTemplate(), Page::getViewTemplate(), and Page::setViewTemplate().
+- New method Component::getData() for manually defining the data passed to the component view.
 
 ### Changed
 - Controller::init() and Controller::ready() are now hookable methods.
