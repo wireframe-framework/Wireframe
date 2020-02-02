@@ -7,7 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.8.0] - 2019-01-06
+## [0.9.0] - 2020-02-02
+
+### Added
+- New EventListenerTrait. Currently used by Components only. Adds support for listening and emitting events.
+- Support for Renderer modules for adding templating engine support for view files, component view files, etc.
+- New Page methods Page::viewTemplate(), Page::getViewTemplate(), and Page::setViewTemplate().
+
+### Changed
+- Controller::init() and Controller::ready() are now hookable methods.
+- Component::setView() and Component::getView() are now final methods, preventing accidental overrides.
+- Layout file is no longer necessary; if it's missing, the page can be rendered using just a view file.
+
+## [0.8.0] - 2020-01-06
 
 ### Added
 - Support for Components, along with a new static factory method Wireframe::component($component_name, $args).
@@ -30,7 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.6.0] - 2019-09-13
 
 ### Added
-- New Page methods Page::getLayout, Page::setLayout(), Page::getView(), and Page::setView().
+- New Page methods Page::getLayout(), Page::setLayout(), Page::getView(), and Page::setView().
 - New Controller::render() method, executed right before a page is actually rendered.
 - New ViewData class for storing (internal) data required by the View class.
 - New getter/setter methods for ViewData properties for the View class.

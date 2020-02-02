@@ -5,7 +5,7 @@ namespace Wireframe;
 /**
  * Abstract base implementation for Controller objects
  *
- * @version 0.3.0
+ * @version 0.4.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -140,7 +140,11 @@ abstract class Controller extends \ProcessWire\Wire {
      * you perform resource-intensive tasks here, it is highly recommended that you cache their
      * results in local (object) properties.
      */
-    public function init() {}
+    public function init() {
+        if (method_exists($this, '___init')) {
+            return $this->__call('init', []);
+        }
+    }
 
     /**
      * Render method
@@ -149,7 +153,11 @@ abstract class Controller extends \ProcessWire\Wire {
      * for an example, pass data (properties/variables) to the View, so that you can later access
      * said data as locally scoped variables in your view files and layouts.
      */
-    public function render() {}
+    public function render() {
+        if (method_exists($this, '___render')) {
+            return $this->__call('render', []);
+        }
+    }
 
     /**
      * PHP magic getter method

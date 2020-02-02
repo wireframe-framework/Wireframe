@@ -5,7 +5,7 @@ namespace Wireframe;
 /**
  * Container for View Placeholders
  *
- * @version 0.3.0
+ * @version 0.4.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -64,6 +64,20 @@ class ViewPlaceholders {
                     $page->setView($page_view);
                 }
             }
+        }
+        return $return;
+    }
+
+    /**
+     * Check if a view placeholder or view file exists
+     *
+     * @param string $key Name of a view placeholder or view
+     * @return bool
+     */
+    public function __isset(string $key): bool {
+        $return = isset($this->data[$key]);
+        if (!$return && basename($key) === $key) {
+            $return = is_file($this->view->getViewFilename($key));
         }
         return $return;
     }
