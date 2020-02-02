@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.9.0] - 2020-02-02
 
 ### Added
 - New EventListenerTrait. Currently used by Components only. Adds support for listening and emitting events.
@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Component::setView() and Component::getView() are now final methods, preventing accidental overrides.
 - Layout file is no longer necessary; if it's missing, the page can be rendered using just a view file.
 
-## [0.8.0] - 2019-01-06
+## [0.8.0] - 2020-01-06
 
 ### Added
 - Support for Components, along with a new static factory method Wireframe::component($component_name, $args).
