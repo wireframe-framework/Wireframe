@@ -8,7 +8,7 @@ namespace ProcessWire;
  * Wireframe is an output framework with MVC inspired architecture for ProcessWire CMS/CMF.
  * See README.md or https://wireframe-framework.com for more details.
  *
- * @version 0.9.0
+ * @version 0.9.1
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -116,8 +116,8 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     /**
      * Keep track of whether Wireframe has already been initialized
      *
-     * This information is stored in an array for it to work properly with multi-instance support;
-     * in such cases we need to make sure that initOnce() is run once per ProcessWire instance.
+     * This information is stored in an array for it to work properly with multi-instance support; in such cases we
+     * need to make sure that initOnce() is run once per ProcessWire instance.
      *
      * @var array
      */
@@ -196,8 +196,8 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     /**
      * Check if Wireframe has already been initialized
      *
-     * As long as $instanceID is provided, this method will work on a multi-instance ProcessWire
-     * setup. If $instanceID is left out (null), we get it from the wire() function instead.
+     * As long as $instanceID is provided, this method will work on a multi-instance ProcessWire setup. If $instanceID
+     * is left out (null), we get it from the wire() function instead.
      *
      * @param null|int $instanceID ProcessWire instance ID. This parameter is optional but recommended.
      * @return bool True if initialized, false if not.
@@ -217,8 +217,8 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      */
     public function ___setConfig(array $config = []): Wireframe {
 
-        // default config settings; if you need to customize or override any of these, copy this array to
-        // your site config file (/site/config.php) as $config->wireframe
+        // default config settings; if you need to customize or override any of these, copy this array to your site
+        // config file (/site/config.php) as $config->wireframe
         $config_defaults = [
             'include_paths' => [
                 // '/path/to/shared/libraries/',
@@ -490,8 +490,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         $ext = $this->ext;
         $data = $this->data;
 
-        // initialize the View object (note: not setting view file yet at this point, that's a task
-        // for the Wireframe::___setView() method)
+        // initialize the View object (note: view file is set in the Wireframe::___setView() method)
         $view = new \Wireframe\View;
         $view->setLayout($page->getLayout() === null ? 'default' : $page->getLayout());
         $view->setTemplate($page->getViewTemplate());
@@ -634,12 +633,11 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
                 $output = $view->render();
             }
             if ($filename = basename($view->getLayout())) {
-                // layouts make it possible to define a common base structure for
-                // multiple otherwise separate template and view files (DRY)
+                // layouts make it possible to define a common base structure for multiple otherwise separate template
+                // and view files (DRY)
                 $layout_filename = $paths->layouts . $filename . $ext;
                 if ($ext != '.php' && !is_file($layout_filename)) {
-                    // layout filename not found and using custom file extension,
-                    // try with the default extension (.php) instead
+                    // layout filename not found and using custom file extension; try with the default extension (.php)
                     $layout_filename = $paths->layouts . $filename . '.php';
                 }
                 if (is_file($layout_filename)) {
@@ -1056,19 +1054,29 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             $page->_wireframe_filename = $args['parent']->template->altFilename;
         }
         if (empty($page->template->altFilename) || $page->template->altFilename != $page->_wireframe_filename) {
-            $page->addHookBefore('render', function(HookEvent $event) use ($args) {
-                if (!empty($event->object->_wireframe_filename) && empty($event->object->template->altFilename)) {
+            // due to the way PageRender works (calling Page::output(true) internally), a template file check occurs
+            // even if the filename argument is used; we detect this situation in order to avoid unnecessary errors.
+            $page_has_no_file = empty($page->template->altFilename) && (empty($page->template->filename) || !is_file($page->template->filename));
+            $page->addHookBefore('render', function(HookEvent $event) use ($args, $page_has_no_file) {
+                if (!empty($event->object->_wireframe_filename)) {
                     $options = $event->arguments[0] ?? [];
                     if (empty($options['filename'])) {
                         $options['filename'] = $event->object->_wireframe_filename . $args['ext'];
                         $event->arguments(0, $options);
                     }
+                    if ($page_has_no_file) {
+                        $event->object->template->_altFilename = $event->object->template->altFilename;
+                        $event->object->template->altFilename = $event->object->_wireframe_filename;
+                    }
                 }
             });
-            if (!empty($args['wireframe']) && !empty($args['parent'])) {
-                $page->addHookAfter('render', function(HookEvent $event) use ($args) {
+            if ((!empty($args['wireframe']) && !empty($args['parent'])) || $page_has_no_file) {
+                $page->addHookAfter('render', function(HookEvent $event) use ($args, $page_has_no_file) {
                     if (!empty($event->object->_wireframe_page)) {
                         $args['wireframe']->page = $args['parent'];
+                    }
+                    if ($page_has_no_file) {
+                        $event->object->template->altFilename = $event->object->template->_altFilename;
                     }
                 });
             }
