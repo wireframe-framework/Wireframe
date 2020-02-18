@@ -9,10 +9,10 @@ namespace Wireframe;
  * the Wireframe namespace.
  *
  * @property ViewPlaceholders|null $placeholders ViewPlaceholders object.
- * @property \stdClass|null $partials Object containing partial paths.
+ * @property Partials|null $partials Object containing partial paths.
  * @property \ProcessWire\Module|null $renderer Renderer object.
  *
- * @version 0.5.0
+ * @version 0.6.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -35,7 +35,7 @@ class View extends \ProcessWire\TemplateFile {
     /**
      * Partials object
      *
-     * @var \stdClass
+     * @var Partials
      */
     protected $partials;
 
@@ -458,10 +458,10 @@ class View extends \ProcessWire\TemplateFile {
     /**
      * Setter method for the partials object
      *
-     * @param \stdClass|null Object containing partial paths or null
+     * @param Partials|null Object containing partial paths or null
      * @return View Self-reference
      */
-    public function setPartials(?\stdClass $partials): View {
+    public function setPartials(?Partials $partials): View {
         $this->partials = $partials;
         return $this;
     }
@@ -469,9 +469,9 @@ class View extends \ProcessWire\TemplateFile {
     /**
      * Getter method for the partials object
      *
-     * @return \stdClass|null Object containing partial paths or null
+     * @return Partials|null Object containing partial paths or null
      */
-    public function getPartials(): ?\stdClass {
+    public function getPartials(): ?Partials {
         return $this->partials;
     }
 
