@@ -8,7 +8,7 @@ namespace ProcessWire;
  * Wireframe is an output framework with MVC inspired architecture for ProcessWire CMS/CMF.
  * See README.md or https://wireframe-framework.com for more details.
  *
- * @version 0.9.1
+ * @version 0.10.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
