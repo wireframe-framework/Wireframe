@@ -259,6 +259,9 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             $config
         );
 
+        // Path additions to global config settings
+        $this->wire('config')->paths->set('partials', $this->config['paths']['partials']);
+
         // URL additions to global config settings
         foreach ($this->config['urls'] as $key => $value) {
             $this->wire('config')->urls->set($key, $value);
@@ -895,9 +898,9 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      *
      * @param string $path Base directory.
      * @param string $ext File extension.
-     * @return \stdClass An object containing list of files as its properties.
+     * @return \Wireframe\Partials An object containing list of files as its properties.
      */
-    protected function getFilesRecursive(string $path, string $ext): \stdClass {
+    protected function getFilesRecursive(string $path, string $ext): \Wireframe\Partials {
         $cache_key = 'files:' . $path . ':' . $ext;
         $files = $this->cache[$cache_key] ?? [];
         if (empty($files)) {
@@ -910,10 +913,16 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
                     $files[substr($name, 0, strrpos($name, "."))] = $file;
                 }
             }
-            $files = (object) $files;
+            if (is_array($files)) {
+                $temp_files = $files;
+                $files = new \Wireframe\Partials();
+                foreach ($temp_files as $key => $file) {
+                    $files->{$key} = $file;
+                }
+            }
             $this->cache[$cache_key] = $files;
         }
-        return $files;
+        return $this->wire($files);
     }
 
     /**
