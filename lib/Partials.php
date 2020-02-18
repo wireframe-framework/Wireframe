@@ -14,20 +14,20 @@ namespace Wireframe;
  */
 class Partials extends \ProcessWire\Wire {
 
-	/**
-	 * Gateway for rendering partials with arguments
-	 *
-	 * @param string $method
-	 * @param array $arguments
-	 * @return mixed
-	 */
-	public function __call($method, $arguments) {
-		$file = $this->$method;
-		if (!empty($file) && is_file($file)) {
-			$args = is_array($arguments) && !empty($arguments[0]) && is_array($arguments[0]) ? $arguments[0] : [];
-			return \ProcessWire\wireRenderFile($file, $args);
-		}
-		return parent::__call($method, $arguments);
-	}
+    /**
+     * Gateway for rendering partials with arguments
+     *
+     * @param string $method
+     * @param array $arguments
+     * @return mixed
+     */
+    public function __call($method, $arguments) {
+        $file = $this->$method;
+        if (!empty($file) && is_file($file)) {
+            $args = is_array($arguments) && !empty($arguments[0]) && is_array($arguments[0]) ? $arguments[0] : [];
+            return \ProcessWire\wireRenderFile($file, $args);
+        }
+        return parent::__call($method, $arguments);
+    }
 
 }
