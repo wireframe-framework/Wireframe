@@ -2,8 +2,6 @@
 
 namespace Wireframe;
 
-use ProcessWire\WireException;
-
 /**
  * Wireframe Partial
  *
@@ -26,11 +24,12 @@ class Partial extends \ProcessWire\Wire {
      * Constructor
      *
      * @param array $filenames Partial filenames as an assoc array (ext => filename).
+     * @throws \ProcessWire\WireException if a partial file isn't found.
      */
     public function __construct(array $filenames) {
         foreach ($filenames as $ext => $filename) {
             if (!\is_file($filename)) {
-                throw new WireException(\sprintf(
+                throw new \ProcessWire\WireException(\sprintf(
                     'Partial file not found: %s',
                     $filename
                 ));
