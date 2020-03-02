@@ -10,13 +10,14 @@ namespace Wireframe;
  *
  * @property ViewPlaceholders|null $placeholders ViewPlaceholders object.
  * @property Partials|null $partials Object containing partial paths.
- * @property \ProcessWire\Module|null $renderer Renderer object.
  *
  * @version 0.6.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
 class View extends \ProcessWire\TemplateFile {
+
+    use RendererTrait;
 
     /**
      * Wireframe View Data object
@@ -45,13 +46,6 @@ class View extends \ProcessWire\TemplateFile {
      * @var ViewPlaceholders
      */
     protected $placeholders;
-
-    /**
-     * Renderer object
-     *
-     * @var null|\ProcessWire\Module
-     */
-    protected $renderer;
 
     /**
      * Constructor method
@@ -473,38 +467,6 @@ class View extends \ProcessWire\TemplateFile {
      */
     public function getPartials(): ?Partials {
         return $this->partials;
-    }
-
-    /**
-     * Setter method for the renderer object
-     *
-     * @param \ProcessWire\Module|string|null $renderer Renderer module, name of a renderer module, or null to unset.
-     * @param array $settings Optional array of settings for the renderer module.
-     * @return View Self-reference
-     */
-    public function setRenderer($renderer, array $settings = []): View {
-        $needs_init = !empty($settings);
-        if (is_null($renderer)) {
-            $this->renderer = null;
-        } else if (is_string($renderer)) {
-            $renderer = $this->wire('modules')->get($renderer);
-            $needs_init = true;
-        }
-        if ($renderer instanceof \ProcessWire\Module) {
-            if ($needs_init) $renderer->init($settings);
-            $this->renderer = $renderer;
-            $this->setExt($renderer->getExt());
-        }
-        return $this;
-    }
-
-    /**
-     * Getter method for the renderer object
-     *
-     * @return \ProcessWire\Module|null Renderer object or null
-     */
-    public function getRenderer(): ?\ProcessWire\Module {
-        return $this->renderer;
     }
 
     /**

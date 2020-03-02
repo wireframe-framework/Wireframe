@@ -20,6 +20,7 @@ namespace Wireframe;
 abstract class Component extends \ProcessWire\WireData {
 
     use EventListenerTrait;
+    use RendererTrait;
 
     /**
      * Default view file for the Component
@@ -27,13 +28,6 @@ abstract class Component extends \ProcessWire\WireData {
      * @var string
      */
     private $view = 'default';
-
-    /**
-     * Renderer used for the Component
-     *
-     * @var null|\ProcessWire\Module
-     */
-    private $renderer;
 
     /**
      * Render markup for the Component
@@ -109,37 +103,6 @@ abstract class Component extends \ProcessWire\WireData {
      */
     final public function getView(): string {
         return $this->view;
-    }
-
-    /**
-     * Set renderer for the Component
-     *
-     * @param \ProcessWire\Module|string|null $renderer Renderer module, name of a renderer module, or null to unset.
-     * @param array $settings Optional array of settings for the renderer module.
-     * @return Component Self-reference.
-     */
-    final public function setRenderer($renderer, array $settings = []): Component {
-        $needs_init = !empty($settings);
-        if (is_null($renderer)) {
-            $this->renderer = null;
-        } else if (is_string($renderer)) {
-            $renderer = $this->wire('modules')->get($renderer);
-            $needs_init = true;
-        }
-        if ($renderer instanceof \ProcessWire\Module) {
-            if ($needs_init) $renderer->init($settings);
-            $this->renderer = $renderer;
-        }
-        return $this;
-    }
-
-    /**
-     * Get renderer for the Component
-     *
-     * @return \ProcessWire\Module|null $renderer Wireframe renderer module or null.
-     */
-    final public function getRenderer(): ?\ProcessWire\Module {
-        return $this->renderer ?: $this->wire('view')->getRenderer();
     }
 
     /**
