@@ -64,11 +64,11 @@ class View extends \ProcessWire\TemplateFile {
 
         // attempt to render markup using a renderer
         $renderer = $this->getRenderer();
-        if ($renderer && substr($this->filename, -strlen($renderer->getExt())) == $renderer->getExt()) {
+        if ($renderer && substr($this->filename, -\strlen($renderer->getExt())) == $renderer->getExt()) {
             // since the filename we have stored locally matches the extension expected by the renderer, we can assume
             // that this renderer can be used to render said file
             $view_path = $this->getViewData('context') == 'layout' ? 'layouts_path' : 'views_path';
-            $view_file = substr($this->filename, strlen($this->getViewData($view_path)));
+            $view_file = substr($this->filename, \strlen($this->getViewData($view_path)));
             $view_context = array_merge($this->getArray(), self::$globals);
             return $renderer->render($this->getViewData('context'), $view_file, $view_context);
         }
@@ -244,7 +244,7 @@ class View extends \ProcessWire\TemplateFile {
         }
 
         // set (template file) filename and handle page caching
-        if ($view != 'default' || is_file($view_filename)) {
+        if ($view != 'default' || \is_file($view_filename)) {
             $this->setFilename($view_filename);
             if ($page->_wireframe_context != 'placeholder') {
                 if ($view != 'default' && !$this->allow_cache) {
@@ -296,7 +296,7 @@ class View extends \ProcessWire\TemplateFile {
      * @return View Self-reference
      */
     public function setLayoutsPath(string $layouts_path = null): View {
-        if (!empty($layouts_path) && is_dir($layouts_path)) {
+        if (!empty($layouts_path) && \is_dir($layouts_path)) {
             $layouts_path = rtrim($layouts_path, '/') . '/';
             $this->setViewData('layouts_path', $layouts_path);
         }
@@ -324,7 +324,7 @@ class View extends \ProcessWire\TemplateFile {
      * @throws Exception if path to the views directory is missing or unreadable.
      */
     public function setViewsPath(string $views_path): View {
-        if (!is_dir($views_path)) {
+        if (!\is_dir($views_path)) {
             throw new \Exception(sprintf(
                 'Missing or unreadable path to the views directory: "%"',
                 $views_path
@@ -370,9 +370,9 @@ class View extends \ProcessWire\TemplateFile {
 
         // validate filename and fall back to default file extension (.php) if necessary
         $filename = $views_path . $template . '/' . $view . $ext;
-        if ($this->getViewData('ext') != '.php' && !is_file($filename)) {
+        if ($this->getViewData('ext') != '.php' && !\is_file($filename)) {
             $fallback_filename = $views_path . $template . '/' . $view . '.php';
-            if (is_file($fallback_filename)) {
+            if (\is_file($fallback_filename)) {
                 $filename = $fallback_filename;
             }
         }

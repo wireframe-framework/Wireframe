@@ -209,8 +209,8 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      * @return bool True if initialized, false if not.
      */
     public static function isInitialized(int $instanceID = null): bool {
-        return in_array(
-            is_null($instanceID) ? wire()->instanceID : $instanceID,
+        return \in_array(
+            \is_null($instanceID) ? wire()->instanceID : $instanceID,
             static::$initialized
         );
     }
@@ -261,7 +261,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         // combine default config settings with custom ones
         $this->config = array_merge(
             $config_defaults,
-            is_array($this->wire('config')->wireframe) ? $this->wire('config')->wireframe : [],
+            \is_array($this->wire('config')->wireframe) ? $this->wire('config')->wireframe : [],
             $config
         );
 
@@ -337,10 +337,10 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      */
     public function setRenderer($renderer, array $settings = []): Wireframe {
         $needs_init = !empty($settings);
-        if (is_null($renderer)) {
+        if (\is_null($renderer)) {
             $this->renderer = null;
             if ($this->view) $this->view->setRenderer(null);
-        } else if (is_string($renderer)) {
+        } else if (\is_string($renderer)) {
             $renderer = $this->wire('modules')->get($renderer);
             $needs_init = true;
         }
@@ -443,7 +443,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         foreach ($redirect_fields as $field => $options) {
 
             // redirect_fields may be an indexed array
-            if (is_int($field) && is_string($options)) {
+            if (\is_int($field) && \is_string($options)) {
                 $field = $options;
             }
 
@@ -458,8 +458,8 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             $permanent = false;
 
             // if options is an array, read contained settings
-            if (is_array($options)) {
-                if (!empty($options['property']) && is_object($url)) {
+            if (\is_array($options)) {
+                if (!empty($options['property']) && \is_object($url)) {
                     $url = $url->get($options['property']);
                 }
                 if (!empty($options['permanent'])) {
@@ -468,7 +468,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             }
 
             // if target URL is valid and doesn't belong to current page, perform a redirect
-            if (is_string($url) && $url != $page->url && $this->wire('sanitizer')->url($url)) {
+            if (\is_string($url) && $url != $page->url && $this->wire('sanitizer')->url($url)) {
                 $this->redirect($url, $permanent);
             }
         }
@@ -572,14 +572,14 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
 
         $get_view = null;
         if ($input->get->view && $allow_get_view = $config['allow_get_view']) {
-            if (is_array($allow_get_view)) {
+            if (\is_array($allow_get_view)) {
                 // allowing *any* view to be accessed via a GET param might not be
                 // appropriate; using a whitelist lets us define the allowed values
                 foreach ($allow_get_view as $get_template => $get_value) {
-                    if (is_string($get_template) && is_array($get_value) && $template == $get_template) {
-                        $get_view = in_array($input->get->view, $get_value) ? $input->get->view : null;
+                    if (\is_string($get_template) && \is_array($get_value) && $template == $get_template) {
+                        $get_view = \in_array($input->get->view, $get_value) ? $input->get->view : null;
                         break;
-                    } else if (is_int($get_template) && is_string($get_value) && $input->get->view == $get_value) {
+                    } else if (\is_int($get_template) && \is_string($get_value) && $input->get->view == $get_value) {
                         $get_view = $input->get->view;
                         break;
                     }
@@ -668,11 +668,11 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
                 // layouts make it possible to define a common base structure for multiple otherwise separate template
                 // and view files (DRY)
                 $layout_filename = $paths->layouts . $filename . $ext;
-                if ($ext != '.php' && !is_file($layout_filename)) {
+                if ($ext != '.php' && !\is_file($layout_filename)) {
                     // layout filename not found and using custom file extension; try with the default extension (.php)
                     $layout_filename = $paths->layouts . $filename . '.php';
                 }
-                if (is_file($layout_filename)) {
+                if (\is_file($layout_filename)) {
                     $view->setContext('layout');
                     $view->setFilename($layout_filename);
                     if (!$view->placeholders->has('default')) {
@@ -852,7 +852,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
 
         switch ($key) {
             case 'data':
-                if (is_array($value)) {
+                if (\is_array($value)) {
                     $invalid_value = false;
                     $this->$key = $value;
                 }
@@ -870,10 +870,10 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
                 break;
             case 'renderer':
                 // renderer module
-                if (is_array($value) && !empty($value)) {
+                if (\is_array($value) && !empty($value)) {
                     $invalid_value = false;
                     $this->setRenderer($value[0], $value[1] ?? []);
-                } else if (is_null($value) || is_string($value) || $value instanceof Module) {
+                } else if (\is_null($value) || \is_string($value) || $value instanceof Module) {
                     $invalid_value = false;
                     $this->setRenderer($value);
                 }

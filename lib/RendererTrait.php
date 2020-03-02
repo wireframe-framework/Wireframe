@@ -31,9 +31,9 @@ trait RendererTrait {
      */
     final public function setRenderer($renderer, array $settings = []): Wire {
         $needs_init = !empty($settings);
-        if (is_null($renderer)) {
+        if (\is_null($renderer)) {
             $this->renderer = null;
-        } else if (is_string($renderer)) {
+        } else if (\is_string($renderer)) {
             $renderer = $this->wire('modules')->get($renderer);
             $needs_init = true;
         }

@@ -96,7 +96,7 @@ class Partial extends \ProcessWire\Wire {
      */
     public function __debugInfo() {
         return [
-            'count' => count($this->filenames),
+            'count' => \count($this->filenames),
             'items' => $this->filenames,
         ];
     }

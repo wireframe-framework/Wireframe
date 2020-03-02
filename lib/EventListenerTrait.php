@@ -58,7 +58,7 @@ trait EventListenerTrait {
         $run_once = !empty($options['once']);
         $this->event_listeners[$event][] = [
             'hook_id' => method_exists($this, $event) ? null : $this->addHook($event, function(\ProcessWire\HookEvent $hook_event) use($callback, $run_once) {
-                call_user_func($callback, $this->wire(new \Processwire\HookEvent([
+                \call_user_func($callback, $this->wire(new \Processwire\HookEvent([
                     'object' => $this,
                     'method' => $hook_event->method,
                     'arguments' => $hook_event->arguments,
@@ -139,7 +139,7 @@ trait EventListenerTrait {
             $this->runHooks($event['event'], $event['args']);
             foreach ($this->event_listeners[$event['event']] as $event_listener_id => $event_listener) {
                 if (empty($event_listener['hook_id'])) {
-                    call_user_func($event_listener['callback'], $this->wire(new \Processwire\HookEvent([
+                    \call_user_func($event_listener['callback'], $this->wire(new \Processwire\HookEvent([
                         'object' => $this,
                         'method' => $event['event'],
                         'arguments' => $event['args'],

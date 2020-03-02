@@ -51,21 +51,21 @@ abstract class Component extends \ProcessWire\WireData {
         if (!empty($view)) {
 
             // view file root path and view file
-            $view_root = dirname((new \ReflectionClass($this))->getFileName());
+            $view_root = \dirname((new \ReflectionClass($this))->getFileName());
             $view_file = (strpos($view, '/') ? '' : '/' . $this->className()) . '/' . $view;
 
             // attempt to render markup using a renderer
             $renderer = $this->getRenderer();
             if ($renderer) {
                 $view_ext = '.' . ltrim($renderer->getExt(), '.');
-                if (is_file($view_root . $view_file . $view_ext)) {
+                if (\is_file($view_root . $view_file . $view_ext)) {
                     return $renderer->render('component', ltrim($view_file, '/') . $view_ext, $this->getData());
                 }
             }
 
             // fall back to built-in PHP template renderer if necessary
             $view_ext = $this->wire('view')->getExt();
-            if (is_file($view_root . $view_file . $view_ext)) {
+            if (\is_file($view_root . $view_file . $view_ext)) {
                 return $this->wire('files')->render($view_root . $view_file . $view_ext, $this->getData());
             }
         }

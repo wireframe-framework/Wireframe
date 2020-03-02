@@ -69,11 +69,11 @@ class Config extends \ProcessWire\Wire {
                     'disabled' => true,
                 ];
                 if (!$attributes['selected']) {
-                    $parent_dir = dirname($path);
-                    if (is_writable($parent_dir)) {
+                    $parent_dir = \dirname($path);
+                    if (\is_writable($parent_dir)) {
                         // writable parent and non-existing directory
                         $attributes['disabled'] = false;
-                        if (is_array($this->wire('input')->post->create_directories) && in_array($key, $this->wire('input')->post->create_directories)) {
+                        if (\is_array($this->wire('input')->post->create_directories) && \in_array($key, $this->wire('input')->post->create_directories)) {
                             // attempt to create a directory
                             $path_created = \ProcessWire\wireMkDir($path);
                             if ($path_created) {

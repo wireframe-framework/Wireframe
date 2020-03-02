@@ -45,13 +45,13 @@ class ViewPlaceholders {
      */
     public function __get(string $key) {
         $return = $this->data[$key] ?? null;
-        if (is_null($return) && basename($key) === $key) {
+        if (\is_null($return) && basename($key) === $key) {
 
             // params
             $page = $this->view->getPage();
             $file = $this->view->getViewFilename($key);
 
-            if (is_file($file)) {
+            if (\is_file($file)) {
                 $page_layout = $page->getLayout();
                 $page_view = $page->getView();
                 $page->_wireframe_context = 'placeholder';
@@ -77,7 +77,7 @@ class ViewPlaceholders {
     public function __isset(string $key): bool {
         $return = isset($this->data[$key]);
         if (!$return && basename($key) === $key) {
-            $return = is_file($this->view->getViewFilename($key));
+            $return = \is_file($this->view->getViewFilename($key));
         }
         return $return;
     }

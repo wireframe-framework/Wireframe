@@ -173,11 +173,11 @@ abstract class Controller extends \ProcessWire\Wire {
 
         $return = null;
         $cache_name = null;
-        $cacheable = !in_array($name, $this->uncacheable_methods);
+        $cacheable = !\in_array($name, $this->uncacheable_methods);
 
         // only allow access to method names that are not prefixed with an underscore and haven't
         // been specifically disallowed by adding them to the disallowed_methods array.
-        if (is_string($name) && $name[0] !== '_' && !in_array($name, $this->disallowed_methods)) {
+        if (\is_string($name) && $name[0] !== '_' && !\in_array($name, $this->disallowed_methods)) {
 
             if ($cacheable && isset($this->method_return_value_cache[$name])) {
                 // return value from temporary runtime cache
@@ -191,24 +191,24 @@ abstract class Controller extends \ProcessWire\Wire {
                             . '/method=' . $name
                             . '/page=' . $this->wire('page');
                 $return = $this->wire('cache')->get($cache_name, $this->cacheable_methods[$name]);
-                if (!is_null($return)) {
+                if (!\is_null($return)) {
                     $this->method_return_value_cache[$name] = $return;
                     return $return;
                 }
             }
 
-            if (method_exists($this, $name) && is_callable([$this, $name])) {
+            if (\method_exists($this, $name) && \is_callable([$this, $name])) {
                 // callable (public) local method
                 $return = $this->$name();
 
-            } else if (method_exists($this, '___' . $name) && is_callable([$this, '___' . $name])) {
+            } else if (\method_exists($this, '___' . $name) && \is_callable([$this, '___' . $name])) {
                 // callable (public) and hookable local method
                 $return = $this->_callHookMethod($name);
 
             } else if (!empty($this->method_aliases[$name])) {
                 // method alias
                 $method_alias = $this->method_aliases[$name];
-                $return = call_user_func_array(
+                $return = \call_user_func_array(
                     $method_alias['callable'],
                     $method_alias['params']
                 );
@@ -226,7 +226,7 @@ abstract class Controller extends \ProcessWire\Wire {
             $this->method_return_value_cache[$name] = $return;
         }
 
-        if (!empty($cache_name) && !is_null($return)) {
+        if (!empty($cache_name) && !\is_null($return)) {
             // store return value in persistent cache (WireCache)
             $this->wire('cache')->save($cache_name, $return, $this->cacheable_methods[$name]);
         }

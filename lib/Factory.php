@@ -104,12 +104,12 @@ class Factory {
         $page = null;
         if ($source instanceof Page) {
             $page = $source;
-        } else if (is_int($source) || is_string($source)) {
+        } else if (\is_int($source) || \is_string($source)) {
             $page = $wire->pages->get($source);
         } else {
             throw new WireException(sprintf(
                 'Invalid argument type supplied for param source (%s)',
-                gettype($source) . (is_object($source) ? ' ' . get_class($source) : '')
+                \gettype($source) . (\is_object($source) ? ' ' . \get_class($source) : '')
             ));
         }
 
@@ -117,7 +117,7 @@ class Factory {
         if ($page instanceof NullPage) return $page;
 
         // parse arguments and merge with defaults
-        if (is_string($args)) {
+        if (\is_string($args)) {
             $args = [
                 'layout' => null,
                 'view' => $args,
@@ -132,7 +132,7 @@ class Factory {
                 ];
             }
         }
-        if (is_array($args)) {
+        if (\is_array($args)) {
             $args = array_merge([
                 'parent' => null,
                 'wireframe' => null,
@@ -147,7 +147,7 @@ class Factory {
         } else {
             throw new WireException(sprintf(
                 'Invalid argument type supplied for param args (%s)',
-                gettype($args) . (is_object($args) ? ' ' . get_class($args) : '')
+                \gettype($args) . (\is_object($args) ? ' ' . \get_class($args) : '')
             ));
         }
 
