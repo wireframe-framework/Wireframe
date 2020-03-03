@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2020-03-03
+
 ### Added
 - New class Partials. Container for Partial objects. Provides a gateway for rendering partials with arguments (`$partials->name(['arg' => 'val'])`).
 - New class Partial. Singular Partial object. Provides the ability to render a partial and adds support for multiple (alternate) file extensions for each partial.
@@ -15,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New method Wireframe::setViewTemplate(). This allows overriding current view template via the Wireframe object, primarily intended to be used in the Wireframe bootstrap file.
 
 ### Changed
-- Shared renderer related features moved to new trait RendererTrait. This is used internally by View, Component, and Partial classes.
+- Shared renderer related features were moved to new trait RendererTrait. This is used internally by View, Component, and Partial classes.
 
 ## [0.9.1] - 2020-02-03
 
