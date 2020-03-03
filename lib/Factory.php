@@ -191,8 +191,8 @@ class Factory {
         }
 
         // set view, layout, and view template
-		if ($args['layout'] != 'default') $page->setLayout($args['layout']);
-		if ($args['view'] != 'default') $page->setView($args['view']);
+        if ($args['layout'] != 'default') $page->setLayout($args['layout']);
+        if ($args['view'] != 'default') $page->setView($args['view']);
         if ($args['viewTemplate'] != null) $page->setViewTemplate($args['viewTemplate']);
 
         return $args['render'] ? $page->render() : $page;
@@ -210,25 +210,25 @@ class Factory {
      * @throws WireException if partials path isn't found from config.
      */
     public static function partial(string $partial_name, array $args = null) {
-		$config = wire('config');
+        $config = wire('config');
         $partials_path = $config->paths->partials;
         if (empty($partials_path)) {
             throw new WireException('Partials path not found from config.');
         }
-		$ext = '';
+        $ext = '';
         if (\strpos($partial_name, '.') === false) {
-			$ext = $config->_wireframeTemplateExtension;
-			if (!$ext) {
-				$ext = $config->templateExtension;
-				if (\is_array($config->wireframe) && !empty($config->wireframe->ext)) {
-					$ext = $config->wireframe->ext;
-				}
-			}
+            $ext = $config->_wireframeTemplateExtension;
+            if (!$ext) {
+                $ext = $config->templateExtension;
+                if (\is_array($config->wireframe) && !empty($config->wireframe->ext)) {
+                    $ext = $config->wireframe->ext;
+                }
+            }
         }
-		$partial = new Partial([
-			\ltrim($ext, '.') => $partials_path . $partial_name . $ext,
-		]);
-		return \is_array($args) ? $partial->render($args) : $partial;
+        $partial = new Partial([
+            \ltrim($ext, '.') => $partials_path . $partial_name . $ext,
+        ]);
+        return \is_array($args) ? $partial->render($args) : $partial;
     }
 
 }
