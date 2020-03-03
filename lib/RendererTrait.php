@@ -9,7 +9,7 @@ use ProcessWire\Wire;
  *
  * @property \ProcessWire\Module|null $renderer Renderer object.
  *
- * @version 0.1.0
+ * @version 0.1.1
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -20,7 +20,7 @@ trait RendererTrait {
      *
      * @var null|\ProcessWire\Module
      */
-	private $renderer;
+    private $renderer;
 
     /**
      * Set renderer
@@ -39,10 +39,10 @@ trait RendererTrait {
         }
         if ($renderer instanceof \ProcessWire\Module) {
             if ($needs_init) $renderer->init($settings);
-			$this->renderer = $renderer;
-			if (method_exists($this, 'setExt')) {
-				$this->setExt($renderer->getExt());
-			}
+            $this->renderer = $renderer;
+            if (method_exists($this, 'setExt')) {
+                $this->setExt($renderer->getExt());
+            }
         }
         return $this;
     }
@@ -53,7 +53,7 @@ trait RendererTrait {
      * @return \ProcessWire\Module|null $renderer Wireframe renderer module or null.
      */
     final public function getRenderer(): ?\ProcessWire\Module {
-		return $this->renderer ?: !$this instanceof View ? $this->wire('view')->getRenderer() : null;
+        return $this->renderer ?: (!$this instanceof View ? $this->wire('view')->getRenderer() : null);
     }
 
 }
