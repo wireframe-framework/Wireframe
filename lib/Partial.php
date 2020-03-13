@@ -46,6 +46,11 @@ class Partial extends \ProcessWire\Wire {
      */
     public function ___render(array $args = []): string {
 
+        // prepare arguments
+        if (is_array($args) && !empty($args[0]) && is_array($args[0])) {
+            $args = $args[0];
+        }
+
         // attempt to render markup using a renderer
         $renderer = $this->getRenderer();
         if ($renderer) {

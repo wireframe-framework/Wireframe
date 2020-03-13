@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.2] - 2020-03-13
+
+### Fixed
+- When rendering a partial with arguments, prepare the arguments array properly before use.
+
 ## [0.10.1] - 2020-03-13
 
 ### Fixed
