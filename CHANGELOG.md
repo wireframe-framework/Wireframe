@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.1] - 2020-03-13
+
+### Fixed
+- Autoload Factory class in cases where it's methods are called before Wireframe has been initiated.
+
 ## [0.10.0] - 2020-03-03
 
 ### Added

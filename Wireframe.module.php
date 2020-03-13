@@ -14,7 +14,7 @@ namespace ProcessWire;
  * @method static string|Page|NullPage page($source, $args = []) Static getter (factory) method for Pages.
  * @method static string|null partial(string $partial_name, array $args = []) Static getter (factory) method for Partials.
  *
- * @version 0.10.0
+ * @version 0.10.1
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -931,6 +931,9 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             case 'component':
             case 'page':
             case 'partial':
+                if (!class_exists('\Wireframe\Factory')) {
+                    include_once __DIR__ . '/lib/Factory.php';
+                }
                 return \call_user_func_array(['\Wireframe\Factory', $method], $arguments);
                 break;
         }
