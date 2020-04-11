@@ -14,7 +14,7 @@ namespace ProcessWire;
  * @method static string|Page|NullPage page($source, $args = []) Static getter (factory) method for Pages.
  * @method static string|null partial(string $partial_name, array $args = []) Static getter (factory) method for Partials.
  *
- * @version 0.10.2
+ * @version 0.11.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -510,7 +510,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         $view->setExt($ext);
         $view->setPage($this->page);
         $view->setData($data);
-        $view->setPartials($this->findPartials($paths->partials . "*"));
+        $view->setPartials($this->findPartials($paths->partials));
         $view->setPlaceholders(new \Wireframe\ViewPlaceholders($view));
         $view->setRenderer($this->renderer);
         $this->view = $view;
@@ -953,11 +953,11 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         $cache_key = 'files:' . $path . ':' . $ext;
         $files = $this->cache[$cache_key] ?? [];
         if (empty($files)) {
-            foreach (\glob($path) as $file) {
+            foreach (\glob($path . '*') as $file) {
                 $name = \basename($file);
                 if (\strpos($name, ".") === 0) continue;
                 if (\is_dir($file)) {
-                    $files[$name] = $this->findPartials("{$file}/*", $ext);
+                    $files[$name] = $this->findPartials("{$file}/", $ext);
                 } else {
                     $file_data = [];
                     $ext_pos = \strrpos($name, '.');
@@ -979,6 +979,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             if (\is_array($files)) {
                 $temp_files = $files;
                 $files = new \Wireframe\Partials();
+                $files->setPath($path);
                 foreach ($temp_files as $key => $file) {
                     $files->{$key} = \is_object($file) ? $file : new \Wireframe\Partial($file);
                 }

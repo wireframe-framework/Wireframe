@@ -7,11 +7,18 @@ namespace Wireframe;
  *
  * This class holds Partial objects and provides method access to rendering them with optional arguments.
  *
- * @version 0.1.0
+ * @version 0.2.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
 class Partials extends \ProcessWire\WireArray {
+
+    /**
+     * Path to the root directory for partial files
+     *
+     * @var string
+     */
+    private $path;
 
     /**
      * Gateway for rendering partials with arguments
@@ -26,6 +33,52 @@ class Partials extends \ProcessWire\WireArray {
             return $partial->render($arguments);
         }
         return parent::__call($method, $arguments);
+    }
+
+    /**
+     * Enables derefencing of WireArray elements in object notation.
+     *
+     * Note that unlike regular WireArray, we're going to prioritize local data items.
+     *
+     * @param int|string $property
+     * @return Partial|Partials|null Partial or Partials object or null if no matching item found
+     *
+     */
+    public function __get($property) {
+        $value = null;
+        if ((\is_string($property) || \is_int($property)) && isset($this->data[$property])) {
+            $value = $this->data[$property];
+        } else {
+            $value = parent::__get($property);
+        }
+        if (\is_null($value)) {
+            $ext = $this->wire('config')->templateExtension;
+            return new Partial([
+                $ext => $this->path . $property . '.' . $ext,
+            ]);
+        }
+        return $value;
+    }
+
+    /**
+     * Get a new/blank Partial object
+     *
+     * @return Partial
+     *
+     */
+    public function makeBlankItem() {
+        return new Partial([]);
+    }
+
+    /**
+     * Set path
+     *
+     * @param string $path
+     * @return Partials Self-reference
+     */
+    public function setPath(string $path): Partials {
+        $this->path = $path;
+        return $this;
     }
 
 }
