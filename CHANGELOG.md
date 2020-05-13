@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2020-05-13
+
+### Changed
+- Partials class now detects if a missing partial is being requested and throws an exception.
+
 ## [0.10.2] - 2020-03-13
 
 ### Fixed
