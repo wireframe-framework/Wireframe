@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Added `/** @noinspection ...` comments for certain Renderer method calls.
+
 ## [0.11.0] - 2020-05-13
 
 ### Changed

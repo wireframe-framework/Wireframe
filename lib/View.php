@@ -11,7 +11,7 @@ namespace Wireframe;
  * @property ViewPlaceholders|null $placeholders ViewPlaceholders object.
  * @property Partials|null $partials Object containing partial paths.
  *
- * @version 0.6.0
+ * @version 0.6.1
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -64,12 +64,14 @@ class View extends \ProcessWire\TemplateFile {
 
         // attempt to render markup using a renderer
         $renderer = $this->getRenderer();
+        /** @noinspection PhpUndefinedMethodInspection */
         if ($renderer && substr($this->filename, -\strlen($renderer->getExt())) == $renderer->getExt()) {
             // since the filename we have stored locally matches the extension expected by the renderer, we can assume
             // that this renderer can be used to render said file
             $view_path = $this->getViewData('context') == 'layout' ? 'layouts_path' : 'views_path';
             $view_file = substr($this->filename, \strlen($this->getViewData($view_path)));
             $view_context = array_merge($this->getArray(), self::$globals);
+            /** @noinspection PhpUndefinedMethodInspection */
             return $renderer->render($this->getViewData('context'), $view_file, $view_context);
         }
 
