@@ -38,6 +38,7 @@ trait RendererTrait {
             $needs_init = true;
         }
         if ($renderer instanceof \ProcessWire\Module) {
+            /** @noinspection PhpUndefinedMethodInspection */
             if ($needs_init) $renderer->init($settings);
             $this->renderer = $renderer;
             if (method_exists($this, 'setExt')) {
