@@ -102,8 +102,6 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
 
         // init necessary parts of Wireframe
         $this->setConfig();
-        $this->setPaths();
-        $this->addNamespaces();
 
         // instantiate Wireframe Config and get all config inputfields
         $config = new \Wireframe\Config($this->wire(), $this);
@@ -132,7 +130,12 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     /**
      * Initialize Wireframe
      *
-     * @param array $settings Array of additional settings (optional).
+     * @param array $settings Array of additional settings (optional). Supported settings:
+     *  - `page` (Page): current Page object
+     *  - `paths` (array): custom paths for Wireframe objects; views, layouts, partials, components, etc.
+     *  - `data` (array): variables for the View, does the same thing as passing an assoc array to the render method
+     *  - `ext` (string|null): file extension for view, layout, and partial files; default value is pulled from site config
+     *  - `renderer` (Module|string|null): name or instance of a Renderer module, or null for none
      * @return Wireframe Self-reference.
      *
      * @throws WireException if no valid Page object is found.
@@ -180,15 +183,6 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         // set config settings
         $this->setConfig();
 
-        // store paths locally (unless already manually defined)
-        if (empty($this->paths)) $this->setPaths();
-
-        // add Wireframe namespaces to ProcessWire's class autoloader
-        $this->addNamespaces();
-
-        // set PHP include path
-        $this->setIncludePath();
-
         // attach hooks
         $this->addHooks();
 
@@ -218,14 +212,67 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     /**
      * Define runtime config settings
      *
+     * If runtime config settings already exist, those will be kept, with new values overwriting existing values with
+     * the same name. In order to reset previously (manually) defined config values, provide default values for them.
+     * You can get default config values by calling the getConfigDefaults() method.
+     *
      * @param array $config Optional configuration settings array.
      * @return Wireframe Self-reference.
      */
     public function ___setConfig(array $config = []): Wireframe {
 
-        // default config settings; if you need to customize or override any of these, copy this array to your site
-        // config file (/site/config.php) as $config->wireframe
-        $config_defaults = [
+        // combine default config settings with custom ones
+        $config_merged = array_merge(
+            $this->getConfigDefaults(),
+            \is_array($this->wire('config')->wireframe) ? $this->wire('config')->wireframe : [],
+            $this->getConfig(),
+            $config
+        );
+
+        // check if paths or include_paths have changed
+        $set_paths = !isset($this->config['paths']) || $this->config['paths'] != $config_merged['paths'];
+        $set_include_path = !isset($this->config['include_paths']) || $this->config['include_paths'] != $config_merged['include_paths'];
+
+        // URL additions to global config settings
+        foreach ($config_merged['urls'] as $key => $value) {
+            $this->wire('config')->urls->set($key, $value);
+        }
+
+        // save config settings
+        $this->config = $config_merged;
+
+        // PHP include path additions
+        if ($set_include_path) {
+            $this->setIncludePath();
+        }
+
+        // set or update wireframe paths
+        if ($set_paths) {
+            $this->setPaths();
+        }
+
+        return $this;
+    }
+
+    /**
+     * Getter for runtime config settings
+     *
+     * @return array Current config settings.
+     */
+    public function getConfig(): array {
+        return $this->config;
+    }
+
+    /**
+     * Getter for default config settings
+     *
+     * If you need to customize or override any of the default config values, you can copy this array to your site
+     * config file (/site/config.php) as $config->wireframe, or call setConfig() with an array of override values.
+     *
+     * @return array Default config settings.
+     */
+    public function getConfigDefaults(): array {
+        return [
             'include_paths' => [
                 // '/path/to/shared/libraries/',
             ],
@@ -257,43 +304,42 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
                 'resources' => $this->wire('config')->urls->templates . "resources/",
             ],
         ];
-
-        // combine default config settings with custom ones
-        $this->config = array_merge(
-            $config_defaults,
-            \is_array($this->wire('config')->wireframe) ? $this->wire('config')->wireframe : [],
-            $config
-        );
-
-        // Path additions to global config settings
-        $this->wire('config')->paths->set('partials', $this->config['paths']['partials']);
-
-        // URL additions to global config settings
-        foreach ($this->config['urls'] as $key => $value) {
-            $this->wire('config')->urls->set($key, $value);
-        }
-
-        return $this;
     }
 
     /**
-     * Getter for runtime config settings
+     * Set or update paths
      *
-     * @return array Config settings.
-     */
-    public function getConfig(): array {
-        return $this->config;
-    }
-
-    /**
-     * Store paths in a class property
+     * This method makes necessary site config additions/modifications and updates ProcessWire's class autoloader.
      *
-     * @param array $paths Paths array for overriding the default value.
+     * Note: it's a bit of a border case, but it's probably worth noting that if this method has already been called
+     * *and* you've instantiated a class found from previously set paths, you *can't* instantiate a different class
+     * with exactly the same name from a new path. (PHP doesn't allow "uncaching" previously declared classes.)
+     *
+     * @param array $paths Paths array for overriding default values.
      * @return Wireframe Self-reference.
      */
     public function setPaths(array $paths = []): Wireframe {
-        if (empty($paths)) $paths = $this->config['paths'];
+
+        // if called with empty paths array, get paths from config; otherwise make sure that config paths are in sync
+        // with values defined here (overwrite config values if they exist)
+        if (empty($paths)) {
+            $paths = $this->config['paths'];
+        } else if (isset($this->config['paths'])) {
+            $this->config['paths'] = array_merge(
+                $this->config['paths'],
+                $paths
+            );
+        }
+
+        // if partials path is being defined, also set or update the partials path stored site (runtime) config
+        if (isset($paths['partials'])) {
+            $this->wire('config')->paths->set('partials', $paths['partials']);
+        }
+
+        // store paths locally as an object and add Wireframe namespaces to ProcessWire's class autoloader
         $this->paths = (object) $paths;
+        $this->addNamespaces();
+
         return $this;
     }
 
@@ -366,34 +412,61 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      * should call $classLoader->removeNamespace($namespace, $path) before re-adding the namespace with a new path.
      */
     protected function addNamespaces() {
+
+        // declare our namespaces
         $namespaces = [
             'Wireframe' => $this->wire('config')->paths->Wireframe . 'lib/',
             'Wireframe\Component' => $this->paths->components,
             'Wireframe\Controller' => $this->paths->controllers,
             'Wireframe\Lib' => $this->paths->lib,
         ];
+
+        /** @var WireClassLoader ProcessWire's class autoloader */
+        $classLoader = $this->wire('classLoader');
+
+        // make class autoloader aware of our namespaces
         foreach ($namespaces as $namespace => $path) {
-            $this->wire('classLoader')->addNamespace($namespace, $path);
+
+            // if namespaces have already been added, remove old ones first, just in case; this might, for an example,
+            // happen if paths are changed manually after the init method has been called
+            if ($classLoader->hasNamespace($namespace)) {
+                $classLoader->removeNamespace($namespace);
+            }
+
+            // add new namespace to class autoloader
+            $classLoader->addNamespace($namespace, $path);
         }
     }
 
     /**
      * Set PHP include path
-     *
      */
     protected function setIncludePath() {
+
+        // add templates to include path by default
         $include_paths = [
             $this->wire('config')->paths->templates,
         ];
+
+        // config settings may contain additional include paths
         if (!empty($this->config['include_paths'])) {
             $include_paths = array_merge(
                 $include_paths,
                 $this->config['include_paths']
             );
         }
-        if (strpos(get_include_path(), $include_paths[0]) === false) {
+
+        // validate include path(s)
+        $include_path = get_include_path();
+        $include_path_parts = empty($include_path) ? [] : explode(PATH_SEPARATOR, $include_path);
+        $include_paths = array_unique(array_filter($include_paths, function($value) use ($include_path_parts) {
+            return !empty($value) && !in_array($value, $include_path_parts);
+        }));
+
+        // modify PHP include path if valid paths remain
+        if (!empty($include_paths)) {
             set_include_path(
-                get_include_path() .
+                $include_path .
                 PATH_SEPARATOR .
                 implode(PATH_SEPARATOR, $include_paths)
             );
@@ -851,23 +924,36 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         $invalid_value = true;
 
         switch ($key) {
+
             case 'data':
                 if (\is_array($value)) {
                     $invalid_value = false;
                     $this->$key = $value;
                 }
                 break;
+
             case 'page':
                 if ($value instanceof Page && $value->id) {
                     $invalid_value = false;
                     $this->$key = $value;
                 }
                 break;
+
+            case 'paths':
+                if (\is_array($value)) {
+                    $invalid_value = false;
+                    $this->setPaths($value);
+                }
+                break;
+
             case 'create_directories':
                 // module config (saved values)
-                $invalid_value = false;
-                $this->$key = $value;
+                if (\is_array($value)) {
+                    $invalid_value = false;
+                    $this->$key = $value;
+                }
                 break;
+
             case 'renderer':
                 // renderer module
                 if (\is_array($value) && !empty($value)) {
@@ -878,11 +964,13 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
                     $this->setRenderer($value);
                 }
                 break;
+
             case 'uninstall':
             case 'submit_save_module':
                 // module config (skipped values)
                 $invalid_value = false;
                 break;
+
             default:
                 throw new WireException(sprintf(
                     'Unable to set value for unrecognized property "%s"',
@@ -909,7 +997,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      * @param array $values Values as an associative array.
      * @return Wireframe Self-reference.
      */
-    public function setArray(array $values = []): Wireframe {
+    public function setArray(array $values): Wireframe {
         if (!empty($values)) {
             $this->settings_hash = md5(serialize($values));
             foreach ($values as $key => $value) {
