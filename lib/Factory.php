@@ -8,7 +8,7 @@ use function ProcessWire\wire;
 /**
  * Factory class for Wireframe
  *
- * @version 0.1.0
+ * @version 0.2.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -36,20 +36,56 @@ class Factory {
      */
     public static function component(string $component_name, array $args = []): \Wireframe\Component {
 
-        $component = null;
         $component_class = '\Wireframe\Component\\' . $component_name;
 
-        if (class_exists($component_class)) {
-            $reflector = new \ReflectionClass($component_class);
-            $component = $reflector->newInstanceArgs($args);
-        } else {
+        if (!class_exists($component_class)) {
             throw new WireException(sprintf(
                 'Component class %s was not found.',
                 $component_class
             ));
         }
 
-        return $component;
+        $reflector = new \ReflectionClass($component_class);
+
+        if (empty($args) || array_key_exists(0, $args)) {
+            // no args provided, or args looks like a numeric array; instantiate component using sequential args
+            // (intended as a performant way to make an educated guess, not a foolproof associative array test)
+            return $reflector->newInstanceArgs($args);
+        }
+
+        // get the component constructor method and its arguments; bail out early if constructor takes no args
+        $constructor = $reflector->getConstructor();
+        $constructor_args = $constructor->getParameters();
+        if (empty($constructor_args)) {
+            return $reflector->newInstanceArgs($args);
+        }
+
+        // build a modified args array based on component constructor parameter definitions and use that to
+        // instantiate the component (named parameter support)
+        $modified_args = [];
+        foreach ($constructor_args as $constructor_arg_key => $constructor_arg) {
+            if (empty($args)) {
+                // if there are no more arguments left, break out of the loop
+                break;
+            }
+            if (array_key_exists($constructor_arg->name, $args)) {
+                // args has an argument matching the name of the constructor argument
+                $modified_args[] = $args[$constructor_arg->name];
+                unset($args[$constructor_arg->name]);
+                continue;
+            } else if (array_key_exists($constructor_arg_key, $args)) {
+                // args has a numeric key in the position of the constructor argument
+                $modified_args[] = $args[$constructor_arg_key];
+                unset($args[$constructor_arg_key]);
+                continue;
+            }
+            $modified_args[] = $constructor_arg->isDefaultValueAvailable() ? $constructor_arg->getDefaultValue() : null;
+        }
+        if (!empty($args)) {
+            // args still has arguments left; merge these with the modified args array
+            $modified_args = array_merge($modified_args, $args);
+        }
+        return $reflector->newInstanceArgs($modified_args);
     }
 
     /**
