@@ -12,9 +12,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `/** @noinspection ...` comments for certain Renderer method calls.
 - JSON API. Currently implemented for components. See comments in the WireframeAPI module file for more details.
 
-### Changed
-- Various Wireframe module class comments have been either rewritten, or extended notably.
-
 ## [0.11.0] - 2020-05-13
 
 ### Changed
