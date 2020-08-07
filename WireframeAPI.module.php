@@ -49,7 +49,7 @@ namespace ProcessWire;
  * but keep in mind that allowing users to freely control which arguments they pass to your code can be potentially
  * dangerous.
  *
- * Access control is out of the scope of this module. You can, though, hook into the `WireframeApi::checkAccess()`
+ * Access control is out of the scope of this module. You can, though, hook into the `WireframeAPI::checkAccess()`
  * method and perform your own access management this way. Just return boolean `false` and the API endpoint will
  * send an "Unauthorized" response instead of a regular API response.
  *
