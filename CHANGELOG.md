@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Support for named arguments when using `Wireframe::component($component_name, $args)`.
 - `/** @noinspection ...` comments for certain Renderer method calls.
+- JSON API. Currently implemented for components. See comments in the WireframeAPI module file for more details.
 
 ### Changed
 - Various Wireframe module class comments have been either rewritten, or extended notably.
