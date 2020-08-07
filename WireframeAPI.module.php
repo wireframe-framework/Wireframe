@@ -290,7 +290,7 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
                 ];
             }
             return $data;
-        } catch (WireException $e) {
+        } catch (\Exception $e) {
             if ($e->getCode() === 404) {
                 throw (new \Wireframe\APIException(sprintf(
                     'Unknown component (%s)',
