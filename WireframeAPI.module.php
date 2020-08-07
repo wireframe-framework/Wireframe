@@ -21,7 +21,7 @@ namespace ProcessWire;
  * something along these lines:
  *
  * ```
- * https://www.yoursite.tld/wireframe-api/components/ComponentName/
+ * https://www.yoursite.tld/wireframe-api/components/Card/
  * ```
  *
  * Note, though, that by default all of the default endpoints ("components" etc.) are disabled, so the first step is to
@@ -30,12 +30,13 @@ namespace ProcessWire;
  *
  * ```
  * $api = $wire->modules->get('WireframeAPI');
- * $api->serve('/wireframe-api/component/Card/', ['arg' => 'value']);
+ * $api->serve('/wireframe-api/components/Card/', ['arg' => 'value']);
  * ```
  *
- * Note that for security reasons the API itself won't automatically convert GET params into arguments, but you can
- * do this manually if you want to. Or, alternatively, you could hook into the `WireframeAPI::prepareArgs()` method
- * and merge GET params with existing arguments, while also filtering them as you see fit:
+ * For security reasons the API won't automatically convert GET params into arguments, but you can of course do exactly
+ * that manually in the Wireframe element that handles the request (e.g. as the "Card" component class). Alternatively
+ * you could hook into the `WireframeAPI::prepareArgs()` method and merge GET params with existing arguments, though
+ * be sure to also filter them so that they can only contain useful/expected values:
  *
  * ```
  * $api->addHookAfter('prepareArgs', function(HookEvent $event) use ($input) {
@@ -48,6 +49,47 @@ namespace ProcessWire;
  * In the example above you could allow *all* GET params by merging `$event->return` with `$input->get->getArray()`,
  * but keep in mind that allowing users to freely control which arguments they pass to your code can be potentially
  * dangerous.
+ *
+ * The return value of an API request is always JSON, but you can choose what the included data object should contain
+ * by modifying the return_format option (`$api->setReturnFormat()`). Recognized values for this method are 'json',
+ * 'rendered', and 'both'. Here's an example return value for 'both' (default value):
+ *
+ * ```
+ * {
+ *     "success": true,
+ *     "message": "",
+ *     "path": "wireframe-api\/components\/Card",
+ *     "args": {
+ *         "exampleArg": false
+ *     },
+ *     "data": {
+ *         "json": {
+ *             "title": "Hello World",
+ *         },
+ *         "rendered": "<div class=\"card\"><h2>Hello World</h2></div>",
+ *     }
+ * }
+ * ```
+ *
+ * In this case the "rendered" property of the "data" object contains whatever `Card::render()` returns, while "json"
+ * contains whatever `Card::renderJSON()` returns. Note that in the case of components you need to implement this
+ * method yourself or Wireframe API will only return `null` as the value of the "json" property.
+ *
+ * Here's an example of what an error returned by the API would look like:
+ *
+ * ```
+ * {
+ *     "success": false,
+ *     "message": "Unknown component (Test)",
+ *     "path": "wireframe-api\/components\/Test",
+ *     "args": {
+ *         "exampleArg": false
+ *     },
+ * }
+ * ```
+ *
+ * Wireframe API attempts to return applicable HTTP status codes with each response, but the (boolean) "success" flag
+ * is provided as well. "success" is `true` if HTTP status code is equal to or greater than 200 and smaller than 300.
  *
  * Access control is out of the scope of this module. You can, though, hook into the `WireframeAPI::checkAccess()`
  * method and perform your own access management this way. Just return boolean `false` and the API endpoint will
@@ -92,7 +134,7 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
     /**
      * Return format
      *
-     * @var string 'json', 'markup', or 'both'.
+     * @var string 'json', 'rendered', or 'both'.
      */
     protected $return_format = 'both';
 
@@ -281,12 +323,12 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
             $data = [];
             if ($this->return_format == 'json') {
                 $data['json'] = json_decode($component->renderJSON());
-            } else if ($this->return_format == 'markup') {
-                $data['markup'] = $component->render();
+            } else if ($this->return_format == 'rendered') {
+                $data['rendered'] = $component->render();
             } else {
                 $data = [
                     'json' => json_decode($component->renderJSON()),
-                    'markup' => $component->render(),
+                    'rendered' => $component->render(),
                 ];
             }
             return $data;
@@ -453,11 +495,11 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
     /**
      * Set return format
      *
-     * @param string $format 'json', 'markup', or 'both'.
+     * @param string $format 'json', 'rendered', or 'both'.
      * @return WireframeAPI Self-reference.
      */
     public function setReturnFormat(string $format): WireframeAPI {
-        if (!in_array($format, ['both', 'json', 'markup'])) {
+        if (!in_array($format, ['both', 'json', 'rendered'])) {
             throw new WireException(sprintf(
                 'Invalid value provided for return format (%s)',
                 $format
