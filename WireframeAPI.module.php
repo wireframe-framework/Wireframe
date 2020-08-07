@@ -268,6 +268,7 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
      *
      * @throws \Wireframe\APIException if no component name was specified.
      * @throws \Wireframe\APIException if unknown component was requested.
+     * @throws \Wireframe\APIException if an error occurred while processing the component.
      */
     protected function componentsEndpoint(array $path, array $args = []): array {
         if (empty($path)) {
@@ -290,10 +291,17 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
             }
             return $data;
         } catch (WireException $e) {
-            throw (new \Wireframe\APIException(sprintf(
-                'Unknown component (%s)',
-                $component_name
-            )))->setResponseCode(400);
+            if ($e->getCode() === 404) {
+                throw (new \Wireframe\APIException(sprintf(
+                    'Unknown component (%s)',
+                    $component_name
+                )))->setResponseCode(404);
+            } else {
+                throw (new \Wireframe\APIException(sprintf(
+                    'Error while processing component (%s)',
+                    $component_name
+                )));
+            }
         }
     }
 

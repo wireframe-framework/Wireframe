@@ -59,7 +59,7 @@ class Factory {
             throw new WireException(sprintf(
                 'Component class %s was not found.',
                 $component_class
-            ));
+            ), 404);
         }
 
         $reflector = new \ReflectionClass($component_class);
