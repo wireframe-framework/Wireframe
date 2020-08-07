@@ -22,15 +22,32 @@ class Factory {
     /**
      * Static getter (factory) method for Components
      *
+     * The args array can be used to provide arguments that will be used while instantiating the component. If you
+     * provide an associative array and the keys of said array match component class constructor argument names, the
+     * order of the values doesn't matter - otherwise they will be used in order.
+     *
+     * Assuming that you had a component called "Card" and the constructor method for this component accepted "title"
+     * and "summary" as arguments (`__constructor($title, $summary) { ... }`), these two would be equal:
+     *
+     * ```
+     * <?= Wireframe::component('Card', ['summary' => 'Card summary', 'title' => 'Card title']) ?>
+     * <?= Wireframe::component('Card', ['Card title', 'Card summary']) ?>
+     * ```
+     *
+     * While this method returns an object, in the examples above we're making use of the fact that the __toString()
+     * method of the Component class returns the rendered output of said component, so we don't have to call the
+     * render() method (`Wireframe::component('Card', [...]->render()`) specifically.
+     *
      * Note: keep in mind that due to file system differences and the use of an autoloader, the name of the component
-     * should *always* be treated as case sensitive. If actual class name is `Card` and the name is provided for this
-     * method as `card`, this will fail in some environments, resulting in an exception.
+     * should *always* be treated as case sensitive. If actual class name is "Card" and the name is provided for this
+     * method as "card", this will fail in some environments, resulting in an exception.
      *
      * @param string $component_name Component name.
      * @param array $args Arguments for the Component.
      * @return \Wireframe\Component Instance of the Component.
      *
-     * @since 0.8.0
+     * @since 0.2.0 Added support for named arguments (Wireframe 0.12.0)
+     * @since 0.1.0 (Wireframe 0.8.0)
      *
      * @throws WireException if Component class isn't found.
      */
@@ -126,7 +143,7 @@ class Factory {
      * @return string|Page|NullPage Returns string if 'render' option was 'true' **or** the args param was a string,
      *                              otherwise returns a Page, or NullPage (if page wasn't found).
      *
-     * @since Wireframe 0.8.0
+     * @since 0.1.0 (Wireframe 0.8.0)
      *
      * @throws WireException if source param is of an unexpected type.
      * @throws WireException if args param is of an unexpected type.
@@ -241,7 +258,7 @@ class Factory {
      * @param array|null $args Optional arguments for rendering the Partial. If provided, the Partial is automatically rendered.
      * @return Partial|string Instance of the Partial, or rendered markup if $args array was provided.
      *
-     * @since Wireframe 0.10.0
+     * @since 0.1.0 (Wireframe 0.10.0)
      *
      * @throws WireException if partials path isn't found from config.
      */
