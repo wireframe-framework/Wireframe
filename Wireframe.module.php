@@ -14,7 +14,7 @@ namespace ProcessWire;
  * @method static string|Page|NullPage page($source, $args = []) Static getter (factory) method for Pages.
  * @method static string|null partial(string $partial_name, array $args = []) Static getter (factory) method for Partials.
  *
- * @version 0.11.0
+ * @version 0.12.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -222,10 +222,10 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     public function ___setConfig(array $config = []): Wireframe {
 
         // combine default config settings with custom ones
-        $config_merged = array_merge(
+        $config_merged = array_merge_recursive(
             $this->getConfigDefaults(),
             \is_array($this->wire('config')->wireframe) ? $this->wire('config')->wireframe : [],
-            $this->getConfig(),
+            $this->config,
             $config
         );
 
@@ -260,6 +260,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      * @return array Current config settings.
      */
     public function getConfig(): array {
+        $this->initOnce();
         return $this->config;
     }
 
