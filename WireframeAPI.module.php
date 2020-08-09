@@ -7,30 +7,36 @@ namespace ProcessWire;
  *
  * This module provides a JSON API for accessing Wireframe's features.
  *
- * In order to enable the API, you need to call the "serve" method somewhere in your own code. Typically you'd put this
- * in a file that gets called for all (or at least all the applicable) requests, such as the Wireframe bootstrap file
- * (/site/templates/wireframe.php):
+ * In order to enable the API, you need to call the "init" method somewhere in your own code and render the response.
+ * To get started, you should create a new template that has URL segments enabled and is routed through the Wireframe
+ * bootstrap file (via alternate template file setting). Finally insert this code snippet as the render method of the
+ * controller class for your template, and the API should be good to go:
  *
  * ```
- * // serve API request using current path ($input->url)
- * $wire->modules->get('WireframeAPI')->serve();
+ * public function render() {
+ *     echo $this->wire('modules')->get('WireframeAPI')->init()->sendHeaders()->render();
+ *     $this->view->setLayout(null)->halt();
+ * }
  * ```
  *
- * After enabling the API, requests that match the configured root path of the API will be automatically handled by the
- * WireframeAPI module. Default root path is /wireframe-api/, so an example of a request that goes to the API would be
- * something along these lines:
+ * (Alternatively you could create a template that isn't routed through the Wireframe bootstrap file; this should work
+ * fine in most cases, but obviously you won't have access to any of the settings etc. defined in the bootstrap file.)
+ *
+ * Requests for this page will now be served by the API. In order to get something useful out of the API, a request has
+ * to match a recognized API endoint. Here's an example of a request for the "components" endpoint. Here wireframe-api
+ * would be the name of the page you created for the API, and Card would be the name of one of your components:
  *
  * ```
  * https://www.yoursite.tld/wireframe-api/components/Card/
  * ```
  *
- * Note, though, that by default all of the default endpoints ("components" etc.) are disabled, so the first step is to
- * enable one or more of these via module config, or by defining the `$config->wireframeAPI` array. It's also possible
- * to define the served path manually, and you can also pass an array of arguments to the endpoint:
+ * Note that by default all of the default endpoints ("components" etc.) are disabled, so actually the first step is to
+ * enable one or more of these via module config or via the `$config->wireframeAPI` array.
+ *
+ * It's also possible to define the path manually, and you can pass an array of arguments for the endpoint:
  *
  * ```
- * $api = $wire->modules->get('WireframeAPI');
- * $api->serve('/wireframe-api/components/Card/', ['arg' => 'value']);
+ * $api->init('components/Card', ['arg' => 'value']);
  * ```
  *
  * For security reasons the API won't automatically convert GET params into arguments, but you can of course do exactly
@@ -50,9 +56,7 @@ namespace ProcessWire;
  * but keep in mind that allowing users to freely control which arguments they pass to your code can be potentially
  * dangerous.
  *
- * The return value of an API request is always JSON, but you can choose what the included data object should contain
- * by modifying the return_format option (`$api->setReturnFormat()`). Recognized values for this method are 'json',
- * 'rendered', and 'both'. Here's an example return value for 'both' (default value):
+ * The return value of an API request is always JSON. Here's an example of what the returned data might look like:
  *
  * ```
  * {
@@ -102,13 +106,6 @@ namespace ProcessWire;
 class WireframeAPI extends \ProcessWire\WireData implements Module, ConfigurableModule {
 
     /**
-     * Root path name format
-     *
-     * @var string
-     */
-    const ROOT_PATH_FORMAT = '[-_.a-zA-Z0-9]*';
-
-    /**
      * Available endpoints
      *
      * Note: default endpoints are populated in __construct().
@@ -118,13 +115,6 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
     protected $available_endpoints;
 
     /**
-     * API root path
-     *
-     * @var string
-     */
-    protected $root_path = '';
-
-    /**
      * Enabled endpoints
      *
      * @var array
@@ -132,11 +122,11 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
     protected $enabled_endpoints = [];
 
     /**
-     * Return format
+     * API response
      *
-     * @var string 'json', 'rendered', or 'both'.
+     * @var \Wireframe\APIResponse|null
      */
-    protected $return_format = 'both';
+    protected $response = null;
 
     /**
      * Constructor
@@ -145,9 +135,9 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
 
         // populate the default endpoints
         $this->available_endpoints = [
-            'components' => 'componentsEndpoint',
-            'pages' => 'pagesEndpoint',
-            'partials' => 'partialsEndpoint',
+            'components' => 'components',
+            'pages' => 'pages',
+            'partials' => 'partials',
         ];
 
         // populate the default config data
@@ -157,10 +147,6 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
         );
         foreach ($config as $key => $value) {
             switch ($key) {
-                case 'root_path':
-                    $this->setRootPath($value);
-                    break;
-
                 case 'enabled_endpoints':
                     $this->setEnabledEndpoints($value);
                     break;
@@ -169,6 +155,20 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
                     $this->$key = $value;
             }
         }
+    }
+
+    /**
+     * Get default config settings
+     *
+     * If you need to customize or override any of the default config values, you can copy this array to your site
+     * config file (/site/config.php) as $config->wireframeAPI.
+     *
+     * @return array Default config settings.
+     */
+    public function getConfigDefaults(): array {
+        return [
+            'enabled_endpoints' => [],
+        ];
     }
 
     /**
@@ -186,21 +186,6 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
 
         // Configuration settings from site config
         $config = $this->wire('config')->wireframeAPI ?? [];
-
-        // API root path
-        /** @var InputfieldText */
-        $field = $this->modules->get('InputfieldText');
-        $field->name = 'root_path';
-        $field->label = $this->_('API root path');
-        $field->value = $data[$field->name];
-        $field->pattern = self::ROOT_PATH_FORMAT;
-        $field->notes = sprintf($this->_('Expected format: %s'), $field->pattern);
-        if (isset($config[$field->name])) {
-            $field->notes = $this->_('Root path is currently defined in site config. You cannot override site config settings here.');
-            $field->value = $config[$field->name];
-            $field->collapsed = Inputfield::collapsedNoLocked;
-        }
-        $fields->add($field);
 
         // Enabled API endpoints
         /** @var InputfieldCheckboxes */
@@ -222,170 +207,142 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
     }
 
     /**
-     * Serve specified API endpoint
+     * Init API
      *
      * @param string|null $path API path; leave null to use current URL.
      * @param array $args Optional array of arguments for the endpoint.
-     *
-     * @throws \Wireframe\APIException if no API endpoint was specified.
-     * @throws \Wireframe\APIException if API endpoint is unknown/unavailable.
+     * @return WireframeAPI Self-reference.
      */
-    public function serve(?string $path = null, array $args = []): void {
+    public function init(?string $path = null, array $args = []): WireframeAPI {
 
         // define path
         if ($path === null) {
             $path = trim($this->wire('input')->url, '/');
         }
 
-        // bail out early if this doesn't look like a real API request
-        if (empty($path) || (!empty($this->root_path) && strpos($path, $this->root_path . '/') !== 0)) {
-            return;
+        // make sure that Wireframe is initialized
+        if (!Wireframe::isInitialized()) {
+            $this->wire('modules')->get('Wireframe')->init();
         }
 
-        // instantiate response object
-        $response = (new \Wireframe\APIResponse())
+        // instantiate a response object
+        $this->response = (new \Wireframe\APIResponse())
             ->setPath($path);
 
+        // if debug mode is enabled, improve response readability by enabling JSON pretty print
+        if ($this->wire('config')->debug) {
+            $this->response->setPretty(true);
+        }
+
         // split path into parts and remove API root path if present
-        $path = explode('/', trim($path, '/'));
-        if (!empty($path) && $path[0] == $this->root_path) {
-            array_shift($path);
+        if (!empty($path)) {
+            $path = explode('/', trim($path, '/'));
+            if (!empty($path) && $path[0] == $this->wire('page')->name) {
+                array_shift($path);
+            }
+        }
+
+        // bail out early if path is empty
+        if (empty($path)) {
+            $this->response->setData([
+                'endpoints' => $this->enabled_endpoints,
+            ]);
+            return $this;
         }
 
         try {
 
-            // validate endpoint
-            if (empty($path)) {
-                throw (new \Wireframe\APIException('Missing API endpoint'))->setResponseCode(400);
-            }
-            $endpoint = array_shift($path);
-            $endpoints = array_intersect(array_keys($this->available_endpoints), $this->enabled_endpoints);
-            if (!in_array($endpoint, $endpoints)) {
-                throw (new \Wireframe\APIException(sprintf(
-                    'Invalid API endpoint (%s)',
-                    $endpoint
-                )))->setResponseCode(400);
-            }
+            // validate endpoint and remove it from path
+            $endpoint = $this->validateEndpoint($path);
+            array_shift($path);
 
-            // prepare arguments
-            $args = $this->prepareArgs($endpoint, $path, $args);
-            $response->setArgs($args);
+            // prepare arguments and store them in the response object
+            $this->response->setArgs($this->prepareArgs($endpoint, $path, $args));
 
             // check access
-            if (!$this->checkAccess($endpoint, $path, $args)) {
+            if (!$this->checkAccess($endpoint, $path, $this->response->getArgs())) {
                 throw (new \Wireframe\APIException('Unauthorized'))
                     ->setResponseCode(401);
             }
 
             // call endpoint method
+            $data = [];
             $method = $this->available_endpoints[$endpoint];
-            $data = \is_string($method) ? $this->$method($path, $args) : \call_user_func($method, $path, $args);
-            $response->setData(\is_array($data) ? $data : [$data]);
+            if (\is_string($method)) {
+                $data = (new \Wireframe\APIEndpoints())->$method($path, $this->response->getArgs());
+            } else {
+                $data = \call_user_func($method, $path, $this->response->getArgs());
+            }
+            $this->response->setData(\is_array($data) ? $data : [$data]);
 
         } catch (\Exception $e) {
 
             // handle exception
-            $response
+            $this->response
                 ->setMessage($e->getMessage())
                 ->setStatusCode($e instanceof \Wireframe\APIException ? $e->getResponseCode() : 500);
 
         }
 
-        // output response
-        header('Content-Type: application/json');
-        http_response_code($response->getStatusCode());
-        exit($response->render());
+        return $this;
     }
 
     /**
-     * Components endpoint
-     *
-     * Note that for the JSON output to return something, component must implement renderJSON() method.
-     * While we could also pull data using getData(), this isn't necessarily expected behaviour, and/or
-     * JSON output could require different set of data compared to HTML rendering.
+     * Validate endpoint
      *
      * @param array $path
-     * @param array $args
-     * @return array
+     * @return string
      *
-     * @throws \Wireframe\APIException if no component name was specified.
-     * @throws \Wireframe\APIException if unknown component was requested.
-     * @throws \Wireframe\APIException if an error occurred while processing the component.
+     * @throws \Wireframe\APIException if no API endpoint was specified (HTTP 400).
+     * @throws \Wireframe\APIException if API endpoint is unknown/unavailable (HTTP 404).
      */
-    protected function componentsEndpoint(array $path, array $args = []): array {
+    protected function validateEndpoint(array $path): string {
         if (empty($path)) {
-            throw (new \Wireframe\APIException('Missing component name'))
-                ->setResponseCode(400);
+            throw (new \Wireframe\APIException('Missing API endpoint'))->setResponseCode(400);
         }
-        $component_name = $path[0] ?? null;
-        try {
-            $component = \Wireframe\Factory::component($component_name, $args);
-            $data = [];
-            if ($this->return_format == 'json') {
-                $data['json'] = json_decode($component->renderJSON());
-            } else if ($this->return_format == 'rendered') {
-                $data['rendered'] = $component->render();
-            } else {
-                $data = [
-                    'json' => json_decode($component->renderJSON()),
-                    'rendered' => $component->render(),
-                ];
-            }
-            return $data;
-        } catch (\Exception $e) {
-            if ($e->getCode() === 404) {
-                throw (new \Wireframe\APIException(sprintf(
-                    'Unknown component (%s)',
-                    $component_name
-                )))->setResponseCode(404);
-            } else {
-                throw (new \Wireframe\APIException(sprintf(
-                    'Error while processing component (%s)',
-                    $component_name
-                )));
-            }
+        $endpoint = $path[0];
+        $endpoints = array_intersect(array_keys($this->available_endpoints), $this->enabled_endpoints);
+        if (!in_array($endpoint, $endpoints)) {
+            throw (new \Wireframe\APIException(sprintf(
+                'Unknown API endpoint (%s)',
+                $endpoint
+            )))->setResponseCode(404);
         }
+        return $endpoint;
     }
 
     /**
-     * Pages endpoint
+     * Get API response
      *
-     * Note: this method is a temporary placeholder.
-     *
-     * @param array $path
-     * @param array $args
-     * @return array
+     * @return \Wireframe\APIResponse|null
      */
-    protected function pagesEndpoint(array $path, array $args = []): array {
-        return [];
+    public function getResponse(): ?\Wireframe\APIResponse {
+        return $this->response;
     }
 
     /**
-     * Partials endpoint
+     * Send headers
      *
-     * Note: this method is a temporary placeholder.
-     *
-     * @param array $path
-     * @param array $args
-     * @return array
+     * @return WireframeAPI Self-reference.
      */
-    protected function partialsEndpoint(array $path, array $args = []): array {
-        return [];
+    public function sendHeaders(): WireframeAPI {
+        header('Content-Type: application/json');
+        if ($this->response) {
+            http_response_code($this->response->getStatusCode());
+        }
+        return $this;
     }
 
     /**
-     * Get default config settings
+     * Render API response
      *
-     * If you need to customize or override any of the default config values, you can copy this array to your site
-     * config file (/site/config.php) as $config->wireframeAPI.
-     *
-     * @return array Default config settings.
+     * @return string
      */
-    public function getConfigDefaults(): array {
-        return [
-            'root_path' => 'wireframe-api',
-            'enabled_endpoints' => [],
-        ];
+    public function render(): string {
+        if ($this->response) {
+            return $this->response->render();
+        }
+        return '';
     }
 
     /**
@@ -462,60 +419,6 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
     public function removeEndpoint(string $endpoint) {
         $this->disableEndpoint($endpoint);
         unset($this->available_endpoints[$endpoint]);
-    }
-
-    /**
-     * Set API root path
-     *
-     * @param string
-     * @return WireframeAPI Self-reference.
-     *
-     * @throws WireException if root path is invalid.
-     */
-    public function setRootPath(string $root_path): WireframeAPI {
-        if (!preg_match('/' . self::ROOT_PATH_FORMAT . '/', $root_path)) {
-            throw new WireException(sprintf(
-                'Invalid root path (%s)',
-                $root_path
-            ));
-        }
-        $this->root_path = $root_path;
-        return $this;
-    }
-
-    /**
-     * Get API root path
-     *
-     * @return string
-     */
-    public function getRootPath(): string {
-        return $this->root_path;
-    }
-
-    /**
-     * Set return format
-     *
-     * @param string $format 'json', 'rendered', or 'both'.
-     * @return WireframeAPI Self-reference.
-     */
-    public function setReturnFormat(string $format): WireframeAPI {
-        if (!in_array($format, ['both', 'json', 'rendered'])) {
-            throw new WireException(sprintf(
-                'Invalid value provided for return format (%s)',
-                $format
-            ));
-        }
-        $this->return_format = $format;
-        return $this;
-    }
-
-    /**
-     * Get return format
-     *
-     * @return string
-     */
-    public function getReturnFormat(): string {
-        return $this->return_format;
     }
 
     /**
