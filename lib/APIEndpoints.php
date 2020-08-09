@@ -38,11 +38,10 @@ class APIEndpoints {
         $component_name = $path[0] ?? null;
         try {
             $component = \Wireframe\Factory::component($component_name, $args);
-            $data = [
+            return [
                 'json' => json_decode($component->renderJSON()),
                 'rendered' => $component->render(),
             ];
-            return $data;
         } catch (\Exception $e) {
             if ($e->getCode() === 404) {
                 throw (new \Wireframe\APIException(sprintf(

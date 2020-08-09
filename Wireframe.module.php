@@ -949,10 +949,8 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
 
             case 'create_directories':
                 // module config (saved values)
-                if (\is_array($value)) {
-                    $invalid_value = false;
-                    $this->$key = $value;
-                }
+                $invalid_value = false;
+                $this->$key = $value;
                 break;
 
             case 'renderer':
