@@ -48,12 +48,11 @@ class APIEndpoints {
                     'Unknown component (%s)',
                     $component_name
                 )))->setResponseCode(404);
-            } else {
-                throw (new \Wireframe\APIException(sprintf(
-                    'Error while processing component (%s)',
-                    $component_name
-                )));
             }
+            throw (new \Wireframe\APIException(sprintf(
+                'Error while processing component (%s)',
+                $component_name
+            )));
         }
     }
 
