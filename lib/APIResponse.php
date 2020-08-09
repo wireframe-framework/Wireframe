@@ -142,6 +142,15 @@ class APIResponse {
     public function setArgs(array $args): APIResponse {
         $this->args = $args;
         return $this;
+	}
+
+    /**
+     * Get args
+     *
+     * @return array
+     */
+    public function getArgs(): array {
+        return $this->args;
     }
 
     /**
