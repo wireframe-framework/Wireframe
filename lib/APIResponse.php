@@ -16,7 +16,7 @@ class APIResponse {
      *
      * @var bool
      */
-    protected $pretty = true;
+    protected $pretty = false;
 
     /**
      * Path for current response
@@ -94,6 +94,17 @@ class APIResponse {
     }
 
     /**
+     * Set pretty print
+     *
+     * @param bool $pretty
+     * @return APIResponse Self-reference
+     */
+    public function setPretty(bool $pretty): APIResponse {
+        $this->pretty = $pretty;
+        return $this;
+    }
+
+    /**
      * Set path
      *
      * @param string $path
@@ -142,7 +153,7 @@ class APIResponse {
     public function setArgs(array $args): APIResponse {
         $this->args = $args;
         return $this;
-	}
+    }
 
     /**
      * Get args
