@@ -30,8 +30,17 @@ namespace ProcessWire;
  * https://www.yoursite.tld/wireframe-api/components/Card/
  * ```
  *
- * Note that by default all of the default endpoints ("components" etc.) are disabled, so actually the first step is to
- * enable one or more of these via module config or via the `$config->wireframeAPI` array.
+ * 'Components' and 'pages' endpoints have an option to specify whether returned data should contain the object in JSON
+ * or rendered form (or both):
+ *
+ * ```
+ * https://www.yoursite.tld/wireframe-api/components/Card/json/
+ * https://www.yoursite.tld/wireframe-api/components/Card/rendered/
+ * ```
+ *
+ * Note that by default all of the default endpoints are disabled, so actually the first step is to enable one or more
+ * of these via module config or via the `$config->wireframeAPI` array. Available options are 'components', 'pages',
+ * and 'partials'.
  *
  * It's also possible to define the path manually, and you can pass an array of arguments for the endpoint:
  *
@@ -98,6 +107,29 @@ namespace ProcessWire;
  * Access control is out of the scope of this module. You can, though, hook into the `WireframeAPI::checkAccess()`
  * method and perform your own access management this way. Just return boolean `false` and the API endpoint will
  * send an "Unauthorized" response instead of a regular API response.
+ *
+ * Please note that if you enable component or partial endpoints, you may expose publicly content that isn't normally
+ * available for unauthenticated users. For such use cases it's highly recommended to set up an allow list:
+ *
+ * ```
+ * $api->addHookAfter('WireframeAPI::checkAccess', function(HookEvent $event) {
+ *     if ($event->return === false) return;
+ *     if ($event->arguments[0] == 'partials') {
+ *         $partial_name = implode('/', $event->arguments[1]);
+ *         $event->return = in_array($partial_name, [
+ *             'allowed_partial',
+ *             'directory/another_allowed_partial',
+ *         ]);
+ *     }
+ *     if ($event->arguments[0] == 'components') {
+ *         $component_name = $event->arguments[1];
+ *         $event->return = in_array($component_name, [
+ *             'AllowedComponent',
+ *             'AnotherAllowedComponent',
+ *         ]);
+ *     }
+ * });
+ * ```
  *
  * @version 0.1.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
@@ -213,7 +245,7 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
      * @param array $args Optional array of arguments for the endpoint.
      * @return WireframeAPI Self-reference.
      */
-    public function init(?string $path = null, array $args = []): WireframeAPI {
+    public function ___init(?string $path = null, array $args = []): WireframeAPI {
 
         // define path
         if ($path === null) {

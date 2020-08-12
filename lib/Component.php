@@ -50,7 +50,7 @@ abstract class Component extends \ProcessWire\WireData {
      * }
      * ```
      *
-     * @return string JSON output.
+     * @return string|null JSON output.
      */
     public function ___renderJSON(): ?string {
         return null;

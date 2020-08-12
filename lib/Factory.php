@@ -8,7 +8,7 @@ use function ProcessWire\wire;
 /**
  * Factory class for Wireframe
  *
- * @version 0.2.0
+ * @version 0.2.1
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -260,16 +260,27 @@ class Factory {
      *
      * @since 0.1.0 (Wireframe 0.10.0)
      *
+     * @throws WireException if partial name is invalid.
      * @throws WireException if partials path isn't found from config.
      */
     public static function partial(string $partial_name, array $args = null) {
+        if (\strpos($partial_name, '..') !== false) {
+            throw new WireException(sprintf(
+                'Partial name is invalid (%s)',
+                $partial_name
+            ));
+        }
         $config = wire('config');
         $partials_path = $config->paths->partials;
         if (empty($partials_path)) {
             throw new WireException('Partials path not found from config.');
         }
         $ext = '';
-        if (\strpos($partial_name, '.') === false) {
+        if (\strpos($partial_name, '.') !== false) {
+            $ext_pos = strrpos($partial_name, '.');
+            $ext = substr($partial_name, $ext_pos);
+            $partial_name = substr($partial_name, 0, $ext_pos);
+        } else {
             $ext = $config->_wireframeTemplateExtension;
             if (!$ext) {
                 $ext = $config->templateExtension;

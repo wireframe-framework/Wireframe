@@ -9,8 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Support for named arguments when using `Wireframe::component($component_name, $args)`.
-- `/** @noinspection ...` comments for certain Renderer method calls.
-- JSON API. Currently implemented for components. See comments in the WireframeAPI module file for more details.
+- JSON API. See comments in the WireframeAPI module file for more details.
+- New Page methods Page::getController() and Page::setController().
+
+### Fixed
+- Factory::partial() now works as expected for partial names with file ext included (partial_name.php etc.)
+- Factory::partial() prevents 2 or more dots in partial name, just in case (directory traversal is not intended).
 
 ## [0.11.0] - 2020-05-13
 

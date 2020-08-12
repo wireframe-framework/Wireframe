@@ -5,7 +5,7 @@ namespace Wireframe;
 /**
  * Wireframe Partial
  *
- * @version 0.1.2
+ * @version 0.1.3
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -32,7 +32,7 @@ class Partial extends \ProcessWire\Wire {
                 throw new \ProcessWire\WireException(\sprintf(
                     'Partial file not found: %s',
                     $filename
-                ));
+                ), 404);
             }
             $this->filenames[$ext] = $filename;
         }

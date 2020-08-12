@@ -160,6 +160,28 @@ abstract class Controller extends \ProcessWire\Wire {
     }
 
     /**
+     * Render JSON method
+     *
+     * By default this method returns nothing (null). If you want a Controller to return values for
+     * JSON API requests you need to implement this method or the hookable version `___renderJSON()`
+     * in the Controller class. Basic example:
+     *
+     * ```
+     * public function renderJSON() {
+     *     return json_encode($this->wire('page')->getArray());
+     * }
+     * ```
+     *
+     * @return string|null JSON output.
+     */
+    public function renderJSON() {
+        if (method_exists($this, '___renderJSON')) {
+            return $this->__call('renderJSON', []);
+        }
+        return null;
+    }
+
+    /**
      * PHP magic getter method
      * 
      * Provides access to class methods as properties, and also abstracts away

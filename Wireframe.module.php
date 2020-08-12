@@ -477,6 +477,9 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     /**
      * Attach hooks
      *
+     * Note: Page::layout() and Page::view() are kept for backwards compatibility, but their use is discouraged.
+     * Generally speaking it's better to stick to dedicated getter/setter methods (view/layout are ambiguous).
+     *
      * @see pageLayout() for Page::layout(), Page::getLayout(), and Page::setLayout() implementation.
      * @see pageView() for Page::view(), Page::getView(), and Page::setView() implementation.
      * @see PageViewTemplate() for Page::viewTemplate(), Page::getViewTemplate(), and Page::setViewTemplate() implementation.
@@ -497,6 +500,10 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         $this->addHookMethod('Page::viewTemplate', $this, 'pageViewTemplate');
         $this->addHookMethod('Page::getViewTemplate', $this, 'pageViewTemplate');
         $this->addHookMethod('Page::setViewTemplate', $this, 'pageViewTemplate');
+
+        // helper methods for getting or setting page controller
+        $this->addHookMethod('Page::getController', $this, 'pageController');
+        $this->addHookMethod('Page::setController', $this, 'pageController');
     }
 
     /**
@@ -604,27 +611,16 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      * @return \Wireframe\Controller|null Controller object or null.
      *
      * @throws WireException if no valid Page has been defined.
-     * @todo Method for overriding the default controller, similar to Wireframe::setViewTemplate($template).
-     * @todo Method for overriding the default controller *and* view template at the same time (e.g. Wireframe::setTemplate($template)).
      */
     public function ___initController(): ?\Wireframe\Controller {
 
         // params
         $page = $this->page;
-        $view = $this->view;
 
-        // define template name and Controller class name
-        $controller = null;
-        $controller_name = $this->wire('sanitizer')->pascalCase($page->template);
-        $controller_class = '\Wireframe\Controller\\' . $controller_name . 'Controller';
+        $this->controller = $this->getController($page);
+        $page->_wireframe_controller = $this->controller;
 
-        if (class_exists($controller_class)) {
-            $controller = new $controller_class($this->wire(), $page, $view);
-        }
-
-        $this->controller = $controller;
-
-        return $controller;
+        return $this->controller;
     }
 
     /**
@@ -670,6 +666,9 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     /**
      * Set current view template
      *
+     * View template is primarily used for figuring out where the view files for current page should come from. This is
+     * useful in case you want to use the exact same view files for pages using different (real) templates.
+     *
      * Note: this method should be used if you need to override view template in the Wireframe bootstrap file.
      *
      * @param string|null $template Template name
@@ -700,6 +699,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         $view = $this->view;
         $paths = $this->paths;
         $ext = $this->ext;
+        $controller = $this->getController($this->page);
 
         // attempt to return prerendered value from cache
         $cache_key = implode(':', [
@@ -708,6 +708,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             $this->settings_hash,
             empty($data) ? '' : md5(json_encode($data)),
             $view->getTemplate(),
+            $controller,
             $view->getFilename(),
             $view->getLayout(),
             $view->getExt(),
@@ -726,8 +727,8 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         }
 
         // execute optional Controller::render()
-        if (!empty($this->controller)) {
-            $this->controller->render();
+        if (!empty($controller)) {
+            $controller->render();
         }
 
         // render output
@@ -852,6 +853,36 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             $event->return = $event->object->_wireframe_view_template ?: $event->object->template;
         } else {
             $event->object->_wireframe_view_template = $event->arguments[0] ?? '';
+            $event->object = \Wireframe\Factory::page($event->object, [
+                'wireframe' => $this,
+            ]);
+            $event->return = $event->object;
+        }
+    }
+
+    /**
+     * This method is used by Page::getController() and Page::setController()
+     *
+     * Example use:
+     *
+     * ```
+     * The controller for current page is "<?= $page->getController() ?>".
+     * <?= $page->setController('home')->render() ?>
+     * ```
+     *
+     * @param HookEvent $event The ProcessWire HookEvent object.
+     *
+     * @see addHooks() for the code that attaches Wireframe hooks.
+     */
+    protected function pageController(HookEvent $event) {
+        if ($event->method == 'getController') {
+            $controller = $event->object->_wireframe_controller ?: null;
+            if (\is_null($controller)) {
+                $controller = $this->getController($event->object);
+            }
+            $event->return = $controller;
+        } else {
+            $event->object->_wireframe_controller = $this->getController($event->object, $event->arguments[0] ?? null);
             $event->object = \Wireframe\Factory::page($event->object, [
                 'wireframe' => $this,
             ]);
@@ -1074,6 +1105,29 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             $this->cache[$cache_key] = $files;
         }
         return $this->wire($files);
+    }
+
+    /**
+     * Get controller object
+     *
+     * @param Page $page
+     * @param string|null $template_name
+     * @return \Wireframe\Controller|null
+     */
+    protected function getController(Page $page, ?string $template_name = null): ?\Wireframe\Controller {
+        if (\is_null($template_name)) {
+            if ($page->_wireframe_controller) {
+                return $page->_wireframe_controller;
+            }
+            $template_name = $page->template->name;
+        }
+        $controller_name = $this->wire('sanitizer')->pascalCase($template_name);
+        $controller_class = '\Wireframe\Controller\\' . $controller_name . 'Controller';
+
+        if (class_exists($controller_class)) {
+            return new $controller_class($this->wire(), $page, $this->view);
+        }
+        return null;
     }
 
 }
