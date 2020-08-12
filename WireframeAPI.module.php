@@ -122,7 +122,7 @@ namespace ProcessWire;
  *         ]);
  *     }
  *     if ($event->arguments[0] == 'components') {
- *         $component_name = $event->arguments[1];
+ *         $component_name = $event->arguments[1][0];
  *         $event->return = in_array($component_name, [
  *             'AllowedComponent',
  *             'AnotherAllowedComponent',
