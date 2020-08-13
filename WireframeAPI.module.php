@@ -5,131 +5,8 @@ namespace ProcessWire;
 /**
  * Wireframe API
  *
- * This module provides a JSON API for accessing Wireframe's features.
- *
- * In order to enable the API, you need to call the "init" method somewhere in your own code and render the response.
- * To get started, you should create a new template that has URL segments enabled and is routed through the Wireframe
- * bootstrap file (via alternate template file setting). Finally insert this code snippet as the render method of the
- * controller class for your template, and the API should be good to go:
- *
- * ```
- * public function render() {
- *     echo $this->wire('modules')->get('WireframeAPI')->init()->sendHeaders()->render();
- *     $this->view->setLayout(null)->halt();
- * }
- * ```
- *
- * (Alternatively you could create a template that isn't routed through the Wireframe bootstrap file; this should work
- * fine in most cases, but obviously you won't have access to any of the settings etc. defined in the bootstrap file.)
- *
- * Requests for this page will now be served by the API. In order to get something useful out of the API, a request has
- * to match a recognized API endoint. Here's an example of a request for the "components" endpoint. Here wireframe-api
- * would be the name of the page you created for the API, and Card would be the name of one of your components:
- *
- * ```
- * https://www.yoursite.tld/wireframe-api/components/Card/
- * ```
- *
- * 'Components' and 'pages' endpoints have an option to specify whether returned data should contain the object in JSON
- * or rendered form (or both):
- *
- * ```
- * https://www.yoursite.tld/wireframe-api/components/Card/json/
- * https://www.yoursite.tld/wireframe-api/components/Card/rendered/
- * ```
- *
- * Note that by default all of the default endpoints are disabled, so actually the first step is to enable one or more
- * of these via module config or via the `$config->wireframeAPI` array. Available options are 'components', 'pages',
- * and 'partials'.
- *
- * It's also possible to define the path manually, and you can pass an array of arguments for the endpoint:
- *
- * ```
- * $api->init('components/Card', ['arg' => 'value']);
- * ```
- *
- * For security reasons the API won't automatically convert GET params into arguments, but you can of course do exactly
- * that manually in the Wireframe element that handles the request (e.g. as the "Card" component class). Alternatively
- * you could hook into the `WireframeAPI::prepareArgs()` method and merge GET params with existing arguments, though
- * be sure to also filter them so that they can only contain useful/expected values:
- *
- * ```
- * $api->addHookAfter('prepareArgs', function(HookEvent $event) use ($input) {
- *     $event->return = array_merge($event->return, [
- *         $input->get->bool('some_variable'),
- *     ]);
- * });
- * ```
- *
- * In the example above you could allow *all* GET params by merging `$event->return` with `$input->get->getArray()`,
- * but keep in mind that allowing users to freely control which arguments they pass to your code can be potentially
- * dangerous.
- *
- * The return value of an API request is always JSON. Here's an example of what the returned data might look like:
- *
- * ```
- * {
- *     "success": true,
- *     "message": "",
- *     "path": "wireframe-api\/components\/Card",
- *     "args": {
- *         "exampleArg": false
- *     },
- *     "data": {
- *         "json": {
- *             "title": "Hello World",
- *         },
- *         "rendered": "<div class=\"card\"><h2>Hello World</h2></div>",
- *     }
- * }
- * ```
- *
- * In this case the "rendered" property of the "data" object contains whatever `Card::render()` returns, while "json"
- * contains whatever `Card::renderJSON()` returns. Note that in the case of components you need to implement this
- * method yourself or Wireframe API will only return `null` as the value of the "json" property.
- *
- * Here's an example of what an error returned by the API would look like:
- *
- * ```
- * {
- *     "success": false,
- *     "message": "Unknown component (Test)",
- *     "path": "wireframe-api\/components\/Test",
- *     "args": {
- *         "exampleArg": false
- *     },
- * }
- * ```
- *
- * Wireframe API attempts to return applicable HTTP status codes with each response, but the (boolean) "success" flag
- * is provided as well. "success" is `true` if HTTP status code is equal to or greater than 200 and smaller than 300.
- *
- * Access control is out of the scope of this module. You can, though, hook into the `WireframeAPI::checkAccess()`
- * method and perform your own access management this way. Just return boolean `false` and the API endpoint will
- * send an "Unauthorized" response instead of a regular API response.
- *
- * Please note that if you enable component or partial endpoints, you may expose publicly content that isn't normally
- * available for unauthenticated users. For such use cases it's highly recommended to set up an allow list:
- *
- * ```
- * $api->addHookAfter('WireframeAPI::checkAccess', function(HookEvent $event) {
- *     if ($event->return === false) return;
- *     if ($event->arguments[0] == 'partials') {
- *         $partial_name = implode('/', $event->arguments[1]);
- *         $event->return = in_array($partial_name, [
- *             'allowed_partial',
- *             'directory/another_allowed_partial',
- *         ]);
- *     }
- *     if ($event->arguments[0] == 'components') {
- *         $component_name = $event->arguments[1][0];
- *         $event->return = in_array($component_name, [
- *             'AllowedComponent',
- *             'AnotherAllowedComponent',
- *         ]);
- *     }
- * });
- * ```
+ * This module provides a JSON API for accessing Wireframe's features. For more details check out the documentation at
+ * https://wireframe-framework.com/docs/wireframe-api/.
  *
  * @version 0.1.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
@@ -429,10 +306,11 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
      *
      * @param string $endpoint
      * @param callable $callable
+     * @return WireframeAPI Self-reference.
      *
      * @throws WireException if specified endpoint already exists.
      */
-    public function addEndpoint(string $endpoint, callable $callable) {
+    public function addEndpoint(string $endpoint, callable $callable): WireframeAPI {
         if (array_key_exists($endpoint, $this->available_endpoints)) {
             throw new WireException(sprintf(
                 'Unable to add endpoint: an endpoint with this name already exists (%s)',
@@ -441,16 +319,19 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
         }
         $this->available_endpoints[$endpoint] = $callable;
         $this->enableEndpoint($endpoint);
+        return $this;
     }
 
     /**
      * Remove endpoint
      *
      * @param string $endpoint Endpoint name
+     * @return WireframeAPI Self-reference.
      */
-    public function removeEndpoint(string $endpoint) {
+    public function removeEndpoint(string $endpoint): WireframeAPI {
         $this->disableEndpoint($endpoint);
         unset($this->available_endpoints[$endpoint]);
+        return $this;
     }
 
     /**
