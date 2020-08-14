@@ -686,6 +686,25 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     }
 
     /**
+     * Set current controller
+     *
+     * Note: this method should be used if you need to override controller in the Wireframe bootstrap file.
+     *
+     * @param string|null $template Template name
+     * @return Wireframe Self-reference
+     */
+    public function setController(?string $template): Wireframe {
+        $this->controller = $this->getController($this->page, $template);
+        if ($this->page) {
+            $this->page->setController($this->controller);
+        }
+        if ($this->view) {
+            $this->view->setController($this->controller);
+        }
+        return $this;
+    }
+
+    /**
      * Render the Page with specified View and Layout
      *
      * Note: this method returns null if both view and layout file are undefined.
@@ -882,7 +901,11 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             }
             $event->return = $controller;
         } else {
-            $event->object->_wireframe_controller = $this->getController($event->object, $event->arguments[0] ?? null);
+            $controller = $event->arguments[0] ?? null;
+            if (!$controller instanceof \Wireframe\Controller) {
+                $controller = $this->getController($event->object, $controller);
+            }
+            $event->object->_wireframe_controller = $controller;
             $event->object = \Wireframe\Factory::page($event->object, [
                 'wireframe' => $this,
             ]);
