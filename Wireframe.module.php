@@ -694,7 +694,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      * @return Wireframe Self-reference
      */
     public function setController(?string $template): Wireframe {
-        $this->controller = $this->getController($this->page, $template);
+        $this->controller = $this->getController($this->page, $template ?? '');
         if ($this->page) {
             $this->page->setController($this->controller);
         }
@@ -901,8 +901,8 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             }
             $event->return = $controller;
         } else {
-            $controller = $event->arguments[0] ?? null;
-            if (!$controller instanceof \Wireframe\Controller) {
+            $controller = $event->arguments[0] ?? '';
+            if ($controller != '' && !$controller instanceof \Wireframe\Controller) {
                 $controller = $this->getController($event->object, $controller);
             }
             $event->object->_wireframe_controller = $controller;
@@ -1139,8 +1139,8 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      */
     protected function getController(Page $page, ?string $template_name = null): ?\Wireframe\Controller {
         if (\is_null($template_name)) {
-            if ($page->_wireframe_controller) {
-                return $page->_wireframe_controller;
+            if (isset($page->_wireframe_controller)) {
+                return $page->_wireframe_controller == '' ? null : $page->_wireframe_controller;
             }
             $template_name = $page->template->name;
         }
