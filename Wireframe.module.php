@@ -222,7 +222,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     public function ___setConfig(array $config = []): Wireframe {
 
         // combine default config settings with custom ones
-        $config_merged = array_merge_recursive(
+        $config_merged = array_merge(
             $this->getConfigDefaults(),
             \is_array($this->wire('config')->wireframe) ? $this->wire('config')->wireframe : [],
             $this->config,
