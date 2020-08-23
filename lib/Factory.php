@@ -8,7 +8,7 @@ use function ProcessWire\wire;
 /**
  * Factory class for Wireframe
  *
- * @version 0.2.1
+ * @version 0.2.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -26,7 +26,7 @@ class Factory {
      * provide an associative array and the keys of said array match component class constructor argument names, the
      * order of the values doesn't matter - otherwise they will be used in order.
      *
-     * Assuming that you had a component called "Card" and the constructor method for this component accepted "title"
+     * Assuming that you have a component called "Card" and the constructor method for this component accepts "title"
      * and "summary" as arguments (`__constructor($title, $summary) { ... }`), these two would be equal:
      *
      * ```
@@ -35,8 +35,8 @@ class Factory {
      * ```
      *
      * While this method returns an object, in the examples above we're making use of the fact that the __toString()
-     * method of the Component class returns the rendered output of said component, so we don't have to call the
-     * render() method (`Wireframe::component('Card', [...]->render()`) specifically.
+     * method of the Component class returns the rendered output of said component, so we don't have to specifically
+     * call the render() method (`Wireframe::component('Card', [...])->render()`).
      *
      * Note: keep in mind that due to file system differences and the use of an autoloader, the name of the component
      * should *always* be treated as case sensitive. If actual class name is "Card" and the name is provided for this

@@ -5,7 +5,7 @@ namespace Wireframe;
 /**
  * Wireframe Partial
  *
- * @version 0.1.3
+ * @version 0.1.2
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */

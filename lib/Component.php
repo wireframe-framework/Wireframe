@@ -45,7 +45,7 @@ abstract class Component extends \ProcessWire\WireData {
      * JSON API requests you need to implement this method in the Component class. Basic example:
      *
      * ```
-     * public function ___renderJSON() {
+     * public function renderJSON(): ?string {
      *     return json_encode($this->getData());
      * }
      * ```

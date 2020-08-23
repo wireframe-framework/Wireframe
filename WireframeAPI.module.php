@@ -39,6 +39,8 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
 
     /**
      * Constructor
+     *
+     * @throws WireException if config settings contain unrecognized properties.
      */
     public function __construct() {
 
@@ -61,7 +63,10 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
                     break;
 
                 default:
-                    $this->$key = $value;
+                    throw new WireException(sprintf(
+                        'Unable to set value for unrecognized property "%s"',
+                        $key
+                    ));
             }
         }
     }
@@ -102,7 +107,9 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
         $field->name = 'enabled_endpoints';
         $field->label = $this->_('Enabled endpoints');
         $field->addOptions([
-            'component' => $this->_('Component'),
+            'components' => $this->_('Components'),
+            'pages' => $this->_('Pages'),
+            'partials' => $this->_('Partials'),
         ]);
         $field->value = $data[$field->name];
         if (isset($config[$field->name])) {
@@ -177,7 +184,7 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
             // call endpoint method
             $data = [];
             $method = $this->available_endpoints[$endpoint];
-            if (\is_string($method)) {
+            if (\is_string($method) && strpos($method, '::') === false) {
                 $data = (new \Wireframe\APIEndpoints())->$method($path, $this->response->getArgs());
             } else {
                 $data = \call_user_func($method, $path, $this->response->getArgs());
@@ -257,7 +264,7 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
     /**
      * Set enabled endpoints
      *
-     * @param array
+     * @param array $endpoints
      * @return WireframeAPI Self-reference.
      */
     public function setEnabledEndpoints(array $endpoints): WireframeAPI {
@@ -302,7 +309,7 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
     }
 
     /**
-     * Add custom endpoint
+     * Add and enable a custom endpoint
      *
      * @param string $endpoint
      * @param callable $callable
@@ -323,7 +330,7 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
     }
 
     /**
-     * Remove endpoint
+     * Disable and remove an endpoint
      *
      * @param string $endpoint Endpoint name
      * @return WireframeAPI Self-reference.

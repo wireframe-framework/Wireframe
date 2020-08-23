@@ -5,7 +5,7 @@ namespace Wireframe;
 /**
  * Configuration helper for the Wireframe module
  *
- * @version 0.1.1
+ * @version 0.2.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -111,7 +111,7 @@ class Config extends \ProcessWire\Wire {
                 $field->addOption($key, $path, $attributes);
             }
 
-            // if selectable optiosn include relative URLs, provide more details about what they are
+            // if selectable options include relative URLs, provide more details about what they are
             if ($paths_include_urls) {
                 $field->notes .= "\n\n" . $this->_('Items with the "@" prefix are URL helpers for static resources. These are not strictly speaking required, but can be useful while developing the site.');
             }

@@ -164,14 +164,14 @@ abstract class Controller extends \ProcessWire\Wire {
      * in the Controller class. Basic example:
      *
      * ```
-     * public function renderJSON() {
+     * public function renderJSON(): ?string {
      *     return json_encode($this->wire('page')->getArray());
      * }
      * ```
      *
      * @return string|null JSON output.
      */
-    public function renderJSON() {
+    public function renderJSON(): ?string {
         if (method_exists($this, '___renderJSON')) {
             return $this->__call('renderJSON', []);
         }

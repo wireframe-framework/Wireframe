@@ -48,7 +48,7 @@ class APIEndpoints {
 
         // set return format
         $return_format = $path[1] ?? null;
-        if (!in_array($return_format, ['json', 'rendered'])) {
+        if (!\is_null($return_format) && !in_array($return_format, ['json', 'rendered'])) {
             $return_format = null;
         }
 
@@ -86,8 +86,8 @@ class APIEndpoints {
      * @throws \Wireframe\APIException if no page ID was specified (HTTP 400).
      * @throws \Wireframe\APIException if path has too many parts in it (HTTP 400).
      * @throws \Wireframe\APIException if invalid ID was specified (HTTP 400).
-     * @throws \Wireframe\APIException if unknown component was requested (HTTP 404).
-     * @throws \Wireframe\APIException if an error occurred while processing the component (HTTP 500).
+     * @throws \Wireframe\APIException if non-existing or non-viewable page was requested (HTTP 404).
+     * @throws \Wireframe\APIException if an error occurred while processing the page (HTTP 500).
      */
     public function pages(array $path, array $args = []): array {
 
@@ -103,7 +103,7 @@ class APIEndpoints {
 
         // get page ID from path
         $page_id = (int) $path[0];
-        if ($page_id === 0) {
+        if ($page_id < 1) {
             throw (new \Wireframe\APIException(sprintf(
                 'Invalid page ID (%s)',
                 $path[0]
@@ -112,7 +112,7 @@ class APIEndpoints {
 
         // set return format
         $return_format = $path[1] ?? null;
-        if (!in_array($return_format, ['json', 'rendered'])) {
+        if (!\is_null($return_format) && !in_array($return_format, ['json', 'rendered'])) {
             $return_format = null;
         }
 
@@ -132,7 +132,7 @@ class APIEndpoints {
             $out = [];
             if (\is_null($return_format) || $return_format == 'json') {
                 $controller = $page->getController();
-                $out['json'] = $controller ? json_decode($controller->renderJSON()) : $page->getArray();
+                $out['json'] = $controller ? json_decode($controller->renderJSON()) : null;
             }
             if (\is_null($return_format) || $return_format == 'rendered') {
                 $out['rendered'] = $page->render();
@@ -141,7 +141,7 @@ class APIEndpoints {
         } catch (\Exception $e) {
             if ($e instanceof \ProcessWire\Wire404Exception) {
                 throw (new \Wireframe\APIException(sprintf(
-                    'Unknown page (id=%s)',
+                    'Non-existing or non-viewable page (id=%s)',
                     $page_id
                 )))->setResponseCode(404);
             }
@@ -160,6 +160,8 @@ class APIEndpoints {
      * @return array
      *
      * @throws \Wireframe\APIException if no partial name was specified (HTTP 400).
+     * @throws \Wireframe\APIException if unknown partial was requested (HTTP 404).
+     * @throws \Wireframe\APIException if an error occurred while processing the partial (HTTP 500).
      */
     public function partials(array $path, array $args = []): array {
 

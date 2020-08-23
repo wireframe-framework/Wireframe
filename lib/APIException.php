@@ -36,14 +36,14 @@ class APIException extends \Exception {
      *
      * @return int
      */
-    public function getResponseCode() {
+    public function getResponseCode(): int {
         return $this->http_response_code;
     }
 
     /**
      * Set HTTP response code
      *
-     * @param int
+     * @param int $http_response_code
      * @return APIException Self-reference
      */
     public function setResponseCode(int $http_response_code): APIException {

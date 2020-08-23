@@ -177,6 +177,8 @@ class APIResponse {
      * Render method
      *
      * @return string
+     *
+     * @throws APIException if JSON encoding fails.
      */
     public function render(): string {
         $response = [
@@ -188,7 +190,11 @@ class APIResponse {
         if ($response['success']) {
             $response['data'] = $this->data;
         }
-        return json_encode($response, $this->pretty ? JSON_PRETTY_PRINT : 0);
+        $out = json_encode($response, $this->pretty ? JSON_PRETTY_PRINT : 0);
+        if ($out === false) {
+            throw new APIException('JSON encoding error');
+        }
+        return $out;
     }
 
 }
