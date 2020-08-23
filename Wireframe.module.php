@@ -619,6 +619,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
 
         $this->controller = $this->getController($page);
         $page->_wireframe_controller = $this->controller;
+        $this->view->setController($this->controller);
 
         return $this->controller;
     }
@@ -628,39 +629,59 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      *
      * Default value is 'default', but the setView() method of the $page object or GET param 'view' (if configured so)
      * can be used to override the default value.
+     *
+     * @param string|null $view Optional view name, leave blank to let Wireframe figure it out automatically
+     * @return Wireframe Self-reference
      */
-    public function ___setView() {
+    public function ___setView(?string $view = null): Wireframe {
 
-        // params
-        $config = $this->config;
-        $page = $this->page;
-        $view = $this->view;
-        $template = $view->getTemplate() ?: $page->getViewTemplate();
-
-        // $input API variable
-        $input = $this->wire('input');
-
-        $get_view = null;
-        if ($input->get->view && $allow_get_view = $config['allow_get_view']) {
-            if (\is_array($allow_get_view)) {
-                // allowing *any* view to be accessed via a GET param might not be
-                // appropriate; using a whitelist lets us define the allowed values
-                foreach ($allow_get_view as $get_template => $get_value) {
-                    if (\is_string($get_template) && \is_array($get_value) && $template == $get_template) {
-                        $get_view = \in_array($input->get->view, $get_value) ? $input->get->view : null;
-                        break;
-                    } else if (\is_int($get_template) && \is_string($get_value) && $input->get->view == $get_value) {
-                        $get_view = $input->get->view;
-                        break;
-                    }
-                }
-            } else {
-                $get_view = $input->get->view;
-            }
+        // check if provided with a predefined view name
+        if (!\is_null($view)) {
+            $view = basename($view);
+            $this->view->setView($view);
+            $this->page->setView($view);
+            return $this;
         }
 
         // priority for different sources: 1) View object, 2) Page object, 3) GET param, 4) "default".
-        $view->setView(basename($view->getView() ?: ($page->getView() ?: ($get_view ?: 'default'))));
+        $this->view->setView(basename($this->view->getView() ?: ($this->page->getView() ?: ($this->getViewFromInput() ?: 'default'))));
+
+        return $this;
+    }
+
+    /**
+     * Get view name from input params (GET)
+     *
+     * @return string|null
+     */
+    protected function getViewFromInput(): ?string {
+
+        // bail out early if providing view name as GET param is not allowed
+        $allow_get_view = $this->config['allow_get_view'];
+        if (!$allow_get_view) {
+            return null;
+        }
+
+        // attempt to get view name from GET param 'view'
+        $input = $this->wire('input');
+        $get_view = $input->get->view;
+        if (!empty($get_view) && \is_array($allow_get_view)) {
+            // allowing *any* view to be accessed via a GET param might not be
+            // appropriate; using a allow list lets us define the allowed values
+            $get_view = null;
+            $template = $this->view->getTemplate() ?: $this->page->getViewTemplate();
+            foreach ($allow_get_view as $get_template => $get_value) {
+                if (\is_string($get_template) && \is_array($get_value) && $template == $get_template) {
+                    $get_view = \in_array($input->get->view, $get_value) ? $input->get->view : null;
+                    break;
+                } else if (\is_int($get_template) && \is_string($get_value) && $input->get->view == $get_value) {
+                    $get_view = $input->get->view;
+                    break;
+                }
+            }
+        }
+
+        return $get_view;
     }
 
     /**
@@ -718,7 +739,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         $view = $this->view;
         $paths = $this->paths;
         $ext = $this->ext;
-        $controller = $this->getController($this->page);
+        $controller = $view->getController() ?: $this->getController($this->page);
 
         // attempt to return prerendered value from cache
         $cache_key = implode(':', [
@@ -809,6 +830,9 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             $event->return = $event->object->_wireframe_layout;
         } else {
             $event->object->_wireframe_layout = $event->arguments[0] ?? '';
+            $event->object = \Wireframe\Factory::page($event->object, [
+                'wireframe' => $this,
+            ]);
             $event->return = $event->object;
         }
     }

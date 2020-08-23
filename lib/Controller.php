@@ -5,7 +5,7 @@ namespace Wireframe;
 /**
  * Abstract base implementation for Controller objects
  *
- * @version 0.4.0
+ * @version 0.5.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -88,7 +88,7 @@ abstract class Controller extends \ProcessWire\Wire {
     /**
      * Instance of View
      *
-     * @var View
+     * @var View|null
      */
     protected $view;
 
@@ -115,11 +115,8 @@ abstract class Controller extends \ProcessWire\Wire {
         // store a reference to ProcessWire
         $this->_wire = $wire;
 
-        if ($view) {
-            // store a reference to View and make View aware of its Controller
-            $this->view = $view;
-            $this->view->setController($this);
-        }
+        // store a reference to View
+        $this->view = $view;
 
         // store a reference to Page
         $this->page = $page;

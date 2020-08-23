@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for named arguments when using `Wireframe::component($component_name, $args)`.
 - JSON API. See comments in the WireframeAPI module file for more details.
 - New Page methods Page::getController() and Page::setController().
+- Module config screen provides support for creating directories corresponding to configured Wireframe URLs, assuming that they were provided as relative paths.
+
+### Changed
+- Wireframe::setView() accepts optional view name as an argument.
+- View::setController() accepts Controller name (string) in addition to Controller class instance or null.
+- When Controller is instantiated, it no longer overrides the Controller property of the related View instance.
 
 ### Fixed
 - Factory::partial() now works as expected for partial names with file ext included (partial_name.php etc.)
