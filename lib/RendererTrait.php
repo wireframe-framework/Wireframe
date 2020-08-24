@@ -9,7 +9,7 @@ use ProcessWire\Wire;
  *
  * @property \ProcessWire\Module|null $renderer Renderer object.
  *
- * @version 0.1.1
+ * @version 0.1.2
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -38,6 +38,7 @@ trait RendererTrait {
             $needs_init = true;
         }
         if ($renderer instanceof \ProcessWire\Module) {
+            /** @noinspection PhpUndefinedMethodInspection */
             if ($needs_init) $renderer->init($settings);
             $this->renderer = $renderer;
             if (method_exists($this, 'setExt')) {

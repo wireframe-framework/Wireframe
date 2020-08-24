@@ -5,7 +5,7 @@ namespace Wireframe;
 /**
  * Wireframe Partial
  *
- * @version 0.1.1
+ * @version 0.1.2
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -32,7 +32,7 @@ class Partial extends \ProcessWire\Wire {
                 throw new \ProcessWire\WireException(\sprintf(
                     'Partial file not found: %s',
                     $filename
-                ));
+                ), 404);
             }
             $this->filenames[$ext] = $filename;
         }
@@ -54,6 +54,7 @@ class Partial extends \ProcessWire\Wire {
         // attempt to render markup using a renderer
         $renderer = $this->getRenderer();
         if ($renderer) {
+            /** @noinspection PhpUndefinedMethodInspection */
             $ext = '.' . ltrim($renderer->getExt(), '.');
             $view_file = $this->filenames[$ext] ?? null;
             if (empty($view_file)) {
@@ -69,6 +70,7 @@ class Partial extends \ProcessWire\Wire {
                 }
             }
             if (\is_file($view_file)) {
+                /** @noinspection PhpUndefinedMethodInspection */
                 return $renderer->render('partial', ltrim($view_file, '/'), $args);
             }
         }

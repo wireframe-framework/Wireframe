@@ -13,7 +13,7 @@ namespace Wireframe;
  * In aforementioned use case you should override the getData() method and return the data you want
  * the render process to have access to.
  *
- * @version 0.2.0
+ * @version 0.3.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -39,6 +39,24 @@ abstract class Component extends \ProcessWire\WireData {
     }
 
     /**
+     * Render JSON for the Component
+     *
+     * By default this method returns nothing (null). If you want a Component to return values for
+     * JSON API requests you need to implement this method in the Component class. Basic example:
+     *
+     * ```
+     * public function renderJSON(): ?string {
+     *     return json_encode($this->getData());
+     * }
+     * ```
+     *
+     * @return string|null JSON output.
+     */
+    public function ___renderJSON(): ?string {
+        return null;
+    }
+
+    /**
      * Render markup for the Component using a separate Component View file
      *
      * @param string|null $view Component view file name (optional). If the name contains slash, it
@@ -57,8 +75,10 @@ abstract class Component extends \ProcessWire\WireData {
             // attempt to render markup using a renderer
             $renderer = $this->getRenderer();
             if ($renderer) {
+                /** @noinspection PhpUndefinedMethodInspection */
                 $view_ext = '.' . ltrim($renderer->getExt(), '.');
                 if (\is_file($view_root . $view_file . $view_ext)) {
+                    /** @noinspection PhpUndefinedMethodInspection */
                     return $renderer->render('component', ltrim($view_file, '/') . $view_ext, $this->getData());
                 }
             }

@@ -14,7 +14,7 @@ namespace ProcessWire;
  * @method static string|Page|NullPage page($source, $args = []) Static getter (factory) method for Pages.
  * @method static string|null partial(string $partial_name, array $args = []) Static getter (factory) method for Partials.
  *
- * @version 0.11.0
+ * @version 0.12.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -102,8 +102,6 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
 
         // init necessary parts of Wireframe
         $this->setConfig();
-        $this->setPaths();
-        $this->addNamespaces();
 
         // instantiate Wireframe Config and get all config inputfields
         $config = new \Wireframe\Config($this->wire(), $this);
@@ -132,7 +130,12 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     /**
      * Initialize Wireframe
      *
-     * @param array $settings Array of additional settings (optional).
+     * @param array $settings Array of additional settings (optional). Supported settings:
+     *  - `page` (Page): current Page object
+     *  - `paths` (array): custom paths for Wireframe objects; views, layouts, partials, components, etc.
+     *  - `data` (array): variables for the View, does the same thing as passing an assoc array to the render method
+     *  - `ext` (string|null): file extension for view, layout, and partial files; default value is pulled from site config
+     *  - `renderer` (Module|string|null): name or instance of a Renderer module, or null for none
      * @return Wireframe Self-reference.
      *
      * @throws WireException if no valid Page object is found.
@@ -180,15 +183,6 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         // set config settings
         $this->setConfig();
 
-        // store paths locally (unless already manually defined)
-        if (empty($this->paths)) $this->setPaths();
-
-        // add Wireframe namespaces to ProcessWire's class autoloader
-        $this->addNamespaces();
-
-        // set PHP include path
-        $this->setIncludePath();
-
         // attach hooks
         $this->addHooks();
 
@@ -218,14 +212,68 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     /**
      * Define runtime config settings
      *
+     * If runtime config settings already exist, those will be kept, with new values overwriting existing values with
+     * the same name. In order to reset previously (manually) defined config values, provide default values for them.
+     * You can get default config values by calling the getConfigDefaults() method.
+     *
      * @param array $config Optional configuration settings array.
      * @return Wireframe Self-reference.
      */
     public function ___setConfig(array $config = []): Wireframe {
 
-        // default config settings; if you need to customize or override any of these, copy this array to your site
-        // config file (/site/config.php) as $config->wireframe
-        $config_defaults = [
+        // combine default config settings with custom ones
+        $config_merged = array_merge(
+            $this->getConfigDefaults(),
+            \is_array($this->wire('config')->wireframe) ? $this->wire('config')->wireframe : [],
+            $this->config,
+            $config
+        );
+
+        // check if paths or include_paths have changed
+        $set_paths = !isset($this->config['paths']) || $this->config['paths'] != $config_merged['paths'];
+        $set_include_path = !isset($this->config['include_paths']) || $this->config['include_paths'] != $config_merged['include_paths'];
+
+        // URL additions to global config settings
+        foreach ($config_merged['urls'] as $key => $value) {
+            $this->wire('config')->urls->set($key, $value);
+        }
+
+        // store config settings locally
+        $this->config = $config_merged;
+
+        // PHP include path additions
+        if ($set_include_path) {
+            $this->setIncludePath();
+        }
+
+        // set or update wireframe paths
+        if ($set_paths) {
+            $this->setPaths();
+        }
+
+        return $this;
+    }
+
+    /**
+     * Getter for runtime config settings
+     *
+     * @return array Current config settings.
+     */
+    public function getConfig(): array {
+        $this->initOnce();
+        return $this->config;
+    }
+
+    /**
+     * Getter for default config settings
+     *
+     * If you need to customize or override any of the default config values, you can copy this array to your site
+     * config file (/site/config.php) as $config->wireframe, or call setConfig() with an array of override values.
+     *
+     * @return array Default config settings.
+     */
+    public function getConfigDefaults(): array {
+        return [
             'include_paths' => [
                 // '/path/to/shared/libraries/',
             ],
@@ -257,43 +305,43 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
                 'resources' => $this->wire('config')->urls->templates . "resources/",
             ],
         ];
-
-        // combine default config settings with custom ones
-        $this->config = array_merge(
-            $config_defaults,
-            \is_array($this->wire('config')->wireframe) ? $this->wire('config')->wireframe : [],
-            $config
-        );
-
-        // Path additions to global config settings
-        $this->wire('config')->paths->set('partials', $this->config['paths']['partials']);
-
-        // URL additions to global config settings
-        foreach ($this->config['urls'] as $key => $value) {
-            $this->wire('config')->urls->set($key, $value);
-        }
-
-        return $this;
     }
 
     /**
-     * Getter for runtime config settings
+     * Set or update paths
      *
-     * @return array Config settings.
-     */
-    public function getConfig(): array {
-        return $this->config;
-    }
-
-    /**
-     * Store paths in a class property
+     * This method makes necessary site config additions/modifications and updates ProcessWire's class autoloader.
      *
-     * @param array $paths Paths array for overriding the default value.
+     * Note: it's a bit of a border case, but it's probably worth noting that if this method has already been called
+     * *and* you've instantiated a class found from previously set paths, you *can't* instantiate a different class
+     * with exactly the same name from a new path. (PHP doesn't allow "uncaching" previously declared classes.)
+     *
+     * @param array $paths Paths array for overriding default values.
      * @return Wireframe Self-reference.
      */
     public function setPaths(array $paths = []): Wireframe {
-        if (empty($paths)) $paths = $this->config['paths'];
+
+        // if called with empty paths array, get paths from config; otherwise make sure that config paths are in sync
+        // with values defined here (overwrite config values if they exist)
+        if (empty($paths)) {
+            $paths = $this->config['paths'];
+        } else if (isset($this->config['paths'])) {
+            $this->config['paths'] = array_merge(
+                $this->config['paths'],
+                $paths
+            );
+        }
+
+        // if partials path is being defined, also set or update the partials path stored in global config settings
+        if (isset($paths['partials'])) {
+            $this->wire('config')->paths->set('partials', $paths['partials']);
+        }
+
+        // store paths locally as an object and add Wireframe namespaces to ProcessWire's class autoloader (namespaces
+        // are dependent on the paths defined here, hence the tight coupling between these two methods)
         $this->paths = (object) $paths;
+        $this->addNamespaces();
+
         return $this;
     }
 
@@ -366,42 +414,73 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      * should call $classLoader->removeNamespace($namespace, $path) before re-adding the namespace with a new path.
      */
     protected function addNamespaces() {
+
+        // declare our namespaces
         $namespaces = [
             'Wireframe' => $this->wire('config')->paths->Wireframe . 'lib/',
             'Wireframe\Component' => $this->paths->components,
             'Wireframe\Controller' => $this->paths->controllers,
             'Wireframe\Lib' => $this->paths->lib,
         ];
+
+        /** @var WireClassLoader ProcessWire's class autoloader */
+        $classLoader = $this->wire('classLoader');
+
+        // make class autoloader aware of our namespaces
         foreach ($namespaces as $namespace => $path) {
-            $this->wire('classLoader')->addNamespace($namespace, $path);
+
+            // if namespaces have already been added, remove old ones first, just in case; this could, for an example,
+            // happen if paths are changed manually after calling the init method
+            if ($classLoader->hasNamespace($namespace)) {
+                $classLoader->removeNamespace($namespace);
+            }
+
+            // add new namespace to class autoloader
+            $classLoader->addNamespace($namespace, $path);
         }
     }
 
     /**
      * Set PHP include path
-     *
      */
     protected function setIncludePath() {
-        $include_paths = [
+
+        // add templates directory to the include path by default
+        $new_include_paths = [
             $this->wire('config')->paths->templates,
         ];
+
+        // config settings may contain additional include paths
         if (!empty($this->config['include_paths'])) {
-            $include_paths = array_merge(
-                $include_paths,
+            $new_include_paths = array_merge(
+                $new_include_paths,
                 $this->config['include_paths']
             );
         }
-        if (strpos(get_include_path(), $include_paths[0]) === false) {
+
+        // validate include path(s), removing any duplicate values (new ones, as well as those that have already been
+        // added to the PHP include path)
+        $current_include_path = get_include_path();
+        $current_include_path_parts = empty($current_include_path) ? [] : explode(PATH_SEPARATOR, $current_include_path);
+        $new_include_paths = array_unique(array_filter($new_include_paths, function($path) use ($current_include_path_parts) {
+            return !empty($path) && !in_array($path, $current_include_path_parts);
+        }));
+
+        // modify PHP include path if valid paths remain
+        if (!empty($new_include_paths)) {
             set_include_path(
-                get_include_path() .
+                $current_include_path .
                 PATH_SEPARATOR .
-                implode(PATH_SEPARATOR, $include_paths)
+                implode(PATH_SEPARATOR, $new_include_paths)
             );
         }
     }
 
     /**
      * Attach hooks
+     *
+     * Note: Page::layout() and Page::view() are kept for backwards compatibility, but their use is discouraged.
+     * Generally speaking it's best to stick to dedicated getter/setter methods (view()/layout() are ambiguous).
      *
      * @see pageLayout() for Page::layout(), Page::getLayout(), and Page::setLayout() implementation.
      * @see pageView() for Page::view(), Page::getView(), and Page::setView() implementation.
@@ -423,6 +502,10 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         $this->addHookMethod('Page::viewTemplate', $this, 'pageViewTemplate');
         $this->addHookMethod('Page::getViewTemplate', $this, 'pageViewTemplate');
         $this->addHookMethod('Page::setViewTemplate', $this, 'pageViewTemplate');
+
+        // helper methods for getting or setting page controller
+        $this->addHookMethod('Page::getController', $this, 'pageController');
+        $this->addHookMethod('Page::setController', $this, 'pageController');
     }
 
     /**
@@ -528,29 +611,16 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      * an object from it.
      *
      * @return \Wireframe\Controller|null Controller object or null.
-     *
-     * @throws WireException if no valid Page has been defined.
-     * @todo Method for overriding the default controller, similar to Wireframe::setViewTemplate($template).
-     * @todo Method for overriding the default controller *and* view template at the same time (e.g. Wireframe::setTemplate($template)).
      */
     public function ___initController(): ?\Wireframe\Controller {
 
-        // params
-        $page = $this->page;
-        $view = $this->view;
+        // get a new Controller instance and store it both locally, as a run-time property of current Page object, and
+        // as a reference within the View object
+        $this->controller = $this->getController($this->page);
+        $this->page->_wireframe_controller = $this->controller;
+        $this->view->setController($this->controller);
 
-        // define template name and Controller class name
-        $controller = null;
-        $controller_name = $this->wire('sanitizer')->pascalCase($page->template);
-        $controller_class = '\Wireframe\Controller\\' . $controller_name . 'Controller';
-
-        if (class_exists($controller_class)) {
-            $controller = new $controller_class($this->wire(), $page, $view);
-        }
-
-        $this->controller = $controller;
-
-        return $controller;
+        return $this->controller;
     }
 
     /**
@@ -558,48 +628,70 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      *
      * Default value is 'default', but the setView() method of the $page object or GET param 'view' (if configured so)
      * can be used to override the default value.
+     *
+     * @param string|null $view Optional view name, leave blank to let Wireframe figure it out automatically.
+     * @return Wireframe Self-reference.
      */
-    public function ___setView() {
+    public function ___setView(?string $view = null): Wireframe {
 
-        // params
-        $config = $this->config;
-        $page = $this->page;
-        $view = $this->view;
-        $template = $view->getTemplate() ?: $page->getViewTemplate();
+        // first check if a predefined view name was provided
+        if (!\is_null($view)) {
+            $view = basename($view);
+            $this->view->setView($view);
+            $this->page->setView($view);
+            return $this;
+        }
 
-        // $input API variable
+        // priority for different sources: 1) View object, 2) Page object, 3) GET param, 4) "default"
+        $this->view->setView(basename($this->view->getView() ?: ($this->page->getView() ?: ($this->getViewFromInput() ?: 'default'))));
+
+        return $this;
+    }
+
+    /**
+     * Get view name from input params (GET)
+     *
+     * @return string|null
+     */
+    protected function getViewFromInput(): ?string {
+
+        // bail out early if providing view name as a GET param is not allowed
+        if (!$this->config['allow_get_view']) {
+            return null;
+        }
+
+        // attempt to get view name from GET param 'view'
         $input = $this->wire('input');
-
-        $get_view = null;
-        if ($input->get->view && $allow_get_view = $config['allow_get_view']) {
-            if (\is_array($allow_get_view)) {
-                // allowing *any* view to be accessed via a GET param might not be
-                // appropriate; using a whitelist lets us define the allowed values
-                foreach ($allow_get_view as $get_template => $get_value) {
-                    if (\is_string($get_template) && \is_array($get_value) && $template == $get_template) {
-                        $get_view = \in_array($input->get->view, $get_value) ? $input->get->view : null;
-                        break;
-                    } else if (\is_int($get_template) && \is_string($get_value) && $input->get->view == $get_value) {
-                        $get_view = $input->get->view;
-                        break;
-                    }
+        $get_view = $input->get->view;
+        if (!empty($get_view) && \is_array($this->config['allow_get_view'])) {
+            // allowing *any* view to be accessed via a GET param might not be appropriate; using an allow list lets us
+            // define the specific values that are considered safe
+            $get_view = null;
+            $template = $this->view->getTemplate() ?: $this->page->getViewTemplate();
+            foreach ($this->config['allow_get_view'] as $get_template => $get_value) {
+                if (\is_string($get_template) && \is_array($get_value) && $template == $get_template) {
+                    $get_view = \in_array($input->get->view, $get_value) ? $input->get->view : null;
+                    break;
+                } else if (\is_int($get_template) && \is_string($get_value) && $input->get->view == $get_value) {
+                    $get_view = $get_value;
+                    break;
                 }
-            } else {
-                $get_view = $input->get->view;
             }
         }
 
-        // priority for different sources: 1) View object, 2) Page object, 3) GET param, 4) "default".
-        $view->setView(basename($view->getView() ?: ($page->getView() ?: ($get_view ?: 'default'))));
+        return $get_view;
     }
 
     /**
      * Set current view template
      *
+     * View template is primarily used for figuring out where the view files for current page should come from. This is
+     * useful in case you want to use the exact same view files for pages using different (real) templates.
+     *
      * Note: this method should be used if you need to override view template in the Wireframe bootstrap file.
      *
-     * @param string|null $template Template name
-     * @return Wireframe Self-reference
+     * @param string|null $template Template name.
+     * @return Wireframe Self-reference.
      */
     public function setViewTemplate(?string $template): Wireframe {
         if ($this->page) {
@@ -608,6 +700,25 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         if ($this->view) {
             $this->view->setTemplate($template);
             $this->view->setView($this->view->getView());
+        }
+        return $this;
+    }
+
+    /**
+     * Set current controller
+     *
+     * Note: this method should be used if you need to override controller in the Wireframe bootstrap file.
+     *
+     * @param string|null $template Template name.
+     * @return Wireframe Self-reference.
+     */
+    public function setController(?string $template): Wireframe {
+        $this->controller = $this->getController($this->page, $template ?? '');
+        if ($this->page) {
+            $this->page->setController($this->controller);
+        }
+        if ($this->view) {
+            $this->view->setController($this->controller);
         }
         return $this;
     }
@@ -626,6 +737,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         $view = $this->view;
         $paths = $this->paths;
         $ext = $this->ext;
+        $controller = $view->getController() ?: $this->getController($this->page);
 
         // attempt to return prerendered value from cache
         $cache_key = implode(':', [
@@ -634,6 +746,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             $this->settings_hash,
             empty($data) ? '' : md5(json_encode($data)),
             $view->getTemplate(),
+            $controller,
             $view->getFilename(),
             $view->getLayout(),
             $view->getExt(),
@@ -652,8 +765,8 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         }
 
         // execute optional Controller::render()
-        if (!empty($this->controller)) {
-            $this->controller->render();
+        if (!empty($controller)) {
+            $controller->render();
         }
 
         // render output
@@ -715,6 +828,9 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             $event->return = $event->object->_wireframe_layout;
         } else {
             $event->object->_wireframe_layout = $event->arguments[0] ?? '';
+            $event->object = \Wireframe\Factory::page($event->object, [
+                'wireframe' => $this,
+            ]);
             $event->return = $event->object;
         }
     }
@@ -778,6 +894,40 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             $event->return = $event->object->_wireframe_view_template ?: $event->object->template;
         } else {
             $event->object->_wireframe_view_template = $event->arguments[0] ?? '';
+            $event->object = \Wireframe\Factory::page($event->object, [
+                'wireframe' => $this,
+            ]);
+            $event->return = $event->object;
+        }
+    }
+
+    /**
+     * This method is used by Page::getController() and Page::setController()
+     *
+     * Example use:
+     *
+     * ```
+     * The controller for current page is "<?= $page->getController() ?>".
+     * <?= $page->setController('home')->render() ?>
+     * ```
+     *
+     * @param HookEvent $event The ProcessWire HookEvent object.
+     *
+     * @see addHooks() for the code that attaches Wireframe hooks.
+     */
+    protected function pageController(HookEvent $event) {
+        if ($event->method == 'getController') {
+            $controller = $event->object->_wireframe_controller ?: null;
+            if (\is_null($controller)) {
+                $controller = $this->getController($event->object);
+            }
+            $event->return = $controller;
+        } else {
+            $controller = $event->arguments[0] ?? '';
+            if ($controller != '' && !$controller instanceof \Wireframe\Controller) {
+                $controller = $this->getController($event->object, $controller);
+            }
+            $event->object->_wireframe_controller = $controller;
             $event->object = \Wireframe\Factory::page($event->object, [
                 'wireframe' => $this,
             ]);
@@ -851,23 +1001,34 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         $invalid_value = true;
 
         switch ($key) {
+
             case 'data':
                 if (\is_array($value)) {
                     $invalid_value = false;
                     $this->$key = $value;
                 }
                 break;
+
             case 'page':
                 if ($value instanceof Page && $value->id) {
                     $invalid_value = false;
                     $this->$key = $value;
                 }
                 break;
+
+            case 'paths':
+                if (\is_array($value)) {
+                    $invalid_value = false;
+                    $this->setPaths($value);
+                }
+                break;
+
             case 'create_directories':
                 // module config (saved values)
                 $invalid_value = false;
                 $this->$key = $value;
                 break;
+
             case 'renderer':
                 // renderer module
                 if (\is_array($value) && !empty($value)) {
@@ -878,11 +1039,13 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
                     $this->setRenderer($value);
                 }
                 break;
+
             case 'uninstall':
             case 'submit_save_module':
                 // module config (skipped values)
                 $invalid_value = false;
                 break;
+
             default:
                 throw new WireException(sprintf(
                     'Unable to set value for unrecognized property "%s"',
@@ -909,7 +1072,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      * @param array $values Values as an associative array.
      * @return Wireframe Self-reference.
      */
-    public function setArray(array $values = []): Wireframe {
+    public function setArray(array $values): Wireframe {
         if (!empty($values)) {
             $this->settings_hash = md5(serialize($values));
             foreach ($values as $key => $value) {
@@ -987,6 +1150,29 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             $this->cache[$cache_key] = $files;
         }
         return $this->wire($files);
+    }
+
+    /**
+     * Get controller object
+     *
+     * @param Page $page
+     * @param string|null $template_name
+     * @return \Wireframe\Controller|null
+     */
+    protected function getController(Page $page, ?string $template_name = null): ?\Wireframe\Controller {
+        if (\is_null($template_name)) {
+            if (isset($page->_wireframe_controller)) {
+                return $page->_wireframe_controller == '' ? null : $page->_wireframe_controller;
+            }
+            $template_name = $page->template->name;
+        }
+        $controller_name = $this->wire('sanitizer')->pascalCase($template_name);
+        $controller_class = '\Wireframe\Controller\\' . $controller_name . 'Controller';
+
+        if (class_exists($controller_class)) {
+            return new $controller_class($this->wire(), $page, $this->view);
+        }
+        return null;
     }
 
 }

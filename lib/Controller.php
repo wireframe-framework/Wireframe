@@ -5,7 +5,7 @@ namespace Wireframe;
 /**
  * Abstract base implementation for Controller objects
  *
- * @version 0.4.0
+ * @version 0.5.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -88,7 +88,7 @@ abstract class Controller extends \ProcessWire\Wire {
     /**
      * Instance of View
      *
-     * @var View
+     * @var View|null
      */
     protected $view;
 
@@ -115,11 +115,8 @@ abstract class Controller extends \ProcessWire\Wire {
         // store a reference to ProcessWire
         $this->_wire = $wire;
 
-        if ($view) {
-            // store a reference to View and make View aware of its Controller
-            $this->view = $view;
-            $this->view->setController($this);
-        }
+        // store a reference to View
+        $this->view = $view;
 
         // store a reference to Page
         $this->page = $page;
@@ -157,6 +154,28 @@ abstract class Controller extends \ProcessWire\Wire {
         if (method_exists($this, '___render')) {
             return $this->__call('render', []);
         }
+    }
+
+    /**
+     * Render JSON method
+     *
+     * By default this method returns nothing (null). If you want a Controller to return values for
+     * JSON API requests you need to implement this method or the hookable version `___renderJSON()`
+     * in the Controller class. Basic example:
+     *
+     * ```
+     * public function renderJSON(): ?string {
+     *     return json_encode($this->wire('page')->getArray());
+     * }
+     * ```
+     *
+     * @return string|null JSON output.
+     */
+    public function renderJSON(): ?string {
+        if (method_exists($this, '___renderJSON')) {
+            return $this->__call('renderJSON', []);
+        }
+        return null;
     }
 
     /**

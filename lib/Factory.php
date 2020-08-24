@@ -8,7 +8,7 @@ use function ProcessWire\wire;
 /**
  * Factory class for Wireframe
  *
- * @version 0.1.0
+ * @version 0.2.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -22,34 +22,87 @@ class Factory {
     /**
      * Static getter (factory) method for Components
      *
+     * The args array can be used to provide arguments that will be used while instantiating the component. If you
+     * provide an associative array and the keys of said array match component class constructor argument names, the
+     * order of the values doesn't matter - otherwise they will be used in order.
+     *
+     * Assuming that you have a component called "Card" and the constructor method for this component accepts "title"
+     * and "summary" as arguments (`__constructor($title, $summary) { ... }`), these two would be equal:
+     *
+     * ```
+     * <?= Wireframe::component('Card', ['summary' => 'Card summary', 'title' => 'Card title']) ?>
+     * <?= Wireframe::component('Card', ['Card title', 'Card summary']) ?>
+     * ```
+     *
+     * While this method returns an object, in the examples above we're making use of the fact that the __toString()
+     * method of the Component class returns the rendered output of said component, so we don't have to specifically
+     * call the render() method (`Wireframe::component('Card', [...])->render()`).
+     *
      * Note: keep in mind that due to file system differences and the use of an autoloader, the name of the component
-     * should *always* be treated as case sensitive. If actual class name is `Card` and the name is provided for this
-     * method as `card`, this will fail in some environments, resulting in an exception.
+     * should *always* be treated as case sensitive. If actual class name is "Card" and the name is provided for this
+     * method as "card", this will fail in some environments, resulting in an exception.
      *
      * @param string $component_name Component name.
      * @param array $args Arguments for the Component.
      * @return \Wireframe\Component Instance of the Component.
      *
-     * @since 0.8.0
+     * @since 0.2.0 Added support for named arguments (Wireframe 0.12.0)
+     * @since 0.1.0 (Wireframe 0.8.0)
      *
      * @throws WireException if Component class isn't found.
      */
     public static function component(string $component_name, array $args = []): \Wireframe\Component {
 
-        $component = null;
         $component_class = '\Wireframe\Component\\' . $component_name;
 
-        if (class_exists($component_class)) {
-            $reflector = new \ReflectionClass($component_class);
-            $component = $reflector->newInstanceArgs($args);
-        } else {
+        if (!class_exists($component_class)) {
             throw new WireException(sprintf(
                 'Component class %s was not found.',
                 $component_class
-            ));
+            ), 404);
         }
 
-        return $component;
+        $reflector = new \ReflectionClass($component_class);
+
+        if (empty($args) || array_key_exists(0, $args)) {
+            // no args provided, or args looks like a numeric array; instantiate component using sequential args
+            // (intended as a performant way to make an educated guess, not a foolproof associative array test)
+            return $reflector->newInstanceArgs($args);
+        }
+
+        // get the component constructor method and its arguments; bail out early if constructor takes no args
+        $constructor = $reflector->getConstructor();
+        $constructor_args = $constructor->getParameters();
+        if (empty($constructor_args)) {
+            return $reflector->newInstanceArgs($args);
+        }
+
+        // build a modified args array based on component constructor parameter definitions and use that to
+        // instantiate the component (named parameter support)
+        $modified_args = [];
+        foreach ($constructor_args as $constructor_arg_key => $constructor_arg) {
+            if (empty($args)) {
+                // if there are no more arguments left, break out of the loop
+                break;
+            }
+            if (array_key_exists($constructor_arg->name, $args)) {
+                // args has an argument matching the name of the constructor argument
+                $modified_args[] = $args[$constructor_arg->name];
+                unset($args[$constructor_arg->name]);
+                continue;
+            } else if (array_key_exists($constructor_arg_key, $args)) {
+                // args has a numeric key in the position of the constructor argument
+                $modified_args[] = $args[$constructor_arg_key];
+                unset($args[$constructor_arg_key]);
+                continue;
+            }
+            $modified_args[] = $constructor_arg->isDefaultValueAvailable() ? $constructor_arg->getDefaultValue() : null;
+        }
+        if (!empty($args)) {
+            // args still has arguments left; merge these with the modified args array
+            $modified_args = array_merge($modified_args, $args);
+        }
+        return $reflector->newInstanceArgs($modified_args);
     }
 
     /**
@@ -90,7 +143,7 @@ class Factory {
      * @return string|Page|NullPage Returns string if 'render' option was 'true' **or** the args param was a string,
      *                              otherwise returns a Page, or NullPage (if page wasn't found).
      *
-     * @since Wireframe 0.8.0
+     * @since 0.1.0 (Wireframe 0.8.0)
      *
      * @throws WireException if source param is of an unexpected type.
      * @throws WireException if args param is of an unexpected type.
@@ -205,18 +258,29 @@ class Factory {
      * @param array|null $args Optional arguments for rendering the Partial. If provided, the Partial is automatically rendered.
      * @return Partial|string Instance of the Partial, or rendered markup if $args array was provided.
      *
-     * @since Wireframe 0.10.0
+     * @since 0.1.0 (Wireframe 0.10.0)
      *
+     * @throws WireException if partial name is invalid.
      * @throws WireException if partials path isn't found from config.
      */
     public static function partial(string $partial_name, array $args = null) {
+        if (\strpos($partial_name, '..') !== false) {
+            throw new WireException(sprintf(
+                'Partial name is invalid (%s)',
+                $partial_name
+            ));
+        }
         $config = wire('config');
         $partials_path = $config->paths->partials;
         if (empty($partials_path)) {
             throw new WireException('Partials path not found from config.');
         }
         $ext = '';
-        if (\strpos($partial_name, '.') === false) {
+        if (\strpos($partial_name, '.') !== false) {
+            $ext_pos = strrpos($partial_name, '.');
+            $ext = substr($partial_name, $ext_pos);
+            $partial_name = substr($partial_name, 0, $ext_pos);
+        } else {
             $ext = $config->_wireframeTemplateExtension;
             if (!$ext) {
                 $ext = $config->templateExtension;
