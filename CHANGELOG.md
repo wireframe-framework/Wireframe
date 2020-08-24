@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2020-08-24
+
 ### Added
 - Support for named arguments when using `Wireframe::component($component_name, $args)`.
 - JSON API. See comments in the WireframeAPI module file for more details.
