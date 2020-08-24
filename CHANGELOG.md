@@ -21,8 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - When Controller is instantiated, it no longer overrides the Controller property of the related View instance.
 
 ### Fixed
-- Factory::partial() now works as expected for partial names with file ext included (partial_name.php etc.)
-- Factory::partial() prevents 2 or more dots in partial name, just in case (directory traversal is not intended).
+- Wireframe::partial() now works as expected for partial names with file ext included (partial_name.php etc.)
+- Wireframe::partial() prevents 2 or more dots in partial name, just in case (directory traversal is not intended).
 
 ## [0.11.0] - 2020-05-13
 
