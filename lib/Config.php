@@ -5,7 +5,7 @@ namespace Wireframe;
 /**
  * Configuration helper for the Wireframe module
  *
- * @version 0.2.0
+ * @version 0.2.1
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -35,6 +35,7 @@ class Config extends \ProcessWire\Wire {
      * @return \ProcessWire\InputfieldWrapper
      */
     public function getAllFields() {
+
         // inputfieldwrapper for config fields
         $fields = $this->wire(new \ProcessWire\InputfieldWrapper());
 
@@ -44,7 +45,13 @@ class Config extends \ProcessWire\Wire {
         return $fields;
     }
 
-    public function getCreateDirectoriesField() {
+    /**
+     * Get config field for the create directories settings
+     *
+     * @return \ProcessWire\InputfieldCheckboxes
+     */
+    protected function getCreateDirectoriesField() {
+
         // init and setup a checkboxes field for the create directories feature
         $field = $this->wire(new \ProcessWire\InputfieldCheckboxes());
         $field->name = 'create_directories';

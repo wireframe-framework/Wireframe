@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Wireframe::getController() is now a public method that can return current Controller instance, the Controller instance for provided page, or a Controller instance for provided Page and template name.
+- Visibility of following methods was changed from public to protected: Wireframe::___checkRedirects(), Wireframe::___redirect(), Wireframe::___initView(), Wireframe::___initController(), \Wireframe\Config::getCreateDirectoriesField().
+
 ## [0.12.0] - 2020-08-24
 
 ### Added

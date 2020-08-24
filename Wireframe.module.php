@@ -14,7 +14,7 @@ namespace ProcessWire;
  * @method static string|Page|NullPage page($source, $args = []) Static getter (factory) method for Pages.
  * @method static string|null partial(string $partial_name, array $args = []) Static getter (factory) method for Partials.
  *
- * @version 0.12.0
+ * @version 0.13.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -514,7 +514,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      * Look for redirect fields within config settings. If present, check if the page has a value in one of those and
      * if a redirect should be performed.
      */
-    public function ___checkRedirects() {
+    protected function ___checkRedirects() {
 
         // redirect fields from Wireframe runtime configuration
         $redirect_fields = $this->config['redirect_fields'] ?? null;
@@ -563,7 +563,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      * @param string $url Redirect URL.
      * @param bool $permanent Is this a permanent (301) redirect?
      */
-    public function ___redirect(string $url, bool $permanent) {
+    protected function ___redirect(string $url, bool $permanent) {
         $this->wire('session')->redirect($url, $permanent);
     }
 
@@ -576,7 +576,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      *
      * @throws WireException if no valid Page has been defined.
      */
-    public function ___initView(): \Wireframe\View {
+    protected function ___initView(): \Wireframe\View {
 
         // params
         $page = $this->page;
@@ -612,7 +612,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      *
      * @return \Wireframe\Controller|null Controller object or null.
      */
-    public function ___initController(): ?\Wireframe\Controller {
+    protected function ___initController(): ?\Wireframe\Controller {
 
         // get a new Controller instance and store it both locally, as a run-time property of current Page object, and
         // as a reference within the View object
@@ -1155,11 +1155,19 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     /**
      * Get controller object
      *
-     * @param Page $page
+     * - If a Page object is provided as the first argument, this method returns a Controller for that Page
+     * - If a Page object is provided as the first argument and a template name as the second one, this method will
+     *   attempt to instantiate and return a Controller for provided Page and template name.
+     * - If neither Page nor template name are provided, this method returns Wireframe instance Controller property.
+     *
+     * @param Page|null $page
      * @param string|null $template_name
      * @return \Wireframe\Controller|null
      */
-    protected function getController(Page $page, ?string $template_name = null): ?\Wireframe\Controller {
+    public function getController(?Page $page = null, ?string $template_name = null): ?\Wireframe\Controller {
+        if (\is_null($page)) {
+            return $this->controller;
+        }
         if (\is_null($template_name)) {
             if (isset($page->_wireframe_controller)) {
                 return $page->_wireframe_controller == '' ? null : $page->_wireframe_controller;
