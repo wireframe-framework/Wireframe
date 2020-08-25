@@ -488,6 +488,22 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      */
     protected function addHooks() {
 
+        // make View properties directly available in TemplateFile (primarily for field rendering)
+        $this->addHookBefore('TemplateFile::render', function(HookEvent $event) {
+            $view = $event->object->view;
+            if (!$view instanceof \Wireframe\View || $event->object instanceof \Wireframe\View) {
+                // View doesn't exist or we're currently rendering a Wireframe View
+                return;
+            }
+            $event->object->setArray(array_merge($view->data(), array_filter([
+                'page' => $event->object->page, // used by field rendering
+                'value' => $event->object->value, // used by field rendering
+                'field' => $event->object->field, // used by field rendering
+                'partials' => $view->partials,
+                'placeholders' => $view->placeholders,
+            ])));
+        });
+
         // helper methods for getting or setting page layout
         $this->addHookMethod('Page::layout', $this, 'pageLayout');
         $this->addHookMethod('Page::getLayout', $this, 'pageLayout');
