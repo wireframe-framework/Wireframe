@@ -218,7 +218,7 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
         }
         $endpoint = $path[0];
         $endpoints = array_intersect(array_keys($this->available_endpoints), $this->enabled_endpoints);
-        if (!in_array($endpoint, $endpoints)) {
+        if (!\in_array($endpoint, $endpoints)) {
             throw (new \Wireframe\APIException(sprintf(
                 'Unknown API endpoint (%s)',
                 $endpoint
@@ -288,7 +288,7 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
      * @return WireframeAPI Self-reference.
      */
     public function enableEndpoint(string $endpoint): WireframeAPI {
-        if (array_key_exists($endpoint, $this->available_endpoints) && !in_array($endpoint, $this->enabled_endpoints)) {
+        if (array_key_exists($endpoint, $this->available_endpoints) && !\in_array($endpoint, $this->enabled_endpoints)) {
             $this->enabled_endpoints[] = $endpoint;
         }
         return $this;

@@ -122,7 +122,7 @@ class APIEndpoints {
                 throw new \ProcessWire\Wire404Exception();
             }
             $page->wire('page', $page);
-            $urlSegmentCount = count($page->wire('input')->urlSegments());
+            $urlSegmentCount = \count($page->wire('input')->urlSegments());
             if ($urlSegmentCount) {
                 for ($urlSegmentNum = 0; $urlSegmentNum < $urlSegmentCount; $urlSegmentNum++) {
                     // note: num is always 1 since removing the first segment resets keys for the rest of them.
