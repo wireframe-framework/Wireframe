@@ -9,7 +9,7 @@ namespace Wireframe;
  *
  * @internal APIEndpoints is only intended for use within the Wireframe internals.
  *
- * @version 0.1.0
+ * @version 0.1.1
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -48,17 +48,17 @@ class APIEndpoints {
 
         // set return format
         $return_format = $path[1] ?? null;
-        if (!\is_null($return_format) && !in_array($return_format, ['json', 'rendered'])) {
+        if ($return_format !== null && !in_array($return_format, ['json', 'rendered'])) {
             $return_format = null;
         }
 
         try {
             $component = \Wireframe\Factory::component($component_name, $args);
             $out = [];
-            if (\is_null($return_format) || $return_format == 'json') {
+            if ($return_format === null || $return_format == 'json') {
                 $out['json'] = json_decode($component->renderJSON());
             }
-            if (\is_null($return_format) || $return_format == 'rendered') {
+            if ($return_format === null || $return_format == 'rendered') {
                 $out['rendered'] = $component->render();
             }
             return $out;
@@ -112,7 +112,7 @@ class APIEndpoints {
 
         // set return format
         $return_format = $path[1] ?? null;
-        if (!\is_null($return_format) && !in_array($return_format, ['json', 'rendered'])) {
+        if ($return_format !== null && !in_array($return_format, ['json', 'rendered'])) {
             $return_format = null;
         }
 
@@ -130,11 +130,11 @@ class APIEndpoints {
                 }
             }
             $out = [];
-            if (\is_null($return_format) || $return_format == 'json') {
+            if ($return_format === null || $return_format == 'json') {
                 $controller = $page->getController();
                 $out['json'] = $controller ? json_decode($controller->renderJSON()) : null;
             }
-            if (\is_null($return_format) || $return_format == 'rendered') {
+            if ($return_format === null || $return_format == 'rendered') {
                 $out['rendered'] = $page->render();
             }
             return $out;

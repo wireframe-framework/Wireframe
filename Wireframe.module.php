@@ -204,7 +204,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      */
     public static function isInitialized(int $instanceID = null): bool {
         return \in_array(
-            \is_null($instanceID) ? wire()->instanceID : $instanceID,
+            $instanceID === null ? wire()->instanceID : $instanceID,
             static::$initialized
         );
     }
@@ -385,7 +385,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      */
     public function setRenderer($renderer, array $settings = []): Wireframe {
         $needs_init = !empty($settings);
-        if (\is_null($renderer)) {
+        if ($renderer === null) {
             $this->renderer = null;
             if ($this->view) $this->view->setRenderer(null);
         } else if (\is_string($renderer)) {
@@ -549,7 +549,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             // get URL from a page field
             $url = $page->get($field);
             if ($url instanceof WireArray) {
-                $url = $url->count() ? $url->first() : null;
+                $url = $url->first();
             }
             if (empty($url)) continue;
 
@@ -595,21 +595,18 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     protected function ___initView(): \Wireframe\View {
 
         // params
-        $page = $this->page;
-        $paths = $this->paths;
-        $ext = $this->ext;
-        $data = $this->data;
+        $page_layout = $this->page->getLayout();
 
         // initialize the View object (note: view file is set in the Wireframe::___setView() method)
         $view = new \Wireframe\View;
-        $view->setLayout($page->getLayout() === null ? 'default' : $page->getLayout());
-        $view->setTemplate($page->getViewTemplate());
-        $view->setViewsPath($paths->views);
-        $view->setLayoutsPath($paths->layouts);
-        $view->setExt($ext);
+        $view->setLayout($page_layout === null ? 'default' : $page_layout);
+        $view->setTemplate($this->page->getViewTemplate());
+        $view->setViewsPath($this->paths->views);
+        $view->setLayoutsPath($this->paths->layouts);
+        $view->setExt($this->ext);
         $view->setPage($this->page);
-        $view->setData($data);
-        $view->setPartials($this->findPartials($paths->partials));
+        $view->setData($this->data);
+        $view->setPartials($this->findPartials($this->paths->partials));
         $view->setPlaceholders(new \Wireframe\ViewPlaceholders($view));
         $view->setRenderer($this->renderer);
         $this->view = $view;
@@ -651,7 +648,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     public function ___setView(?string $view = null): Wireframe {
 
         // first check if a predefined view name was provided
-        if (!\is_null($view)) {
+        if ($view !== null) {
             $view = basename($view);
             $this->view->setView($view);
             $this->page->setView($view);
@@ -762,7 +759,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             $this->settings_hash,
             empty($data) ? '' : md5(json_encode($data)),
             $view->getTemplate(),
-            $controller,
+            $controller === null ? '' : \get_class($controller),
             $view->getFilename(),
             $view->getLayout(),
             $view->getExt(),
@@ -934,7 +931,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     protected function pageController(HookEvent $event) {
         if ($event->method == 'getController') {
             $controller = $event->object->_wireframe_controller ?: null;
-            if (\is_null($controller)) {
+            if ($controller === null) {
                 $controller = $this->getController($event->object);
             }
             $event->return = $controller;
@@ -1050,7 +1047,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
                 if (\is_array($value) && !empty($value)) {
                     $invalid_value = false;
                     $this->setRenderer($value[0], $value[1] ?? []);
-                } else if (\is_null($value) || \is_string($value) || $value instanceof Module) {
+                } else if ($value === null || \is_string($value) || $value instanceof Module) {
                     $invalid_value = false;
                     $this->setRenderer($value);
                 }
@@ -1083,7 +1080,8 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     /**
      * Set values from an array
      *
-     * This method is a wrapper for the set() method, with support for multiple values as an associative array.
+     * This method is a wrapper for the set() method that supports multiple values as an associative array and
+     * automatically generates a hash of the settings array (for caching purposes).
      *
      * @param array $values Values as an associative array.
      * @return Wireframe Self-reference.
@@ -1140,7 +1138,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
                 } else {
                     $file_data = [];
                     $ext_pos = \strrpos($name, '.');
-                    if (\is_null($ext)) {
+                    if ($ext === null) {
                         if ($ext_pos !== false) {
                             $temp_ext = \ltrim(\substr($name, $ext_pos), '.');
                             $file_data[$temp_ext] = $file;
@@ -1181,10 +1179,10 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      * @return \Wireframe\Controller|null
      */
     public function getController(?Page $page = null, ?string $template_name = null): ?\Wireframe\Controller {
-        if (\is_null($page)) {
+        if ($page === null) {
             return $this->controller;
         }
-        if (\is_null($template_name)) {
+        if ($template_name === null) {
             if (isset($page->_wireframe_controller)) {
                 return $page->_wireframe_controller == '' ? null : $page->_wireframe_controller;
             }

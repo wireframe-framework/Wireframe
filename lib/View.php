@@ -11,7 +11,7 @@ namespace Wireframe;
  * @property ViewPlaceholders|null $placeholders ViewPlaceholders object.
  * @property Partials|null $partials Object containing partial paths.
  *
- * @version 0.7.0
+ * @version 0.7.1
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -127,7 +127,7 @@ class View extends \ProcessWire\TemplateFile {
      * @throws Exception if $controller argument is of unrecognized type.
      */
     public function setController($controller = null): View {
-        if (!\is_null($controller) && !\is_string($controller) && !$controller instanceof Controller) {
+        if ($controller !== null && !\is_string($controller) && !$controller instanceof Controller) {
             throw new \Exception('Controller is of unexpected type, please provide a Controller instance, Controller class name (string), or null');
         }
         if (\is_string($controller)) {

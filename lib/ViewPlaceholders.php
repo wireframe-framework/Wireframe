@@ -5,7 +5,7 @@ namespace Wireframe;
 /**
  * Container for View Placeholders
  *
- * @version 0.4.0
+ * @version 0.4.1
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -45,7 +45,7 @@ class ViewPlaceholders {
      */
     public function __get(string $key) {
         $return = $this->data[$key] ?? null;
-        if (\is_null($return) && basename($key) === $key) {
+        if ($return === null && basename($key) === $key) {
 
             // params
             $page = $this->view->getPage();

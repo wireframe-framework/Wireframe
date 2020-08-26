@@ -5,7 +5,7 @@ namespace Wireframe;
 /**
  * Abstract base implementation for Controller objects
  *
- * @version 0.5.0
+ * @version 0.5.1
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -210,7 +210,7 @@ abstract class Controller extends \ProcessWire\Wire {
                             . '/method=' . $name
                             . '/page=' . $this->wire('page');
                 $return = $this->wire('cache')->get($cache_name, $this->cacheable_methods[$name]);
-                if (!\is_null($return)) {
+                if ($return !== null) {
                     $this->method_return_value_cache[$name] = $return;
                     return $return;
                 }
@@ -245,7 +245,7 @@ abstract class Controller extends \ProcessWire\Wire {
             $this->method_return_value_cache[$name] = $return;
         }
 
-        if (!empty($cache_name) && !\is_null($return)) {
+        if (!empty($cache_name) && $return !== null) {
             // store return value in persistent cache (WireCache)
             $this->wire('cache')->save($cache_name, $return, $this->cacheable_methods[$name]);
         }

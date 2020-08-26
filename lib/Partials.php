@@ -7,7 +7,7 @@ namespace Wireframe;
  *
  * This class holds Partial objects and provides method access to rendering them with optional arguments.
  *
- * @version 0.2.0
+ * @version 0.2.1
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -51,7 +51,7 @@ class Partials extends \ProcessWire\WireArray {
         } else {
             $value = parent::__get($property);
         }
-        if (\is_null($value)) {
+        if ($value === null) {
             $ext = $this->wire('config')->templateExtension;
             return new Partial([
                 $ext => $this->path . $property . '.' . $ext,
