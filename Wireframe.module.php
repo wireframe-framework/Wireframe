@@ -1124,17 +1124,21 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      *
      * @param string $path Base directory.
      * @param string|null $ext File extension (optional).
+     * @param bool $use_cache Use cache? Defaults to `true`.
      * @return \Wireframe\Partials A container populated with Partials.
      */
-    protected function findPartials(string $path, string $ext = null): \Wireframe\Partials {
-        $cache_key = 'files:' . $path . ':' . $ext;
-        $files = $this->cache[$cache_key] ?? [];
-        if (empty($files)) {
+    protected function findPartials(string $path, string $ext = null, bool $use_cache = true): \Wireframe\Partials {
+        $files = [];
+        if ($use_cache) {
+            $cache_key = 'partials:' . $path . ':' . $ext;
+            $files = $this->cache[$cache_key] ?? [];
+        }
+        if (!$use_cache || empty($files)) {
             foreach (\glob($path . '*') as $file) {
                 $name = \basename($file);
                 if (\strpos($name, ".") === 0) continue;
                 if (\is_dir($file)) {
-                    $files[$name] = $this->findPartials("{$file}/", $ext);
+                    $files[$name] = $this->findPartials("{$file}/", $ext, false);
                 } else {
                     $file_data = [];
                     $ext_pos = \strrpos($name, '.');
@@ -1158,10 +1162,12 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
                 $files = new \Wireframe\Partials();
                 $files->setPath($path);
                 foreach ($temp_files as $key => $file) {
-                    $files->{$key} = \is_object($file) ? $file : new \Wireframe\Partial($file);
+                    $files->{$key} = \is_object($file) ? $file : $this->wire(new \Wireframe\Partial($file));
                 }
             }
-            $this->cache[$cache_key] = $files;
+            if ($use_cache) {
+                $this->cache[$cache_key] = $files;
+            }
         }
         return $this->wire($files);
     }
