@@ -70,6 +70,8 @@ class View extends \ProcessWire\TemplateFile {
             // that this renderer can be used to render said file
             $view_path = $this->getViewData('context') == 'layout' ? 'layouts_path' : 'views_path';
             $view_file = substr($this->filename, \strlen($this->getViewData($view_path)));
+            // note: $globals is inherited from parent class TemplateFile, where it's marked as DEPRECATED; this may
+            // need some attention in the near(ish) future
             $view_context = array_merge($this->getArray(), self::$globals);
             /** @noinspection PhpUndefinedMethodInspection */
             return $renderer->render($this->getViewData('context'), $view_file, $view_context);
