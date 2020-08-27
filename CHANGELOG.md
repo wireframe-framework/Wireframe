@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Wireframe::getController() is now a public method that can return current Controller instance, the Controller instance for provided page, or a Controller instance for provided Page and template name.
 - Visibility of following methods was changed from public to protected: Wireframe::___checkRedirects(), Wireframe::___redirect(), Wireframe::___initView(), Wireframe::___initController(), \Wireframe\Config::getCreateDirectoriesField().
+- Controller class implementation was streamlined: new objects are wired using the native wire() function, and thus Controller constructors no longer require the ProcessWire instance as an argument.
 - Wireframe no longer caches partials unnecessarily, plus new Partial objects are automatically wired.
 - Various minor optimizations, some code cleanup, and a few improvements to comments.
 

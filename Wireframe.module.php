@@ -1198,7 +1198,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         $controller_class = '\Wireframe\Controller\\' . $controller_name . 'Controller';
 
         if (class_exists($controller_class)) {
-            return new $controller_class($this->wire(), $page, $this->view);
+            return $this->wire(new $controller_class($page, $this->view));
         }
         return null;
     }
