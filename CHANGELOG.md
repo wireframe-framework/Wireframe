@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2020-08-28
+
 ### Added
 - New hook makes View properties directly accessible in TemplateFiles (e.g. when rendering field templates)
 
