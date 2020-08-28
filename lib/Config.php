@@ -64,10 +64,8 @@ class Config extends \ProcessWire\Wire {
         $field->description = $this->_('Wireframe can attempt to create required directories for you automatically if you check the items you want us to create and submit the form. Note that this option  requires write access to the disk, and may not be available in all environments.');
         $field->notes = $this->_('If a checkbox is disabled, ProcessWire doesn\'t have write access to the parent of the target directory, or the target directory already exists (in which case the checkbox should also be checked).');
 
-        // process the create directories field
-        $field = $this->processCreateDirectoriesField($field);
-
-        return $field;
+        // return the processed create directories field
+        return $this->processCreateDirectoriesField($field);
     }
 
     /**
