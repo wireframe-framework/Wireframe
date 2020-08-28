@@ -5,7 +5,7 @@ namespace Wireframe;
 /**
  * Abstract base implementation for Controller objects
  *
- * @version 0.5.0
+ * @version 0.6.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -76,16 +76,6 @@ abstract class Controller extends \ProcessWire\Wire {
     private $method_return_value_cache = [];
 
     /**
-     * Instance of ProcessWire
-     *
-     * Note: this variable is underscore-prefixed in order to stay compatible with the Wire
-     * class from ProcessWire (which we are extending here).
-     *
-     * @var \ProcessWire\ProcessWire
-     */
-    protected $_wire;
-
-    /**
      * Instance of View
      *
      * @var View|null
@@ -102,18 +92,13 @@ abstract class Controller extends \ProcessWire\Wire {
     /**
      * Constructor
      *
-     * Note that a Controller can exist without a View. In such a case it is the
-     * responsibility of the developer to make sure that the Controller doesn't
-     * assume that a View is always available.
+     * Note that a Controller can exist without a View. It is the responsibility of the developer
+     * to make sure that the Controller doesn't assume that a View is always available.
      *
-     * @param \ProcessWire\ProcessWire $wire Instance of ProcessWire
      * @param \ProcessWire\Page $page Page object
      * @param View|null $view View component (optional)
      */
-    public function __construct(\ProcessWire\Processwire $wire, \ProcessWire\Page $page, ?View $view = null) {
-
-        // store a reference to ProcessWire
-        $this->_wire = $wire;
+    public function __construct(\ProcessWire\Page $page, ?View $view = null) {
 
         // store a reference to View
         $this->view = $view;
@@ -210,7 +195,7 @@ abstract class Controller extends \ProcessWire\Wire {
                             . '/method=' . $name
                             . '/page=' . $this->wire('page');
                 $return = $this->wire('cache')->get($cache_name, $this->cacheable_methods[$name]);
-                if (!\is_null($return)) {
+                if ($return !== null) {
                     $this->method_return_value_cache[$name] = $return;
                     return $return;
                 }
@@ -245,7 +230,7 @@ abstract class Controller extends \ProcessWire\Wire {
             $this->method_return_value_cache[$name] = $return;
         }
 
-        if (!empty($cache_name) && !\is_null($return)) {
+        if (!empty($cache_name) && $return !== null) {
             // store return value in persistent cache (WireCache)
             $this->wire('cache')->save($cache_name, $return, $this->cacheable_methods[$name]);
         }

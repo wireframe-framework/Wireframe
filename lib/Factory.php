@@ -8,7 +8,7 @@ use function ProcessWire\wire;
 /**
  * Factory class for Wireframe
  *
- * @version 0.2.0
+ * @version 0.2.1
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -167,7 +167,7 @@ class Factory {
         }
 
         // bail out early if page wasn't found
-        if ($page instanceof NullPage) return $page;
+        if (!$page->id) return $page;
 
         // parse arguments and merge with defaults
         if (\is_string($args)) {

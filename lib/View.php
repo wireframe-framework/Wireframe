@@ -11,7 +11,7 @@ namespace Wireframe;
  * @property ViewPlaceholders|null $placeholders ViewPlaceholders object.
  * @property Partials|null $partials Object containing partial paths.
  *
- * @version 0.7.0
+ * @version 0.7.1
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -25,13 +25,6 @@ class View extends \ProcessWire\TemplateFile {
      * @var ViewData
      */
     protected $_wireframe_view_data;
-
-    /**
-     * Local data, made available to layouts and views
-     *
-     * @var array
-     */
-    protected $data = [];
 
     /**
      * Partials object
@@ -70,6 +63,8 @@ class View extends \ProcessWire\TemplateFile {
             // that this renderer can be used to render said file
             $view_path = $this->getViewData('context') == 'layout' ? 'layouts_path' : 'views_path';
             $view_file = substr($this->filename, \strlen($this->getViewData($view_path)));
+            // note: $globals is inherited from parent class TemplateFile, where it's marked as DEPRECATED; this may
+            // need some attention in the near(ish) future
             $view_context = array_merge($this->getArray(), self::$globals);
             /** @noinspection PhpUndefinedMethodInspection */
             return $renderer->render($this->getViewData('context'), $view_file, $view_context);
@@ -92,8 +87,9 @@ class View extends \ProcessWire\TemplateFile {
             $this->setPlaceholders($value);
         } else if ($key == 'partials') {
             $this->setPartials($value);
+        } else {
+            parent::__set($key, $value);
         }
-        parent::__set($key, $value);
     }
 
     /**
@@ -127,7 +123,7 @@ class View extends \ProcessWire\TemplateFile {
      * @throws Exception if $controller argument is of unrecognized type.
      */
     public function setController($controller = null): View {
-        if (!\is_null($controller) && !\is_string($controller) && !$controller instanceof Controller) {
+        if ($controller !== null && !\is_string($controller) && !$controller instanceof Controller) {
             throw new \Exception('Controller is of unexpected type, please provide a Controller instance, Controller class name (string), or null');
         }
         if (\is_string($controller)) {

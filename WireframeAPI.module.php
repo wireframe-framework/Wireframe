@@ -8,7 +8,7 @@ namespace ProcessWire;
  * This module provides a JSON API for accessing Wireframe's features. For more details check out the documentation at
  * https://wireframe-framework.com/docs/wireframe-api/.
  *
- * @version 0.1.0
+ * @version 0.1.1
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -218,7 +218,7 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
         }
         $endpoint = $path[0];
         $endpoints = array_intersect(array_keys($this->available_endpoints), $this->enabled_endpoints);
-        if (!in_array($endpoint, $endpoints)) {
+        if (!\in_array($endpoint, $endpoints)) {
             throw (new \Wireframe\APIException(sprintf(
                 'Unknown API endpoint (%s)',
                 $endpoint
@@ -288,7 +288,7 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
      * @return WireframeAPI Self-reference.
      */
     public function enableEndpoint(string $endpoint): WireframeAPI {
-        if (array_key_exists($endpoint, $this->available_endpoints) && !in_array($endpoint, $this->enabled_endpoints)) {
+        if (array_key_exists($endpoint, $this->available_endpoints) && !\in_array($endpoint, $this->enabled_endpoints)) {
             $this->enabled_endpoints[] = $endpoint;
         }
         return $this;
