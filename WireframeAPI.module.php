@@ -8,7 +8,7 @@ namespace ProcessWire;
  * This module provides a JSON API for accessing Wireframe's features. For more details check out the documentation at
  * https://wireframe-framework.com/docs/wireframe-api/.
  *
- * @version 0.1.0
+ * @version 0.1.1
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
