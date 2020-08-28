@@ -27,13 +27,6 @@ class View extends \ProcessWire\TemplateFile {
     protected $_wireframe_view_data;
 
     /**
-     * Local data, made available to layouts and views
-     *
-     * @var array
-     */
-    protected $data = [];
-
-    /**
      * Partials object
      *
      * @var Partials
@@ -94,8 +87,9 @@ class View extends \ProcessWire\TemplateFile {
             $this->setPlaceholders($value);
         } else if ($key == 'partials') {
             $this->setPartials($value);
+        } else {
+            parent::__set($key, $value);
         }
-        parent::__set($key, $value);
     }
 
     /**
