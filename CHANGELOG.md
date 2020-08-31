@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.1] - 2020-08-31
+
+### Fixed
+- Config class getPaths() method had wrong return type specified, rendering module config screen unusable.
+
 ## [0.13.0] - 2020-08-28
 
 ### Added
