@@ -13,7 +13,7 @@ namespace Wireframe;
  * In aforementioned use case you should override the getData() method and return the data you want
  * the render process to have access to.
  *
- * @version 0.3.0
+ * @version 0.3.1
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -86,7 +86,13 @@ abstract class Component extends \ProcessWire\WireData {
             // fall back to built-in PHP template renderer if necessary
             $view_ext = $this->wire('view')->getExt();
             if (\is_file($view_root . $view_file . $view_ext)) {
-                return $this->wire('files')->render($view_root . $view_file . $view_ext, $this->getData());
+                // note: here we used to use WireFileTools::render(), but that involved a bit of extra overhead, as well
+                // as an issue where null values never reached the view file (WireFileTools::render() passes data array
+                // to WireData::data(), which in turn behaves as a getter if the "value" property is null).
+                $template = $this->wire(new \ProcessWire\TemplateFile());
+                $template->setFilename($view_root . $view_file . $view_ext);
+                $template->data($this->getData());
+                return $template->render();
             }
         }
         return '';

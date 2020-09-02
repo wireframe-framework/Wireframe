@@ -5,7 +5,7 @@ namespace Wireframe;
 /**
  * Wireframe Partial
  *
- * @version 0.1.2
+ * @version 0.1.3
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -80,7 +80,10 @@ class Partial extends \ProcessWire\Wire {
         if (empty($filename)) {
             return '';
         }
-        return $this->wire('files')->render($filename, $args) ?: '';
+        $template = $this->wire(new \ProcessWire\TemplateFile());
+        $template->setFilename($filename);
+        $template->data($args);
+        return $template->render() ?: '';
     }
 
     /**
