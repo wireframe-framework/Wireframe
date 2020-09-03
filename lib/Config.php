@@ -4,13 +4,12 @@ namespace Wireframe;
 
 use \ProcessWire\InputfieldCheckboxes;
 use \ProcessWire\InputfieldWrapper;
-use \ProcessWire\ProcessWire;
 use \ProcessWire\Wireframe;
 
 /**
  * Configuration helper for the Wireframe module
  *
- * @version 0.2.2
+ * @version 0.2.3
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -19,7 +18,7 @@ class Config extends \ProcessWire\Wire {
     /**
      * A local instance of the Wireframe module
      *
-     * @param Wireframe Wireframe
+     * @var Wireframe
      */
     protected $wireframe;
 
@@ -27,10 +26,8 @@ class Config extends \ProcessWire\Wire {
      * Constructor method
      *
      * @param Wireframe $wireframe Instance of Wireframe
-     * @param ProcessWire $wire Instance of ProcessWire
      */
-    public function __construct(ProcessWire $wire, Wireframe $wireframe) {
-        $this->setWire($wire);
+    public function __construct(Wireframe $wireframe) {
         $this->wireframe = $wireframe;
     }
 

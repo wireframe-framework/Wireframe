@@ -7,7 +7,7 @@ namespace Wireframe;
  *
  * This class is used as a container for (internal) view data.
  *
- * @internal ViewData is only intended for use within the Wireframe internals.
+ * @internal This class is only intended for use within the Wireframe internals.
  *
  * @version 0.1.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>

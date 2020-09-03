@@ -14,7 +14,7 @@ namespace ProcessWire;
  * @method static string|Page|NullPage page($source, $args = []) Static getter (factory) method for Pages.
  * @method static string|null partial(string $partial_name, array $args = []) Static getter (factory) method for Partials.
  *
- * @version 0.13.2
+ * @version 0.14.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -104,7 +104,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         $this->setConfig();
 
         // instantiate Wireframe Config and get all config inputfields
-        $config = new \Wireframe\Config($this->wire(), $this);
+        $config = $this->wire(new \Wireframe\Config($this));
         $fields = $config->getAllFields();
 
         return $fields;
@@ -184,7 +184,8 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         $this->setConfig();
 
         // attach hooks
-        $this->addHooks();
+        $hooks = $this->wire(new \Wireframe\Hooks($this));
+        $hooks->init();
 
         // remember that this method has been run and return true
         static::$initialized[] = $this->wire()->instanceID;
@@ -477,54 +478,6 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     }
 
     /**
-     * Attach hooks
-     *
-     * Note: Page::layout() and Page::view() are kept for backwards compatibility, but their use is discouraged.
-     * Generally speaking it's best to stick to dedicated getter/setter methods (view()/layout() are ambiguous).
-     *
-     * @see pageLayout() for Page::layout(), Page::getLayout(), and Page::setLayout() implementation.
-     * @see pageView() for Page::view(), Page::getView(), and Page::setView() implementation.
-     * @see PageViewTemplate() for Page::viewTemplate(), Page::getViewTemplate(), and Page::setViewTemplate() implementation.
-     */
-    protected function addHooks() {
-
-        // make View properties directly available in TemplateFile (primarily for field rendering)
-        $this->addHookBefore('TemplateFile::render', function(HookEvent $event) {
-            $view = $event->object->view;
-            if (!$view instanceof \Wireframe\View || $event->object instanceof \Wireframe\View) {
-                // View doesn't exist or we're currently rendering a Wireframe View
-                return;
-            }
-            $event->object->setArray(array_merge($view->data(), array_filter([
-                'page' => $event->object->page, // used by field rendering
-                'value' => $event->object->value, // used by field rendering
-                'field' => $event->object->field, // used by field rendering
-                'partials' => $view->partials,
-                'placeholders' => $view->placeholders,
-            ])));
-        });
-
-        // helper methods for getting or setting page layout
-        $this->addHookMethod('Page::layout', $this, 'pageLayout');
-        $this->addHookMethod('Page::getLayout', $this, 'pageLayout');
-        $this->addHookMethod('Page::setLayout', $this, 'pageLayout');
-
-        // helper methods for getting or setting page view
-        $this->addHookMethod('Page::view', $this, 'pageView');
-        $this->addHookMethod('Page::getView', $this, 'pageView');
-        $this->addHookMethod('Page::setView', $this, 'pageView');
-
-        // helper methods for getting or setting page view template
-        $this->addHookMethod('Page::viewTemplate', $this, 'pageViewTemplate');
-        $this->addHookMethod('Page::getViewTemplate', $this, 'pageViewTemplate');
-        $this->addHookMethod('Page::setViewTemplate', $this, 'pageViewTemplate');
-
-        // helper methods for getting or setting page controller
-        $this->addHookMethod('Page::getController', $this, 'pageController');
-        $this->addHookMethod('Page::setController', $this, 'pageController');
-    }
-
-    /**
      * Check if a redirect should occur
      *
      * Look for redirect fields within config settings. If present, check if the page has a value in one of those and
@@ -598,7 +551,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         $page_layout = $this->page->getLayout();
 
         // initialize the View object (note: view file is set in the Wireframe::___setView() method)
-        $view = new \Wireframe\View;
+        $view = $this->wire(new \Wireframe\View);
         $view->setLayout($page_layout === null ? 'default' : $page_layout);
         $view->setTemplate($this->page->getViewTemplate());
         $view->setViewsPath($this->paths->views);
@@ -813,139 +766,6 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         $this->cache[$cache_key] = $output;
 
         return $output;
-    }
-
-    /**
-     * This method is used by Page::layout(), Page::getLayout(), and Page::setLayout()
-     *
-     * Example use with combined getter/setter method:
-     *
-     * ```
-     * The layout for current page is "<?= $page->layout() ?>".
-     * <?= $page->layout('another-layout')->render() ?>
-     * ```
-     *
-     * Example use with dedicated getter/setter methods:
-     *
-     * ```
-     * The layout for current page is "<?= $page->getLayout() ?>".
-     * <?= $page->setLayout('another-layout')->render() ?>
-     * ```
-     *
-     * @param HookEvent $event The ProcessWire HookEvent object.
-     *
-     * @see addHooks() for the code that attaches Wireframe hooks.
-     */
-    protected function pageLayout(HookEvent $event) {
-        if ($event->method == 'getLayout' || $event->method == 'layout' && !isset($event->arguments[0])) {
-            $event->return = $event->object->_wireframe_layout;
-        } else {
-            $event->object->_wireframe_layout = $event->arguments[0] ?? '';
-            $event->object = \Wireframe\Factory::page($event->object, [
-                'wireframe' => $this,
-            ]);
-            $event->return = $event->object;
-        }
-    }
-
-    /**
-     * This method is used by Page::view(), Page::getView(), and Page::setView()
-     *
-     * Example use with combined getter/setter method:
-     *
-     * ```
-     * The view for current page is "<?= $page->view() ?>".
-     * <?= $page->view('json')->render() ?>
-     * ```
-     *
-     * Example use with dedicated getter/setter methods:
-     *
-     * ```
-     * The view for current page is "<?= $page->getView() ?>".
-     * <?= $page->setView('json')->render() ?>
-     * ```
-     *
-     * @param HookEvent $event The ProcessWire HookEvent object.
-     *
-     * @see addHooks() for the code that attaches Wireframe hooks.
-     */
-    protected function pageView(HookEvent $event) {
-        if ($event->method == 'getView' || $event->method == 'view' && !isset($event->arguments[0])) {
-            $event->return = $event->object->_wireframe_view;
-        } else {
-            $event->object->_wireframe_view = $event->arguments[0] ?? '';
-            $event->object = \Wireframe\Factory::page($event->object, [
-                'wireframe' => $this,
-            ]);
-            $event->return = $event->object;
-        }
-    }
-
-    /**
-     * This method is used by Page::viewTemplate(), Page::getViewTemplate(), and Page::setViewTemplate()
-     *
-     * Example use with combined getter/setter method:
-     *
-     * ```
-     * The view template for current page is "<?= $page->viewTemplate() ?>".
-     * <?= $page->viewTemplate('home')->render() ?>
-     * ```
-     *
-     * Example use with dedicated getter/setter methods:
-     *
-     * ```
-     * The view template for current page is "<?= $page->getViewtemplate() ?>".
-     * <?= $page->setViewTemplate('home')->render() ?>
-     * ```
-     *
-     * @param HookEvent $event The ProcessWire HookEvent object.
-     *
-     * @see addHooks() for the code that attaches Wireframe hooks.
-     */
-    protected function pageViewTemplate(HookEvent $event) {
-        if ($event->method == 'getViewTemplate' || $event->method == 'viewTemplate' && !isset($event->arguments[0])) {
-            $event->return = $event->object->_wireframe_view_template ?: $event->object->template;
-        } else {
-            $event->object->_wireframe_view_template = $event->arguments[0] ?? '';
-            $event->object = \Wireframe\Factory::page($event->object, [
-                'wireframe' => $this,
-            ]);
-            $event->return = $event->object;
-        }
-    }
-
-    /**
-     * This method is used by Page::getController() and Page::setController()
-     *
-     * Example use:
-     *
-     * ```
-     * The controller for current page is "<?= $page->getController() ?>".
-     * <?= $page->setController('home')->render() ?>
-     * ```
-     *
-     * @param HookEvent $event The ProcessWire HookEvent object.
-     *
-     * @see addHooks() for the code that attaches Wireframe hooks.
-     */
-    protected function pageController(HookEvent $event) {
-        if ($event->method == 'getController') {
-            $controller = $event->object->_wireframe_controller ?: null;
-            if ($controller === null) {
-                $controller = $this->getController($event->object);
-            }
-            $event->return = $controller;
-        } else {
-            $controller = $event->arguments[0] ?? '';
-            if ($controller != '' && !$controller instanceof \Wireframe\Controller) {
-                $controller = $this->getController($event->object, $controller);
-            }
-            $event->object->_wireframe_controller = $controller;
-            $event->object = \Wireframe\Factory::page($event->object, [
-                'wireframe' => $this,
-            ]);
-            $event->return = $event->object;
-        }
     }
 
     /**

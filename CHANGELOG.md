@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Hook related code moved from Wireframe module to separate Hooks class.
+- Some minor improvements related to dependency injection within Wireframe objects and ProcessWire objects instantiated by Wireframe.
+
 ## [0.13.2] - 2020-09-02
 
 ### Fixed
