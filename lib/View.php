@@ -154,8 +154,7 @@ class View extends \ProcessWire\TemplateFile {
     protected function getFromController(string $key) {
         $controller = $this->getController();
         if ($controller) {
-            $value = $controller->$key;
-            return $value;
+            return $controller->$key;
         }
         return null;
     }

@@ -13,7 +13,7 @@ namespace Wireframe;
  * In aforementioned use case you should override the getData() method and return the data you want
  * the render process to have access to.
  *
- * @version 0.3.1
+ * @version 0.4.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
