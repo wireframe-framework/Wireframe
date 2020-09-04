@@ -21,6 +21,7 @@ abstract class Component extends \ProcessWire\WireData {
 
     use EventListenerTrait;
     use RendererTrait;
+    use MethodPropsTrait;
 
     /**
      * Default view file for the Component
@@ -28,6 +29,18 @@ abstract class Component extends \ProcessWire\WireData {
      * @var string
      */
     private $view = 'default';
+
+    /**
+     * PHP magic getter method
+     *
+     * Note: __get() is only called when trying to access a non-existent or non-local and non-public property.
+     *
+     * @param string $name
+     * @return mixed
+     */
+    public function __get($name) {
+        return $this->getMethodProp($name, 'component');
+    }
 
     /**
      * Render markup for the Component
@@ -84,15 +97,11 @@ abstract class Component extends \ProcessWire\WireData {
             }
 
             // fall back to built-in PHP template renderer if necessary
-            $view_ext = $this->wire('view')->getExt();
-            if (\is_file($view_root . $view_file . $view_ext)) {
-                // note: here we used to use WireFileTools::render(), but that involved a bit of extra overhead, as well
-                // as an issue where null values never reached the view file (WireFileTools::render() passes data array
-                // to WireData::data(), which in turn behaves as a getter if the "value" property is null).
-                $template = $this->wire(new \ProcessWire\TemplateFile());
-                $template->setFilename($view_root . $view_file . $view_ext);
-                $template->data($this->getData());
-                return $template->render();
+            if (\is_file($view_root . $view_file . '.php')) {
+                $component_view = $this->wire(new ComponentView($this));
+                $component_view->data($this->getData());
+                $component_view->setFilename($view_root . $view_file . '.php');
+                return $component_view->render();
             }
         }
         return '';
