@@ -36,7 +36,7 @@ class Config extends \ProcessWire\Wire {
      *
      * @return InputfieldWrapper
      */
-    public function getAllFields() {
+    public function getAllFields(): InputfieldWrapper {
 
         // inputfieldwrapper for config fields
         $fields = $this->wire(new InputfieldWrapper());
@@ -52,7 +52,7 @@ class Config extends \ProcessWire\Wire {
      *
      * @return InputfieldCheckboxes
      */
-    protected function getCreateDirectoriesField() {
+    protected function getCreateDirectoriesField(): InputfieldCheckboxes {
 
         // init and setup a checkboxes field for the create directories feature
         $field = $this->wire(new InputfieldCheckboxes());

@@ -11,7 +11,7 @@ namespace Wireframe;
  * @property ViewPlaceholders|null $placeholders ViewPlaceholders object.
  * @property Partials|null $partials Object containing partial paths.
  *
- * @version 0.7.1
+ * @version 0.7.2
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -117,7 +117,7 @@ class View extends \ProcessWire\TemplateFile {
     /**
      * Setter method for the Controller class
      *
-     * @param Controller|string|null Controller instance, Controller class name, or null
+     * @param Controller|string|null $controller Controller instance, Controller class name, or null
      * @return View Self-reference
      *
      * @throws Exception if $controller argument is of unrecognized type.
@@ -142,7 +142,7 @@ class View extends \ProcessWire\TemplateFile {
      * @return Controller|null Controller instance or null
      */
     public function getController(): ?Controller {
-        return $this->getViewData('controller') ?: $this->getPage()->__wireframe_controller;
+        return $this->getViewData('controller') ?: $this->getPage()->_wireframe_controller;
     }
 
     /**
@@ -440,7 +440,7 @@ class View extends \ProcessWire\TemplateFile {
     /**
      * Setter method for view placeholders
      *
-     * @param ViewPlaceholders|null ViewPlaceholders instance or null
+     * @param ViewPlaceholders|null $placeholders ViewPlaceholders instance or null
      * @return View Self-reference
      */
     public function setPlaceholders(?ViewPlaceholders $placeholders): View {
@@ -460,7 +460,7 @@ class View extends \ProcessWire\TemplateFile {
     /**
      * Setter method for the partials object
      *
-     * @param Partials|null Object containing partial paths or null
+     * @param Partials|null $partials Object containing partial paths, or null
      * @return View Self-reference
      */
     public function setPartials(?Partials $partials): View {

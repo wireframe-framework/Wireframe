@@ -995,28 +995,34 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     /**
      * Get controller object
      *
-     * - If a Page object is provided as the first argument, this method returns a Controller for that Page
+     * - If a Page object is provided as the first argument, this method returns a Controller for that Page.
      * - If a Page object is provided as the first argument and a template name as the second one, this method will
      *   attempt to instantiate and return a Controller for provided Page and template name.
-     * - If neither Page nor template name are provided, this method returns Wireframe instance Controller property.
+     * - If no Page is provided, this method returns the controller property of current Wireframe module instance.
      *
      * @param Page|null $page
      * @param string|null $template_name
      * @return \Wireframe\Controller|null
      */
     public function getController(?Page $page = null, ?string $template_name = null): ?\Wireframe\Controller {
+
+        // if no page was specified, return the local controller property
         if ($page === null) {
             return $this->controller;
         }
+
+        // if no template name was provided, return the controller property from the body, or (if that is not set)
+        // use the template name of the page for the next step
         if ($template_name === null) {
             if (isset($page->_wireframe_controller)) {
                 return $page->_wireframe_controller == '' ? null : $page->_wireframe_controller;
             }
             $template_name = $page->template->name;
         }
+
+        // attempt to instantiate and return a controller class based on the template name
         $controller_name = $this->wire('sanitizer')->pascalCase($template_name);
         $controller_class = '\Wireframe\Controller\\' . $controller_name . 'Controller';
-
         if (class_exists($controller_class)) {
             return $this->wire(new $controller_class($page, $this->view));
         }

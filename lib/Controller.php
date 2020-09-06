@@ -46,7 +46,6 @@ abstract class Controller extends \ProcessWire\Wire {
 
         // init Controller
         $this->init();
-
     }
 
     /**
@@ -116,11 +115,12 @@ abstract class Controller extends \ProcessWire\Wire {
     /**
      * Setter method for View
      *
-     * @param View|null View instance or null
+     * @param View|null $view View instance or null
      * @return Controller Self-reference
      */
     public function setView(?View $view): Controller {
         $this->view = $view;
         return $this;
     }
+
 }

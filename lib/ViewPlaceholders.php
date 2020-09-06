@@ -87,7 +87,7 @@ class ViewPlaceholders {
      *
      * @param string $key Name of a view placeholder
      * @param mixed $value Value to store in a view placeholder
-     * @return ViewPlaceholders Current instance
+     * @return ViewPlaceholders Self-reference
      */
     public function __set(string $key, $value): ViewPlaceholders {
         $this->data[$key] = $value;

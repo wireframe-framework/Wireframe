@@ -25,21 +25,21 @@ final class ViewData {
     /**
      * View file name
      *
-     * @param string
+     * @var string
      */
     public $view;
 
     /**
      * Layout file name
      *
-     * @param string
+     * @var string
      */
     public $layout;
 
     /**
      * Template name
      *
-     * @param string
+     * @var string
      */
     public $template;
 
