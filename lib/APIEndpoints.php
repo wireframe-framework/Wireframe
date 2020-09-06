@@ -7,7 +7,7 @@ namespace Wireframe;
  *
  * This class implements the Wireframe API default endpoints.
  *
- * @internal APIEndpoints is only intended for use within the Wireframe internals.
+ * @internal This class is only intended for use within the Wireframe internals.
  *
  * @version 0.1.1
  * @author Teppo Koivula <teppo@wireframe-framework.com>

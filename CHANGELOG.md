@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0] - 2020-09-06
+
+### Added
+- New ComponentView class, as well as the ability for component views to access Component class public methods as properties, in the same way view files and layouts can access Controller class public methods.
+
+### Changed
+- Hook related code moved from Wireframe module to separate Hooks class.
+- Accessing public class methods as properties in view files were moved into new trait MethodPropsTrait. This is used internally by Controller and Component classes.
+- Some minor improvements related to dependency injection within Wireframe objects (and ProcessWire objects instantiated by Wireframe.)
+
 ## [0.13.2] - 2020-09-02
 
 ### Fixed
