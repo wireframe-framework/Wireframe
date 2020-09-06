@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0] - 2020-09-06
+
 ### Added
 - New ComponentView class, as well as the ability for component views to access Component class public methods as properties, in the same way view files and layouts can access Controller class public methods.
 
