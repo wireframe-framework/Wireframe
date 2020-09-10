@@ -37,28 +37,28 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     /**
      * The extension for view, layout, and partial files
      *
-     * @var string
+     * @var null|string
      */
     protected $ext;
 
     /**
      * Current Page object
      *
-     * @var Page|null
+     * @var null|Page
      */
     protected $page;
 
     /**
      * View object
      *
-     * @var \Wireframe\View|null
+     * @var null|\Wireframe\View
      */
     protected $view;
 
     /**
      * Controller object
      *
-     * @var \Wireframe\Controller|null
+     * @var null|\Wireframe\Controller
      */
     protected $controller;
 
