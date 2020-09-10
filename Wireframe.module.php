@@ -14,7 +14,7 @@ namespace ProcessWire;
  * @method static string|Page|NullPage page($source, $args = []) Static getter (factory) method for Pages.
  * @method static string|null partial(string $partial_name, array $args = []) Static getter (factory) method for Partials.
  *
- * @version 0.14.0
+ * @version 0.15.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -44,23 +44,33 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     /**
      * Current Page object
      *
-     * @var Page
+     * @var Page|null
      */
     protected $page;
 
     /**
      * View object
      *
-     * @var \Wireframe\View
+     * @var \Wireframe\View|null
      */
     protected $view;
 
     /**
      * Controller object
      *
-     * @var \Wireframe\Controller
+     * @var \Wireframe\Controller|null
      */
     protected $controller;
+
+    /**
+     * Stash array
+     *
+     * Current context (Page, View, and Controller) can be stored in the stash and then restored at a later time.
+     * Context is stashed at the beginning of ___init() and restored at the end of ___render().
+     *
+     * @var array
+     */
+    protected $stash = [];
 
     /**
      * Renderer object
@@ -141,6 +151,18 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      * @throws WireException if no valid Page object is found.
      */
     public function ___init(array $settings = []): Wireframe {
+
+        // if page, view, or controller are already set, stash them
+        if ($this->page || $this->view || $this->controller) {
+            $this->stash[] = [
+                'page' => $this->page,
+                'view' => $this->view,
+                'controller' => $this->controller,
+            ];
+            $this->page = null;
+            $this->view = null;
+            $this->controller = null;
+        }
 
         // perform init tasks that should only run once
         $this->initOnce();
@@ -764,6 +786,19 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
 
         // store value in cache
         $this->cache[$cache_key] = $output;
+
+        // if there are stashed pages, restore most recent one
+        if (!empty($this->page_pash)) {
+            $this->page = array_pop($this->page_stash);
+        }
+
+        // check if we should return an earlier context from stash
+        if (!empty($this->stash)) {
+            $stashed_context = array_pop($this->stash);
+            $this->page = $stashed_context['page'];
+            $this->view = $stashed_context['view'];
+            $this->controller = $stashed_context['controller'];
+        }
 
         return $output;
     }

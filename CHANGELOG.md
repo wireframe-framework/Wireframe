@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0] - 2020-09-11
+
+### Added
+- Internal stash for storing previous Page, View, and Controller instances in case a Page is rendered within another Page. This way earlier context can be restored once recursive rendering is done, and Wireframe can continue where it left off.
+
 ## [0.14.0] - 2020-09-06
 
 ### Added
