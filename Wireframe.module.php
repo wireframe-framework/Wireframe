@@ -787,11 +787,6 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         // store value in cache
         $this->cache[$cache_key] = $output;
 
-        // if there are stashed pages, restore most recent one
-        if (!empty($this->page_pash)) {
-            $this->page = array_pop($this->page_stash);
-        }
-
         // check if we should return an earlier context from stash
         if (!empty($this->stash)) {
             $stashed_context = array_pop($this->stash);
