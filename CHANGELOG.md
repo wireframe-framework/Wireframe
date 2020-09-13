@@ -7,11 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0] - 2020-09-14
+
 ### Added
 - Support for specifying view and view template at the same time with Page::setView().
 
 ### Changed
-- Wireframe module now updates the internal settings hash more consistently. This is primarily used for runtime page render cache.
+- Wireframe module now updates the internal settings hash more consistently. This hash is primarily used for runtime page render caching.
 
 ## [0.15.2] - 2020-09-13
 
