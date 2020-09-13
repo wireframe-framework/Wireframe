@@ -94,6 +94,17 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     protected $settings_hash;
 
     /**
+     * Settings hash locked?
+     *
+     * This property is used to lock the settings hash. While locked, settings hash won't get automatically updated
+     * by any of the Wireframe class methods that would normally update it. This helps avoid unnecessary overhead
+     * caused by multiple consecutive update operations.
+     *
+     * @var bool
+     */
+    protected $settings_hash_locked = false;
+
+    /**
      * Create directories automatically?
      *
      * Used by the module configuration screen. Contains an array of directories that should be automatically created.
@@ -164,6 +175,9 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             $this->controller = null;
         }
 
+        // lock settings hash
+        $this->settings_hash_locked = true;
+
         // perform init tasks that should only run once
         $this->initOnce();
 
@@ -188,6 +202,10 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
 
         // choose the view to use
         $this->setView();
+
+        // release settings hash lock and trigger an update
+        $this->settings_hash_locked = false;
+        $this->updateSettingsHash();
 
         return $this;
     }
@@ -365,6 +383,9 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         $this->paths = (object) $paths;
         $this->addNamespaces();
 
+        // update settings hash
+        $this->updateSettingsHash();
+
         return $this;
     }
 
@@ -396,6 +417,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             $this->view->setExt($this->ext);
             $this->view->setView($this->view->getView());
         }
+        $this->updateSettingsHash();
         return $this;
     }
 
@@ -423,6 +445,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
                 $this->view->setRenderer($renderer);
             }
         }
+        $this->updateSettingsHash();
         return $this;
     }
 
@@ -869,6 +892,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
                 if (\is_array($value)) {
                     $invalid_value = false;
                     $this->$key = $value;
+                    $this->updateSettingsHash();
                 }
                 break;
 
@@ -924,9 +948,6 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             ));
         }
 
-        // update settings hash
-        $this->updateSettingsHash();
-
         return $this;
     }
 
@@ -944,7 +965,6 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             foreach ($values as $key => $value) {
                 $this->set($key, $value);
             }
-            $this->updateSettingsHash();
         }
         return $this;
     }
@@ -959,6 +979,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      * @return void
      */
     protected function updateSettingsHash(): void {
+        if ($this->settings_hash_locked) return;
         $this->settings_hash = md5(json_encode([
             'data' => $this->data,
             'paths' => $this->paths,
