@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Support for specifying view and view template at the same time with Page::setView().
+
 ## [0.15.2] - 2020-09-13
 
 ### Changed
