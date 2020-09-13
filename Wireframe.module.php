@@ -14,7 +14,7 @@ namespace ProcessWire;
  * @method static string|Page|NullPage page($source, $args = []) Static getter (factory) method for Pages.
  * @method static string|null partial(string $partial_name, array $args = []) Static getter (factory) method for Partials.
  *
- * @version 0.15.2
+ * @version 0.16.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -924,6 +924,9 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             ));
         }
 
+        // update settings hash
+        $this->updateSettingsHash();
+
         return $this;
     }
 
@@ -938,12 +941,30 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      */
     public function setArray(array $values): Wireframe {
         if (!empty($values)) {
-            $this->settings_hash = md5(serialize($values));
             foreach ($values as $key => $value) {
                 $this->set($key, $value);
             }
+            $this->updateSettingsHash();
         }
         return $this;
+    }
+
+    /**
+     * Update settings hash
+     *
+     * Note that the "page" property is intentionally omitted from the settings hash; this is already accounted for in
+     * the render() method. As for the "renderer" property, we only store the class name (instead of a full serialized
+     * object) for performance reasons, but also so that we won't accidentally attempt to serialize closures.
+     *
+     * @return void
+     */
+    protected function updateSettingsHash(): void {
+        $this->settings_hash = md5(json_encode([
+            'data' => $this->data,
+            'paths' => $this->paths,
+            'renderer' => $this->renderer === null ? null : get_class($this->renderer),
+            'ext' => $this->ext,
+        ], \JSON_UNESCAPED_UNICODE));
     }
 
     /**
