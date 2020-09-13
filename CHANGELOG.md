@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.2] - 2020-09-13
+
+### Changed
+- Specify return type of Config::getPaths() as stdClass instead of object for PHP < 7.2.
+
 ## [0.15.1] - 2020-09-13
 
 ### Fixed

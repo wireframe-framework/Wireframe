@@ -9,7 +9,7 @@ use \ProcessWire\Wireframe;
 /**
  * Configuration helper for the Wireframe module
  *
- * @version 0.2.3
+ * @version 0.2.4
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -156,9 +156,9 @@ class Config extends \ProcessWire\Wire {
     /**
      * Get paths for the create directories feature
      *
-     * @return object
+     * @return \stdClass
      */
-    protected function getPaths(): object {
+    protected function getPaths(): \stdClass {
 
         // get paths object from Wireframe
         $paths = $this->wireframe->paths;
