@@ -5,7 +5,7 @@ namespace Wireframe;
 /**
  * Wireframe Partial
  *
- * @version 0.1.3
+ * @version 0.1.4
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -55,23 +55,15 @@ class Partial extends \ProcessWire\Wire {
         $renderer = $this->getRenderer();
         if ($renderer) {
             /** @noinspection PhpUndefinedMethodInspection */
-            $ext = '.' . ltrim($renderer->getExt(), '.');
+            $ext = ltrim($renderer->getExt(), '.');
             $view_file = $this->filenames[$ext] ?? null;
-            if (empty($view_file)) {
-                return '';
-            }
-            if (strpos($view_file, '.') === false) {
-                $view_file .= $ext;
-            } else {
-                $ext_pos = strrpos($view_file, '.');
-                $ext_now = substr($view_file, -$ext_pos);
-                if ($ext_now != $ext) {
-                    $view_file = substr($view_file, -$ext_pos) . $ext;
-                }
-            }
-            if (\is_file($view_file)) {
+            if (!empty($view_file) && \is_file($view_file)) {
                 /** @noinspection PhpUndefinedMethodInspection */
-                return $renderer->render('partial', ltrim($view_file, '/'), $args);
+                $partials_path = $this->wire('modules')->get('Wireframe')->getViewPaths()['partial'] ?? null;
+                if ($partials_path !== null && strpos($view_file, $partials_path) === 0) {
+                    $view_file = substr($view_file, \strlen($partials_path));
+                }
+                return $renderer->render('partial', $view_file, $args);
             }
         }
 

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.1] - 2020-09-13
+
+### Fixed
+- Fixed an issue where partial files were not rendered properly if a Renderer module was enabled.
+
 ## [0.15.0] - 2020-09-11
 
 ### Added
