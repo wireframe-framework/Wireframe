@@ -10,7 +10,7 @@ use \ProcessWire\Wireframe;
  *
  * @internal This class is only intended for use within the Wireframe internals.
  *
- * @version 0.0.1
+ * @version 0.1.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -23,19 +23,19 @@ class Hooks extends \ProcessWire\Wire {
      */
     protected $wireframe;
 
-	/**
-	 * Constructor
-	 *
-	 * @param Wireframe $wireframe
-	 */
-	public function __construct(Wireframe $wireframe) {
-		$this->wireframe = $wireframe;
-	}
+    /**
+     * Constructor
+     *
+     * @param Wireframe $wireframe
+     */
+    public function __construct(Wireframe $wireframe) {
+        $this->wireframe = $wireframe;
+    }
 
-	/**
-	 * Init method
-	 */
-	public function init() {
+    /**
+     * Init method
+     */
+    public function init() {
 
         // make View properties available in TemplateFile
         $this->addHookBefore('TemplateFile::render', $this, 'viewProps');
@@ -58,29 +58,29 @@ class Hooks extends \ProcessWire\Wire {
         // helper methods for getting or setting page controller
         $this->addHookMethod('Page::getController', $this, 'pageController');
         $this->addHookMethod('Page::setController', $this, 'pageController');
-	}
+    }
 
-	/**
-	 * Make View properties directly available in TempalateFile
-	 *
-	 * Note: this is primarily useful for field rendering.
-	 *
-	 * @param HookEvent $event
-	 */
-	protected function viewProps(HookEvent $event) {
-		$view = $event->object->view;
-		if (!$view instanceof View || $event->object instanceof View) {
-			// View doesn't exist or we're currently rendering a Wireframe View
-			return;
-		}
-		$event->object->setArray(array_merge($view->data(), array_filter([
-			'page' => $event->object->page, // used by field rendering
-			'value' => $event->object->value, // used by field rendering
-			'field' => $event->object->field, // used by field rendering
-			'partials' => $view->partials,
-			'placeholders' => $view->placeholders,
-		])));
-	}
+    /**
+     * Make View properties directly available in TempalateFile
+     *
+     * Note: this is primarily useful for field rendering.
+     *
+     * @param HookEvent $event
+     */
+    protected function viewProps(HookEvent $event) {
+        $view = $event->object->view;
+        if (!$view instanceof View || $event->object instanceof View) {
+            // View doesn't exist or we're currently rendering a Wireframe View
+            return;
+        }
+        $event->object->setArray(array_merge($view->data(), array_filter([
+            'page' => $event->object->page, // used by field rendering
+            'value' => $event->object->value, // used by field rendering
+            'field' => $event->object->field, // used by field rendering
+            'partials' => $view->partials,
+            'placeholders' => $view->placeholders,
+        ])));
+    }
 
     /**
      * This method is used by Page::layout(), Page::getLayout(), and Page::setLayout()
@@ -111,7 +111,7 @@ class Hooks extends \ProcessWire\Wire {
             ]);
             $event->return = $event->object;
         }
-	}
+    }
 
     /**
      * This method is used by Page::view(), Page::getView(), and Page::setView()
@@ -130,13 +130,26 @@ class Hooks extends \ProcessWire\Wire {
      * <?= $page->setView('json')->render() ?>
      * ```
      *
+     * It's also possible to use this method as a shortcut for defining both view and view template
+     * at the same time. These two are equal:
+     *
+     * ```
+     * <?= $page->setViewTemplate('home')->setView('json')->render() ?>
+     * <?= $page->setView('home/json')->render() ?>
+     * ```
+     *
      * @param HookEvent $event The ProcessWire HookEvent object.
      */
     protected function pageView(HookEvent $event) {
         if ($event->method == 'getView' || $event->method == 'view' && !isset($event->arguments[0])) {
             $event->return = $event->object->_wireframe_view;
         } else {
-            $event->object->_wireframe_view = $event->arguments[0] ?? '';
+            $view = $event->arguments[0] ?? '';
+            if ($view !== '' && strpos($view, '/') !== false) {
+                list($view_template, $view) = explode('/', $view);
+                $event->object->_wireframe_view_template = $view_template;
+            }
+            $event->object->_wireframe_view = $view;
             $event->object = \Wireframe\Factory::page($event->object, [
                 'wireframe' => $this->wireframe,
             ]);
@@ -173,7 +186,7 @@ class Hooks extends \ProcessWire\Wire {
             ]);
             $event->return = $event->object;
         }
-	}
+    }
 
     /**
      * This method is used by Page::getController() and Page::setController()
