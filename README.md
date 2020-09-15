@@ -2,51 +2,52 @@ Wireframe ProcessWire module and output framework
 -------------------------------------------------
 
 Wireframe is, in the lack of a better term, an output framework for the ProcessWire CMS/CMF. It
-loosely follows the MVC (Model-View-Controller) architecture by providing a View component, and
-(optionally) template specific Controllers.
+loosely follows the MVC (Model-View-Controller) architecture, introducing concepts such as View
+Controllers to ProcessWire site development.
 
-Wireframe is implemented as a combination of a ProcessWire module called Wireframe and a set of
-classes found form the lib directory. This README file contains some basic information for getting
-a site using the Wireframe framework up and running, but a lot more information can be found from
-the Wireframe documentation site at https://wireframe-framework.com.
+Technically Wireframe is a combination of a ProcessWire module - called Wireframe - and a set of
+related classes. Certain features are bundled into a separate module called Wireframe API; this
+optional companion module can be used to quickly set up a JSON based API.
 
-You may also want to check out https://github.com/wireframe-framework/site-wireframe-boilerplate/
-for a boilerplate site profile built on top of Wireframe.
+This README file provides basic instructions for setting Wireframe up. More detailed instructions
+can be found from https://wireframe-framework.com, and if you'd like to see an example site using
+Wireframe, be sure to check out https://github.com/wireframe-framework/site-wireframe-boilerplate/.
 
 ## Getting started
 
-1. Install the Wireframe ProcessWire module.
+1. Download and install the Wireframe ProcessWire module.
+
+There are a couple of ways to get the module:
+
+- Clone or download from GitHub: https://github.com/wireframe-framework/Wireframe
+- Install using Composer: https://packagist.org/packages/wireframe-framework/wireframe
 
 2. Set up the Wireframe directories within the /site/templates/ directory, or install a new site
 using the site-wireframe-boilerplate site profile.
 
 If your site already has identically named files or folders, you can rename the included files to
-something else, as long as you also adjust the paths in config settings ($config->wireframe)
-accordingly. See Wireframe.module.php for more details.
+something else, as long as you also adjust the paths in config settings ($config->wireframe array)
+accordingly. See https://wireframe-framework.com/docs/configuration-settings/ for more information.
 
-3. Copy wireframe.php from the Wireframe module directory to /site/templates/.
+3. Copy wireframe.php from the module's directory to /site/templates/.
 
 This is the file that bootstraps Wireframe. If you want to pass variables to Wireframe during init
 or render phases, you can directly modify this file.
 
-4. Set the value of the Alternate Template Filename setting of templates you want to route through
-Wireframe to 'wireframe'.
+4. Add wireframe.php as the filename of the template(s) you want to use Wirerame for
 
-This will redirect requests for pages using those templates through the Wireframe bootstrap file.
+This can be done via the Alternate Template Filename setting found from the template edit screen,
+and will redirect requests for pages using those templates through the Wireframe bootstrap file.
 
-Since this solution is based on the Alternate Template Filename setting, you can use it for only a
-subset of your templates. In case you want to use other output strategies for other templates,
-that's perfectly fine.
+Note: you don't actually have to route all your templates through Wireframe. In case you want to
+use other output strategies for other templates, that will work just fine.
 
-## Other MVC-ish output strategies
+## Resources
 
-In case you're interested in working with the MVC pattern – or simply looking for a solution that
-offers separation of concerns for your template files – and this particular project doesn't fit
-your needs, I'd recommend checking out following alternatives:
-
-* [A Rails-inspired [something]VC boilerplate for new ProcessWire projects](https://github.com/fixate/pw-mvc-boilerplate)
-* [Spex, an asset and template management module for ProcessWire](https://github.com/jdart/Spex)
-* [Template Data Providers module](https://github.com/marcostoll/processwire-template-data-providers)
+- An introduction to Wireframe and output strategies in general: https://wireframe-framework.com/about/
+- A more in-depth getting started guide for Wireframe: https://wireframe-framework.com/getting-started/
+- Wireframe documentation: https://wireframe-framework.com/docs/
+- Support forum: https://processwire.com/talk/topic/21893-wireframe/
 
 ## License
 
