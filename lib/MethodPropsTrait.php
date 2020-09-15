@@ -5,7 +5,7 @@ namespace Wireframe;
 use ProcessWire\Wire;
 
 /**
- * Trait for adding event public method property access support to Wireframe objects
+ * Trait for adding public method property access support to Wireframe objects
  *
  * @version 0.1.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
