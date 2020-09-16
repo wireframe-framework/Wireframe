@@ -128,11 +128,8 @@ abstract class Controller extends \ProcessWire\Wire {
     public function __set(string $name, $value) {
         if ($name == 'page') {
             $this->setPage($value, true);
-            return;
-        }
-        if ($name == 'view') {
+        } else if ($name == 'view') {
             $this->setView($value);
-            return;
         }
     }
 
