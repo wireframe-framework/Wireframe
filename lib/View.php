@@ -11,7 +11,7 @@ namespace Wireframe;
  * @property ViewPlaceholders|null $placeholders ViewPlaceholders object.
  * @property Partials|null $partials Object containing partial paths.
  *
- * @version 0.7.2
+ * @version 0.8.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -55,6 +55,12 @@ class View extends \ProcessWire\TemplateFile {
      */
     public function ___render() {
 
+        // set current page
+        $set_page = !isset($this->page);
+        if ($set_page) {
+            $this->page = $this->getViewData('page');
+        }
+
         // attempt to render markup using a renderer
         $renderer = $this->getRenderer();
         /** @noinspection PhpUndefinedMethodInspection */
@@ -67,10 +73,19 @@ class View extends \ProcessWire\TemplateFile {
             // need some attention in the near(ish) future
             $view_context = array_merge($this->getArray(), self::$globals);
             /** @noinspection PhpUndefinedMethodInspection */
-            return $renderer->render($this->getViewData('context'), $view_file, $view_context);
+            $out = $renderer->render($this->getViewData('context'), $view_file, $view_context);
+            if ($set_page) {
+                unset($this->page);
+            }
+            return $out;
         }
 
-        return parent::___render();
+        // fall back to built-in PHP template renderer
+        $out = parent::___render();
+        if ($set_page) {
+            unset($this->page);
+        }
+        return $out;
     }
 
     /**
