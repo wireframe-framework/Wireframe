@@ -587,32 +587,29 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      * This method initializes the View object and the $view API variable.
      *
      * @return \Wireframe\View View object.
-     *
-     * @throws WireException if no valid Page has been defined.
      */
     protected function ___initView(): \Wireframe\View {
 
-        // params
+        // get current page's layout
         $page_layout = $this->page->getLayout();
 
         // initialize the View object (note: view file is set in the Wireframe::___setView() method)
-        $view = $this->wire(new \Wireframe\View);
-        $view->setLayout($page_layout === null ? 'default' : $page_layout);
-        $view->setTemplate($this->page->getViewTemplate());
-        $view->setViewsPath($this->paths->views);
-        $view->setLayoutsPath($this->paths->layouts);
-        $view->setExt($this->ext);
-        $view->setPage($this->page);
-        $view->setData($this->data);
-        $view->setPartials($this->findPartials($this->paths->partials));
-        $view->setPlaceholders(new \Wireframe\ViewPlaceholders($view));
-        $view->setRenderer($this->renderer);
-        $this->view = $view;
+        $this->view = $this->wire(new \Wireframe\View);
+        $this->view->setLayout($page_layout === null ? 'default' : $page_layout);
+        $this->view->setTemplate($this->page->getViewTemplate());
+        $this->view->setViewsPath($this->paths->views);
+        $this->view->setLayoutsPath($this->paths->layouts);
+        $this->view->setExt($this->ext);
+        $this->view->setPage($this->page);
+        $this->view->setData($this->data);
+        $this->view->setPartials($this->findPartials($this->paths->partials));
+        $this->view->setPlaceholders(new \Wireframe\ViewPlaceholders($this->view));
+        $this->view->setRenderer($this->renderer);
 
         // define the $view API variable
-        $this->wire('view', $view);
+        $this->wire('view', $this->view);
 
-        return $view;
+        return $this->view;
     }
 
     /**
