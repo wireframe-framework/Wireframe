@@ -523,51 +523,51 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     }
 
     /**
-     * Check if a redirect should occur
+     * Check redirects
      *
-     * Look for redirect fields within config settings. If present, check if the page has a value in one of those and
-     * if a redirect should be performed.
+     * This method looks for a list of redirect fields within config settings (redirect_fields). If present, it checks
+     * if current page has a value in one of said fields, and if that value is a valid URL we can redirect to.
      */
     protected function ___checkRedirects() {
 
-        // redirect fields from Wireframe runtime configuration
+        // get redirect fields from runtime configuration
         $redirect_fields = $this->config['redirect_fields'] ?? null;
-        if (empty($redirect_fields)) return;
+        if (empty($redirect_fields)) {
+            return;
+        }
 
-        // current Page object
-        $page = $this->page;
+        // check individual redirect fields one by one
+        foreach ($redirect_fields as $key => $value) {
 
-        foreach ($redirect_fields as $field => $options) {
-
-            // redirect_fields may be an indexed array
-            if (\is_int($field) && \is_string($options)) {
-                $field = $options;
+            // if key is an integer, value contains the field name
+            $field = \is_int($key) ? $value : $key;
+            if (!\is_string($field)) {
+                continue;
             }
 
-            // get URL from a page field
-            $url = $page->get($field);
+            // get URL value from current page
+            $url = $this->page->get($field);
             if ($url instanceof WireArray) {
                 $url = $url->first();
             }
-            if (empty($url)) continue;
-
-            // default to non-permanent redirect (302)
-            $permanent = false;
-
-            // if options is an array, read contained settings
-            if (\is_array($options)) {
-                if (!empty($options['property']) && \is_object($url)) {
-                    $url = $url->get($options['property']);
-                }
-                if (!empty($options['permanent'])) {
-                    $permanent = (bool) $options['permanent'];
-                }
+            if (empty($url)) {
+                continue;
             }
 
-            // if target URL is valid and doesn't belong to current page, perform a redirect
-            if (\is_string($url) && $url != $page->url && $this->wire('sanitizer')->url($url)) {
-                $this->redirect($url, $permanent);
+            // prepare options array
+            $options = \is_array($value) ? $value : [];
+
+            // check if a property was provided within options array
+            if (!empty($options['property']) && \is_object($url)) {
+                $url = $url->get($options['property']);
             }
+
+            // skip this item if URL is not a string, if it belongs to current page, or if it's invalid
+            if (!\is_string($url) || $url == $this->page->url || !$this->wire('sanitizer')->url($url)) {
+                continue;
+            }
+
+            $this->redirect($url, !empty($options['permanent']));
         }
     }
 
