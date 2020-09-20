@@ -125,7 +125,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         $this->setConfig();
 
         // instantiate Wireframe Config and get all config inputfields
-        $config = $this->wire(new \Wireframe\Config($this));
+        $config = $this->wire(new \Wireframe\Config($data));
         $fields = $config->getAllFields();
 
         return $fields;

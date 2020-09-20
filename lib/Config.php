@@ -4,35 +4,34 @@ namespace Wireframe;
 
 use \ProcessWire\InputfieldCheckboxes;
 use \ProcessWire\InputfieldWrapper;
-use \ProcessWire\Wireframe;
 
 /**
  * Configuration helper for the Wireframe module
  *
- * @version 0.2.4
+ * @version 0.3.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
 class Config extends \ProcessWire\Wire {
 
     /**
-     * A local instance of the Wireframe module
+     * Config data array passed from the Wireframe module
      *
-     * @var Wireframe
+     * @var array
      */
-    protected $wireframe;
+	protected $data = [];
 
     /**
-     * Constructor method
+     * Constructor
      *
-     * @param Wireframe $wireframe Instance of Wireframe
+     * @param array $data Config data array.
      */
-    public function __construct(Wireframe $wireframe) {
-        $this->wireframe = $wireframe;
+    public function __construct(array $data) {
+        $this->data = $data;
     }
 
     /**
-     * Get all config fields for the Wireframe module
+     * Get all config fields
      *
      * @return InputfieldWrapper
      */
@@ -164,7 +163,7 @@ class Config extends \ProcessWire\Wire {
         $paths = $this->wireframe->paths;
 
         // append relative URLs
-        $urls = $this->wireframe->getConfig()['urls'] ?? [];
+        $urls = $this->wire('modules')->get('Wireframe')->getConfig()['urls'] ?? [];
         if (!empty($urls)) {
             foreach ($urls as $key => $url) {
                 if (strpos($url, '/') !== 0) {
