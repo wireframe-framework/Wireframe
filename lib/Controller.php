@@ -5,7 +5,10 @@ namespace Wireframe;
 /**
  * Abstract base implementation for Controller objects
  *
- * @version 0.7.0
+ * @property View $view
+ * @property \ProcessWire\Page $page
+ *
+ * @version 0.8.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -16,33 +19,34 @@ abstract class Controller extends \ProcessWire\Wire {
     /**
      * Instance of View
      *
-     * @var View|null
+     * @var View
      */
-    protected $view;
+    private $view;
 
     /**
      * Instance of Page
      *
      * @var \ProcessWire\Page
      */
-    protected $page;
+    private $page;
 
     /**
      * Constructor
      *
-     * Note that a Controller can exist without a View. It is the responsibility of the developer
-     * to make sure that the Controller doesn't assume that a View is always available.
-     *
-     * @param \ProcessWire\Page $page Page object
-     * @param View|null $view View component (optional)
+     * @param \ProcessWire\Page|null $page Optional Page object
+     * @param View|null $view Optional View object
      */
-    public function __construct(\ProcessWire\Page $page, ?View $view = null) {
+    public function __construct(?\ProcessWire\Page $page = null, ?View $view = null) {
 
-        // store a reference to View
-        $this->view = $view;
+        if ($page !== null) {
+            // store a reference to Page
+            $this->setPage($page);
+        }
 
-        // store a reference to Page
-        $this->page = $page;
+        if ($view !== null) {
+            // store a reference to View
+            $this->setView($view);
+        }
 
         // init Controller
         $this->init();
@@ -102,23 +106,59 @@ abstract class Controller extends \ProcessWire\Wire {
 
     /**
      * PHP magic getter method
-     * 
+     *
      * Note: __get() is only called when trying to access a non-existent or non-local and non-public property.
      *
      * @param string $name
      * @return mixed
      */
     public function __get($name) {
+        if ($name == 'page' || $name == 'view') {
+            return $this->$name ?: $this->wire($name);
+        }
         return $this->getMethodProp($name, 'controller');
+    }
+
+    /**
+     * PHP magic setter method
+     *
+     * @param string $name
+     * @param mixed $value
+     */
+    public function __set(string $name, $value) {
+        if ($name == 'page') {
+            $this->setPage($value, true);
+        } else if ($name == 'view') {
+            $this->setView($value);
+        }
+    }
+
+    /**
+     * Setter method for page
+     *
+     * Note: if you set page property directly in Controller instance ($this->page = ...) the page property of the View
+     * instance is updated automatically. If you *don't* want to update the View, set the page property via this method
+     * instead.
+     *
+     * @param \ProcessWire\Page $page Page instance
+     * @param bool $propagate_to_view Update View instance page property as well?
+     * @return Controller Self-reference
+     */
+    public function setPage(\ProcessWire\Page $page, bool $propagate_to_view = false): Controller {
+        $this->page = $page;
+        if ($propagate_to_view && $this->view) {
+            $this->view->setPage($page);
+        }
+        return $this;
     }
 
     /**
      * Setter method for View
      *
-     * @param View|null $view View instance or null
+     * @param View $view View instance
      * @return Controller Self-reference
      */
-    public function setView(?View $view): Controller {
+    public function setView(View $view): Controller {
         $this->view = $view;
         return $this;
     }

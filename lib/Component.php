@@ -96,7 +96,7 @@ abstract class Component extends \ProcessWire\WireData {
                 }
             }
 
-            // fall back to built-in PHP template renderer if necessary
+            // fall back to built-in PHP template renderer
             if (\is_file($view_root . $view_file . '.php')) {
                 $component_view = $this->wire(new ComponentView($this));
                 $component_view->data($this->getData());

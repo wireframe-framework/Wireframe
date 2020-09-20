@@ -61,7 +61,7 @@ class Hooks extends \ProcessWire\Wire {
     }
 
     /**
-     * Make View properties directly available in TempalateFile
+     * Make View properties directly available in TemplateFile
      *
      * Note: this is primarily useful for field rendering.
      *

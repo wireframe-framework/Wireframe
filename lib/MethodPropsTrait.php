@@ -2,12 +2,10 @@
 
 namespace Wireframe;
 
-use ProcessWire\Wire;
-
 /**
  * Trait for adding public method property access support to Wireframe objects
  *
- * @version 0.1.0
+ * @version 0.2.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -139,67 +137,77 @@ trait MethodPropsTrait {
      */
     final public function getMethodProp(string $name, string $context) {
 
-        $return = null;
-        $cache_name = null;
-        $cacheable = !\in_array($name, $this->uncacheable_methods);
-
         // only allow access to method names that are not prefixed with an underscore and haven't
         // been specifically disallowed by adding them to the disallowed_methods array.
-        if (\is_string($name) && $name[0] !== '_' && !\in_array($name, $this->disallowed_methods)) {
+        if (!\is_string($name) || $name[0] == '_' || \in_array($name, $this->disallowed_methods)) {
+            return null;
+        }
 
-            if ($cacheable && isset($this->method_return_value_cache[$name])) {
-                // return value from temporary runtime cache
-                return $this->method_return_value_cache[$name];
-            }
+        $value = null;
+        $persistent_cache_name = null;
+        $runtime_cache_enabled = !\in_array($name, $this->uncacheable_methods);
 
-            if (!empty($this->cacheable_methods[$name])) {
-                // attempt to return value from persistent cache (WireCache)
-                $cache_name = 'wireframe'
-                            . '/' . $context . '=' . static::class
-                            . '/method=' . $name
-                            . '/page=' . $this->wire('page');
-                $return = $this->wire('cache')->get($cache_name, $this->cacheable_methods[$name]);
-                if ($return !== null) {
-                    $this->method_return_value_cache[$name] = $return;
-                    return $return;
-                }
-            }
+        if ($runtime_cache_enabled && isset($this->method_return_value_cache[$name])) {
+            // return value from temporary runtime cache
+            return $this->method_return_value_cache[$name];
+        }
 
-            if (\method_exists($this, $name) && \is_callable([$this, $name])) {
-                // callable (public) local method
-                $return = $this->$name();
-
-            } else if (\method_exists($this, '___' . $name) && \is_callable([$this, '___' . $name])) {
-                // callable (public) and hookable local method
-                $return = $this->_callHookMethod($name);
-
-            } else if (!empty($this->method_aliases[$name])) {
-                // method alias
-                $method_alias = $this->method_aliases[$name];
-                $return = \call_user_func_array(
-                    $method_alias['callable'],
-                    $method_alias['params']
-                );
-
-            } else {
-                // fall back to parent class getter method
-                $return = parent::__get($name);
-                $cacheable = false;
-
+        if (!empty($this->cacheable_methods[$name])) {
+            // attempt to return value from persistent cache (WireCache)
+            $persistent_cache_name = 'Wireframe/MethodProp'
+                . '/' . $context
+                . '/' . static::class
+                . '/' . $name
+                . '/' . $this->wire('page');
+            $value = $this->wire('cache')->get($persistent_cache_name, $this->cacheable_methods[$name]);
+            if ($value !== null) {
+                $this->cacheMethodProp($name, $value, $runtime_cache_enabled, null);
+                return $value;
             }
         }
 
-        if ($cacheable) {
-            // store return value in temporary runtime cache
-            $this->method_return_value_cache[$name] = $return;
+        if (\method_exists($this, $name) && \is_callable([$this, $name])) {
+            // callable (public) local method
+            $value = $this->$name();
+        } else if (\method_exists($this, '___' . $name) && \is_callable([$this, '___' . $name])) {
+            // callable (public) and hookable local method
+            $value = $this->_callHookMethod($name);
+        } else if (!empty($this->method_aliases[$name])) {
+            // method alias
+            $method_alias = $this->method_aliases[$name];
+            $value = \call_user_func_array(
+                $method_alias['callable'],
+                $method_alias['params']
+            );
+        } else {
+            // fall back to parent class getter method
+            $value = parent::__get($name);
+            $runtime_cache_enabled = false;
         }
 
-        if (!empty($cache_name) && $return !== null) {
-            // store return value in persistent cache (WireCache)
-            $this->wire('cache')->save($cache_name, $return, $this->cacheable_methods[$name]);
+        $this->cacheMethodProp($name, $value, $runtime_cache_enabled, $persistent_cache_name);
+        return $value;
+    }
+
+    /**
+     * Cache and return method prop
+     *
+     * @param string $name
+     * @param mixed $value
+     * @param bool $runtime_cache_enabled
+     * @param string|null $persistent_cache_name
+     */
+    private function cacheMethodProp(string $name, $value, bool $runtime_cache_enabled, ?string $persistent_cache_name) {
+
+        // store return value in temporary runtime cache?
+        if ($runtime_cache_enabled) {
+            $this->method_return_value_cache[$name] = $value;
         }
 
-        return $return;
+        // store return value in persistent cache (WireCache)?
+        if ($persistent_cache_name !== null && $value !== null) {
+            $this->wire('cache')->save($persistent_cache_name, $value, $this->cacheable_methods[$name]);
+        }
     }
 
 }

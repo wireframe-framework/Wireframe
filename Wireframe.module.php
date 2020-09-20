@@ -14,7 +14,7 @@ namespace ProcessWire;
  * @method static string|Page|NullPage page($source, $args = []) Static getter (factory) method for Pages.
  * @method static string|null partial(string $partial_name, array $args = []) Static getter (factory) method for Partials.
  *
- * @version 0.16.0
+ * @version 0.17.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -125,7 +125,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         $this->setConfig();
 
         // instantiate Wireframe Config and get all config inputfields
-        $config = $this->wire(new \Wireframe\Config($this));
+        $config = $this->wire(new \Wireframe\Config($data));
         $fields = $config->getAllFields();
 
         return $fields;
@@ -523,51 +523,51 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     }
 
     /**
-     * Check if a redirect should occur
+     * Check redirects
      *
-     * Look for redirect fields within config settings. If present, check if the page has a value in one of those and
-     * if a redirect should be performed.
+     * This method looks for a list of redirect fields within config settings (redirect_fields). If present, it checks
+     * if current page has a value in one of said fields, and if that value is a valid URL we can redirect to.
      */
     protected function ___checkRedirects() {
 
-        // redirect fields from Wireframe runtime configuration
+        // get redirect fields from runtime configuration
         $redirect_fields = $this->config['redirect_fields'] ?? null;
-        if (empty($redirect_fields)) return;
+        if (empty($redirect_fields)) {
+            return;
+        }
 
-        // current Page object
-        $page = $this->page;
+        // check individual redirect fields one by one
+        foreach ($redirect_fields as $key => $value) {
 
-        foreach ($redirect_fields as $field => $options) {
-
-            // redirect_fields may be an indexed array
-            if (\is_int($field) && \is_string($options)) {
-                $field = $options;
+            // if key is an integer, value contains the field name
+            $field = \is_int($key) ? $value : $key;
+            if (!\is_string($field)) {
+                continue;
             }
 
-            // get URL from a page field
-            $url = $page->get($field);
+            // get URL value from current page
+            $url = $this->page->get($field);
             if ($url instanceof WireArray) {
                 $url = $url->first();
             }
-            if (empty($url)) continue;
-
-            // default to non-permanent redirect (302)
-            $permanent = false;
-
-            // if options is an array, read contained settings
-            if (\is_array($options)) {
-                if (!empty($options['property']) && \is_object($url)) {
-                    $url = $url->get($options['property']);
-                }
-                if (!empty($options['permanent'])) {
-                    $permanent = (bool) $options['permanent'];
-                }
+            if (empty($url)) {
+                continue;
             }
 
-            // if target URL is valid and doesn't belong to current page, perform a redirect
-            if (\is_string($url) && $url != $page->url && $this->wire('sanitizer')->url($url)) {
-                $this->redirect($url, $permanent);
+            // prepare options array
+            $options = \is_array($value) ? $value : [];
+
+            // check if a property was provided within options array
+            if (!empty($options['property']) && \is_object($url)) {
+                $url = $url->get($options['property']);
             }
+
+            // skip this item if URL is not a string, if it belongs to current page, or if it's invalid
+            if (!\is_string($url) || $url == $this->page->url || !$this->wire('sanitizer')->url($url)) {
+                continue;
+            }
+
+            $this->redirect($url, !empty($options['permanent']));
         }
     }
 
@@ -587,32 +587,29 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      * This method initializes the View object and the $view API variable.
      *
      * @return \Wireframe\View View object.
-     *
-     * @throws WireException if no valid Page has been defined.
      */
     protected function ___initView(): \Wireframe\View {
 
-        // params
+        // get current page's layout
         $page_layout = $this->page->getLayout();
 
         // initialize the View object (note: view file is set in the Wireframe::___setView() method)
-        $view = $this->wire(new \Wireframe\View);
-        $view->setLayout($page_layout === null ? 'default' : $page_layout);
-        $view->setTemplate($this->page->getViewTemplate());
-        $view->setViewsPath($this->paths->views);
-        $view->setLayoutsPath($this->paths->layouts);
-        $view->setExt($this->ext);
-        $view->setPage($this->page);
-        $view->setData($this->data);
-        $view->setPartials($this->findPartials($this->paths->partials));
-        $view->setPlaceholders(new \Wireframe\ViewPlaceholders($view));
-        $view->setRenderer($this->renderer);
-        $this->view = $view;
+        $this->view = $this->wire(new \Wireframe\View);
+        $this->view->setLayout($page_layout === null ? 'default' : $page_layout);
+        $this->view->setTemplate($this->page->getViewTemplate());
+        $this->view->setViewsPath($this->paths->views);
+        $this->view->setLayoutsPath($this->paths->layouts);
+        $this->view->setExt($this->ext);
+        $this->view->setPage($this->page);
+        $this->view->setData($this->data);
+        $this->view->setPartials($this->findPartials($this->paths->partials));
+        $this->view->setPlaceholders(new \Wireframe\ViewPlaceholders($this->view));
+        $this->view->setRenderer($this->renderer);
 
         // define the $view API variable
-        $this->wire('view', $view);
+        $this->wire('view', $this->view);
 
-        return $view;
+        return $this->view;
     }
 
     /**

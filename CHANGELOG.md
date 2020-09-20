@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.0] - 2020-09-20
+
+### Added
+
+- Controller objects have a new method called setPage(), used to set the page property of a specific Controller instance. Additionally this method accepts a boolean that (if set to true) propagates the change to the connected View object as well.
+
+### Changed
+
+- Constructor of Controller class was simplified so that neither argument ($page or $view) is required. If one (or both) of these is left out (or provided with `null` value), corresponding property will fall back to API variable (`$this->wire('page')` or `$this->wire('view')`).
+- Controller base class "view" and "page" properties are now private. Accessing them directly behaves much like before, but is now routed via a setter method (`setPage()` or `setView()`). Setting the "page" property directly *also* updates the page property of the related View instance; this is a shortcut for `$this->setPage($page, true)`.
+- If the page property of the View has been defined, it will override the $page API variable render-time. This behaviour is more consistent than before, where "global" $page was used in some situations, "local" (View) page property in others.
+
 ## [0.16.0] - 2020-09-14
 
 ### Added
