@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.0] - 2020-09-20
+
 ### Added
 
 - Controller objects have a new method called setPage(), used to set the page property of a specific Controller instance. Additionally this method accepts a boolean that (if set to true) propagates the change to the connected View object as well.
