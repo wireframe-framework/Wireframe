@@ -19,7 +19,7 @@ class Config extends \ProcessWire\Wire {
      *
      * @var array
      */
-	protected $data = [];
+    protected $data = [];
 
     /**
      * Constructor
