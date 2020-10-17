@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.1] - 2020-10-17
+
+### Fixed
+- Fixed an issue where Config class path creation wasn't working properly due to missing Wireframe module instance.
+
 ## [0.17.0] - 2020-09-20
 
 ### Added
