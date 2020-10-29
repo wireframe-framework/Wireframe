@@ -1,5 +1,6 @@
 <?php
 
+use \ProcessWire\Page;
 use \ProcessWire\Wireframe;
 
 /**
@@ -80,7 +81,11 @@ class WireframePanel extends BasePanel {
 
         // Panel body
         $out .= '<div class="tracy-inner">';
+        $out .= $this->getPanelConfig();
         $out .= $this->getPanelController();
+        $out .= $this->getPanelControllerProps();
+        $out .= $this->getPanelView();
+        $out .= $this->getPanelViewData();
 
         // Panel footer
         $out .= \TracyDebugger::generatePanelFooter(
@@ -96,13 +101,69 @@ class WireframePanel extends BasePanel {
     }
 
     /**
-     * Get Controller details section
+     * Get Config panel section
+     *
+     * @return string
+     */
+    private function getPanelConfig(): string {
+        $out = $this->renderTable($this->wireframe->getConfig());
+        return $this->renderPanelSection('config', 'Config', $out, false);
+    }
+
+    /**
+     * Get Controller panel section
      *
      * @return string
      */
     private function getPanelController(): string {
-        $out = $this->wireframe->getController() ?: '<em>' . $this->_('Current page has no controller.') . '</em>';
+        $controller = $this->wireframe->getController() ?: null;
+        $out = $controller === null ? '<pre>null</pre>' : $this->renderTable([
+            'class' => get_class($controller),
+            'page' => $controller->page,
+        ]);
         return $this->renderPanelSection('controller', 'Controller', $out, false);
+    }
+
+    /**
+     * Get Controller Props panel section
+     *
+     * @return string
+     */
+    private function getPanelControllerProps(): string {
+        $controller = $this->wireframe->getController() ?: null;
+        $out = $controller === null ? '<pre>null</pre>' : $this->renderTable($controller->getMethodProps('controller', 4));
+        return $this->renderPanelSection('controllerProps', 'Controller Props', $out, false);
+    }
+
+    /**
+     * Get View panel section
+     *
+     * @return string
+     */
+    private function getPanelView(): string {
+        $view = $this->wireframe->view;
+        $out = $this->renderTable([
+            'page' => $view->getPage(),
+            'template' => $view->getTemplate(),
+            'layout' => $view->getLayout(),
+            'view' => $view->getView(),
+            'ext' => $view->getExt(),
+            'layouts_path' => $view->getLayoutsPath(),
+            'views_path' => $view->getViewsPath(),
+            'placeholders' => $view->getPlaceholders(),
+            'partials' => $view->getPartials(),
+        ]);
+        return $this->renderPanelSection('view', 'View', $out, false);
+    }
+
+    /**
+     * Get View Data panel section
+     *
+     * @return string
+     */
+    private function getPanelViewData(): string {
+        $out = $this->renderTable($this->wireframe->view->data());
+        return $this->renderPanelSection('viewData', 'View Data', $out, false);
     }
 
     /**
@@ -121,28 +182,61 @@ class WireframePanel extends BasePanel {
         return "<a href='#' rel='{$id}' class='tracy-toggle" . ($collapsed ? " tracy-collapsed" : "") . "'>"
             . $label
             . "</a>"
-            . "<div id='{$id}'" . ($collapsed ? " class='tracy-collapsed'" : "") . ">{$content}</div>";
+            . "<div id='{$id}'" . ($collapsed ? " class='tracy-collapsed'" : "") . ">{$content}</div>"
+            . "<br>";
     }
 
     /**
-     * Render table header
+     * Render data table
      *
-     * @param array $columns
+     * @param array $array
      * @return string
      */
-    private function renderTableHeader($columns = []): string {
-        $out = '<table>'
-           . '<thead>'
-           . '<tr>';
-        foreach ($columns as $column) {
-            $out .= '<th>' . $column . '</th>';
-        }
+    private function renderTable(array $array): string {
+        return '<table>' . implode(array_map(function($key, $value) {
+            if (is_array($value)) {
+                $value = '<pre>' . $this->getJSON($value) . '</pre>';
+            } else if (is_object($value)) {
+                if ($value instanceof \Wireframe\ViewPlaceholders) {
+                    $value = $this->getJSON($value->getData());
+                } else if ($value instanceof \Wireframe\Partials) {
+                    $value = $this->getJSON($value->__debugInfo());
+                } else if ($value instanceof Page) {
+                    $value = $this->getPageInfo($value);
+                } else if (method_exists($value, '__toString')) {
+                    $value = get_class($value) . ' ' . $value;
+                }
+                $value = '<pre>' . $value . '</pre>';
+            } else if (is_bool($value)) {
+                $value = '<pre>' . ($value ? 'true' : 'false') . '</pre>';
+            }
+            return '<tr><th>' . $key . '</th><td>' . $value . '</td></tr>';
+        }, array_keys($array), $array)) . '</table>';
+    }
 
-        $out .= '</tr>'
-            . '</thead>'
-            . '</tbody>';
+    /**
+     * Get Page debug output
+     *
+     * @param Page $page
+     * @return string
+     */
+    private function getPageInfo(Page $page): string {
+        return get_class($page) . ' ' . $this->getJSON([
+            'id' => $page->id,
+            'name' => $page->name,
+            'template' => $page->template->name,
+            'url' => $page->url,
+        ]);
+    }
 
-        return $out;
+    /**
+     * Get JSON encoded value
+     *
+     * @param mixed $value
+     * @return string
+     */
+    private function getJSON($value): string {
+        return json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?: '';
     }
 
 }

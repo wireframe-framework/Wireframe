@@ -5,7 +5,7 @@ namespace Wireframe;
 /**
  * Container for View Placeholders
  *
- * @version 0.4.1
+ * @version 0.5.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -105,6 +105,15 @@ class ViewPlaceholders {
      */
     public function has(string $key): bool {
         return !empty($this->data[$key]);
+    }
+
+    /**
+     * Get data array
+     *
+     * @return array
+     */
+    public function getData(): array {
+        return $this->data;
     }
 
 }
