@@ -2,6 +2,7 @@
 
 use \ProcessWire\Page;
 use \ProcessWire\Wireframe;
+use \Tracy\Dumper;
 
 /**
  * Tracy Debugger Wireframe Panel
@@ -9,7 +10,7 @@ use \ProcessWire\Wireframe;
  * To make your panel visible you have to add it to the public static $allPanels array in TracyDebugger.module
  * See also https://tracy.nette.org/en/extensions for docs about tracy panels
  *
- * @version 0.0.1
+ * @version 0.1.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -134,7 +135,25 @@ class WireframePanel extends BasePanel {
     private function getPanelControllerProps(): string {
         $out = '<p><em>Public methods exposed by the Controller class, also known as Controller props. <a href="https://wireframe-framework.com/docs/controllers/">Documentation for Controllers.</a></em></p>';
         $controller = $this->wireframe->getController() ?: null;
-        $out .= $controller === null ? '<pre>null</pre>' : $this->renderTable($controller->getMethodProps('controller', 4));
+        if ($controller === null) {
+            $out .= '<pre>null</pre>';
+        } else {
+            $out .= '<table><tr>';
+            foreach (['Name', 'Return', 'Caching', 'Current value'] as $key) {
+                $out .= '<th>' . $key . '</th>';
+            }
+            $out .= '</tr>';
+            $props = $controller->getMethodProps('controller', 4);
+            foreach ($props as $prop_name => $prop) {
+                $out .= '<tr><td>' . implode('</td><td>', [
+                    empty($prop['comment']) ? $prop_name : '<span style="text-decoration: underline; text-decoration-style: dotted" title="' . str_replace('"', '\"', $prop['comment']) . '">' . $prop_name . '</span>',
+                    $prop['return'],
+                    $prop['caching'],
+                    $this->formatValue($prop['value']),
+                ]) . '</td></tr>';
+            }
+            $out .= '</table>';
+        }
         return $this->renderPanelSection('controllerProps', 'Controller Props', $out, false);
     }
 
@@ -199,8 +218,33 @@ class WireframePanel extends BasePanel {
      */
     private function renderTable(array $array): string {
         return '<table>' . implode(array_map(function($key, $value) {
+            return '<tr><th>' . $key . '</th><td>' . $this->formatValue($value) . '</td></tr>';
+        }, array_keys($array), $array)) . '</table>';
+    }
+
+    /**
+     * Format value for data table
+     *
+     * This method attempts to use Tracy Dumper, and only if that fails it falls back to local custom implementation.
+     *
+     * @param mixed $value
+     * @return string
+     */
+    private function formatValue($value): string {
+        // trycatch is to prevent panel errors if an image is missing
+        // log the error to the Tracy error logs instead
+        try {
+            $value = Dumper::toHtml($value, [
+                Dumper::LIVE => true,
+                Dumper::DEBUGINFO => \TracyDebugger::getDataValue('debugInfo'),
+                Dumper::DEPTH => 99,
+                Dumper::TRUNCATE => \TracyDebugger::getDataValue('maxLength'),
+                Dumper::COLLAPSE_COUNT => 1,
+                Dumper::COLLAPSE => false,
+            ]);
+        } catch (Exception $e) {
             if (is_array($value)) {
-                $value = '<pre>' . $this->getJSON($value) . '</pre>';
+                $value = $this->getJSON($value);
             } else if (is_object($value)) {
                 if ($value instanceof \Wireframe\ViewPlaceholders) {
                     $value = $this->getJSON($value->getData());
@@ -211,12 +255,12 @@ class WireframePanel extends BasePanel {
                 } else if (method_exists($value, '__toString')) {
                     $value = get_class($value) . ' ' . $value;
                 }
-                $value = '<pre>' . $value . '</pre>';
             } else if (is_bool($value)) {
-                $value = '<pre>' . ($value ? 'true' : 'false') . '</pre>';
+                $value = $value ? 'true' : 'false';
             }
-            return '<tr><th>' . $key . '</th><td>' . $value . '</td></tr>';
-        }, array_keys($array), $array)) . '</table>';
+            $value = '<pre>' . $value . '</pre>';
+        }
+        return $value;
     }
 
     /**

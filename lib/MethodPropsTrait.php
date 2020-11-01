@@ -249,7 +249,7 @@ trait MethodPropsTrait {
                     $return = $method->getReturnType();
                     $props[] = $method->name
                         . '(' . implode(', ', $method->getParameters()) . ')'
-                        . ': ' . ($return->allowsNull() ? '?' . $return : $return);
+                        . ($return !== null ? ': ' . ($return->allowsNull() ? '?' . $return : $return) : '');
                 } else if ($return_mode == 3) {
                     // key is prop name and signature, value is prop value
                     $return = $method->getReturnType();
@@ -257,29 +257,24 @@ trait MethodPropsTrait {
                     $props[
                         $method->name
                         . '(' . implode(', ', $method->getParameters()) . ')'
-                        . ': ' . ($return->allowsNull() ? '?' . $return : $return)
+                        . ($return !== null ? ': ' . ($return->allowsNull() ? '?' . $return : $return) : '')
                     ] = $value;
                 } else if ($return_mode == 4) {
                     // key is prop name, value is prop signature and debug value
                     $return = $method->getReturnType();
-                    $value = $this->getMethodProp($method->name, $context);
-                    if (is_object($value)) {
-                        if (method_exists($value, '__debugInfo')) {
-                            $value = $value->__debugInfo();
-                        } else if (method_exists($value, '__toString')) {
-                            $value = (string) $value;
-                        } else {
-                            $value = get_class($value);
-                        }
-                    } else if (is_array($value)) {
-                        $value = json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?: '';
-                    } else if (is_bool($value)) {
-                        $value = $value ? 'true' : 'false';
+                    if ($return !== null) {
+                        $return = ($return->allowsNull() ? '?' : '') . $return;
+                    }
+                    $comment = $method->getDocComment();
+                    if ($comment !== false) {
+                        $comment = trim(preg_replace('/\s+\*\s?/m', PHP_EOL, substr($comment, 3, -2)));
                     }
                     $props[$method->name] = [
                         'params' => implode(', ', $method->getParameters()),
-                        'return' => ($return->allowsNull() ? '?' : '') . $return,
-                        'value' => $value,
+                        'return' => $return,
+                        'caching' => !\in_array($method->name, $this->uncacheable_methods) ? ($this->cacheable_methods[$method->name] ?? 'run-time') : 'none',
+                        'comment' => $comment,
+                        'value' => $this->getMethodProp($method->name, $context),
                     ];
                 }
             }
