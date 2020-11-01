@@ -106,7 +106,8 @@ class WireframePanel extends BasePanel {
      * @return string
      */
     private function getPanelConfig(): string {
-        $out = $this->renderTable($this->wireframe->getConfig());
+        $out = '<p><em>Config settings passed to the Wireframe module. <a href="https://wireframe-framework.com/docs/configuration-settings/">Documentation for config settings.</a></em></p>';
+        $out .= $this->renderTable($this->wireframe->getConfig());
         return $this->renderPanelSection('config', 'Config', $out, false);
     }
 
@@ -116,8 +117,9 @@ class WireframePanel extends BasePanel {
      * @return string
      */
     private function getPanelController(): string {
+        $out = '<p><em>Current Controller object. <a href="https://wireframe-framework.com/docs/controllers/">Documentation for Controllers.</a></em></p>';
         $controller = $this->wireframe->getController() ?: null;
-        $out = $controller === null ? '<pre>null</pre>' : $this->renderTable([
+        $out .= $controller === null ? '<pre>null</pre>' : $this->renderTable([
             'class' => get_class($controller),
             'page' => $controller->page,
         ]);
@@ -130,8 +132,9 @@ class WireframePanel extends BasePanel {
      * @return string
      */
     private function getPanelControllerProps(): string {
+        $out = '<p><em>Public methods exposed by the Controller class, also known as Controller props. <a href="https://wireframe-framework.com/docs/controllers/">Documentation for Controllers.</a></em></p>';
         $controller = $this->wireframe->getController() ?: null;
-        $out = $controller === null ? '<pre>null</pre>' : $this->renderTable($controller->getMethodProps('controller', 4));
+        $out .= $controller === null ? '<pre>null</pre>' : $this->renderTable($controller->getMethodProps('controller', 4));
         return $this->renderPanelSection('controllerProps', 'Controller Props', $out, false);
     }
 
@@ -141,8 +144,9 @@ class WireframePanel extends BasePanel {
      * @return string
      */
     private function getPanelView(): string {
+        $out = '<p><em>Current View object. <a href="https://wireframe-framework.com/docs/view/">Documentation for the View layer.</a></em></p>';
         $view = $this->wireframe->view;
-        $out = $this->renderTable([
+        $out .= $this->renderTable([
             'page' => $view->getPage(),
             'template' => $view->getTemplate(),
             'layout' => $view->getLayout(),
@@ -162,7 +166,8 @@ class WireframePanel extends BasePanel {
      * @return string
      */
     private function getPanelViewData(): string {
-        $out = $this->renderTable($this->wireframe->view->data());
+        $out = '<p><em>Data (variables) passed via the bootstrap file and/or the Controller class to the View. <a href="https://wireframe-framework.com/docs/view/">Documentation for the View layer.</a></em></p>';
+        $out .= $this->renderTable($this->wireframe->view->data());
         return $this->renderPanelSection('viewData', 'View Data', $out, false);
     }
 
