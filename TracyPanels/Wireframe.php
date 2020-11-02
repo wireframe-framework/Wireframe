@@ -225,67 +225,20 @@ class WireframePanel extends BasePanel {
     /**
      * Format value for data table
      *
-     * This method attempts to use Tracy Dumper, and only if that fails it falls back to local custom implementation.
+     * This method is a wrapper for Tracy Dumper.
      *
      * @param mixed $value
      * @return string
      */
     private function formatValue($value): string {
-        // trycatch is to prevent panel errors if an image is missing
-        // log the error to the Tracy error logs instead
-        try {
-            $value = Dumper::toHtml($value, [
-                Dumper::LIVE => true,
-                Dumper::DEBUGINFO => \TracyDebugger::getDataValue('debugInfo'),
-                Dumper::DEPTH => 99,
-                Dumper::TRUNCATE => \TracyDebugger::getDataValue('maxLength'),
-                Dumper::COLLAPSE_COUNT => 1,
-                Dumper::COLLAPSE => false,
-            ]);
-        } catch (Exception $e) {
-            if (is_array($value)) {
-                $value = $this->getJSON($value);
-            } else if (is_object($value)) {
-                if ($value instanceof \Wireframe\ViewPlaceholders) {
-                    $value = $this->getJSON($value->getData());
-                } else if ($value instanceof \Wireframe\Partials) {
-                    $value = $this->getJSON($value->__debugInfo());
-                } else if ($value instanceof Page) {
-                    $value = $this->getPageInfo($value);
-                } else if (method_exists($value, '__toString')) {
-                    $value = get_class($value) . ' ' . $value;
-                }
-            } else if (is_bool($value)) {
-                $value = $value ? 'true' : 'false';
-            }
-            $value = '<pre>' . $value . '</pre>';
-        }
-        return $value;
-    }
-
-    /**
-     * Get Page debug output
-     *
-     * @param Page $page
-     * @return string
-     */
-    private function getPageInfo(Page $page): string {
-        return get_class($page) . ' ' . $this->getJSON([
-            'id' => $page->id,
-            'name' => $page->name,
-            'template' => $page->template->name,
-            'url' => $page->url,
+        return Dumper::toHtml($value, [
+            Dumper::LIVE => true,
+            Dumper::DEBUGINFO => \TracyDebugger::getDataValue('debugInfo'),
+            Dumper::DEPTH => 99,
+            Dumper::TRUNCATE => \TracyDebugger::getDataValue('maxLength'),
+            Dumper::COLLAPSE_COUNT => 1,
+            Dumper::COLLAPSE => false,
         ]);
-    }
-
-    /**
-     * Get JSON encoded value
-     *
-     * @param mixed $value
-     * @return string
-     */
-    private function getJSON($value): string {
-        return json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?: '';
     }
 
 }
