@@ -146,7 +146,7 @@ class WireframePanel extends BasePanel {
             $props = $controller->getMethodProps('controller', 4);
             foreach ($props as $prop_name => $prop) {
                 $out .= '<tr><td>' . implode('</td><td>', [
-                    empty($prop['comment']) ? $prop_name : '<span style="text-decoration: underline; text-decoration-style: dotted" title="' . str_replace('"', '\"', $prop['comment']) . '">' . $prop_name . '</span>',
+                    empty($prop['comment']) ? $prop_name : '<span style="text-decoration: underline; text-decoration-style: dotted" title="' . $this->sanitizer->entities1($prop['comment']) . '">' . $prop_name . '</span>',
                     $prop['return'],
                     $prop['caching'],
                     $this->formatValue($prop['value']),
