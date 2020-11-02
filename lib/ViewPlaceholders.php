@@ -116,4 +116,42 @@ class ViewPlaceholders {
         return $this->data;
     }
 
+    /**
+     * debugInfo magic method
+     *
+     * @return array
+     */
+    public function __debugInfo() {
+
+        // pre-known placeholders
+        $placeholders = $this->data;
+
+        // view files usable as placeholders
+        $files_path = $this->view->getViewData('views_path') . $this->view->getViewData('template');
+        if (\is_dir($files_path)) {
+            foreach (\glob($files_path. '/*') as $file) {
+                $name = \basename($file);
+                $ext_pos = \strpos($name, ".");
+                if ($ext_pos === 0 || $ext_pos === false) continue;
+                if (\is_dir($file)) continue;
+                $ext = \ltrim(\substr($name, $ext_pos), '.');
+                $view_name = \substr($name, 0, $ext_pos);
+                if (isset($placeholders[$view_name])) {
+                    if (\is_string($placeholders[$view_name])) {
+                        $temp_name = \basename($placeholders[$view_name]);
+                        $temp_ext = \ltrim(\substr($temp_name, \strpos($temp_name, ".")), '.');
+                        $placeholders[$view_name] = [
+                            $temp_ext => $placeholders[$view_name],
+                        ];
+                    }
+                    $placeholders[$view_name][$ext] = $file;
+                    continue;
+                }
+                $placeholders[$view_name] = $file;
+            }
+        }
+
+        return $placeholders;
+    }
+
 }
