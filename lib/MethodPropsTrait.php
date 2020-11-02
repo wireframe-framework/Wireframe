@@ -245,21 +245,6 @@ trait MethodPropsTrait {
                     // key is prop name, value is prop value
                     $props[$method->name] = $this->getMethodProp($method->name, $context);
                 } else if ($return_mode == 2) {
-                    // key is index, value is prop name and signature
-                    $return = $method->getReturnType();
-                    $props[] = $method->name
-                        . '(' . implode(', ', $method->getParameters()) . ')'
-                        . ($return !== null ? ': ' . ($return->allowsNull() ? '?' . $return : $return) : '');
-                } else if ($return_mode == 3) {
-                    // key is prop name and signature, value is prop value
-                    $return = $method->getReturnType();
-                    $value = $this->getMethodProp($method->name, $context);
-                    $props[
-                        $method->name
-                        . '(' . implode(', ', $method->getParameters()) . ')'
-                        . ($return !== null ? ': ' . ($return->allowsNull() ? '?' . $return : $return) : '')
-                    ] = $value;
-                } else if ($return_mode == 4) {
                     // key is prop name, value is prop signature and debug value
                     $return = $method->getReturnType();
                     if ($return !== null) {
@@ -269,10 +254,14 @@ trait MethodPropsTrait {
                     if ($comment !== false) {
                         $comment = trim(preg_replace('/\s+\*\s?/m', PHP_EOL, substr($comment, 3, -2)));
                     }
+                    $cacheable = \in_array($method->name, $this->uncacheable_methods) ? 'none' : 'run-time';
+                    if (!empty($this->cacheable_methods[$method->name])) {
+                        $cacheable = $this->cacheable_methods[$method->name];
+                    }
                     $props[$method->name] = [
                         'params' => implode(', ', $method->getParameters()),
                         'return' => $return,
-                        'caching' => !\in_array($method->name, $this->uncacheable_methods) ? ($this->cacheable_methods[$method->name] ?? 'run-time') : 'none',
+                        'caching' => $cacheable,
                         'comment' => $comment,
                         'value' => $this->getMethodProp($method->name, $context),
                     ];
