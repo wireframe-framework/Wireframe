@@ -52,10 +52,10 @@ class WireframePanel extends BasePanel {
     public function getTab() {
 
         // Bail out early if this is an additional bar (AJAX, redirect)
-        if (\TracyDebugger::isAdditionalBar()) return;
+        if (\TracyDebugger::isAdditionalBar()) return '';
 
         // Disable Wireframe panel if Wireframe hasn't been initialized
-        if (!class_exists('\ProcessWire\Wireframe') || !Wireframe::isInitialized($this->wire()->instanceID)) return;
+        if (!class_exists('\ProcessWire\Wireframe') || !Wireframe::isInitialized($this->wire()->instanceID)) return '';
 
         \Tracy\Debugger::timer($this->name);
         return "<span title='{$this->label}'>"
