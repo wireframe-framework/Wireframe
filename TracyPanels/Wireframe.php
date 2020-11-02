@@ -1,6 +1,5 @@
 <?php
 
-use \ProcessWire\Page;
 use \ProcessWire\Wireframe;
 use \Tracy\Dumper;
 
