@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.1] - 2020-11-08
+
+### Fixed
+- PHP 7.4 deprecated ReflectionType::__toString(), update MethodPropsTrait to use ReflectionNamedType::getName() instead. Also add support for PHP 8 ReflectionUnionType.
+
 ## [0.18.0] - 2020-11-08
 
 ### Added

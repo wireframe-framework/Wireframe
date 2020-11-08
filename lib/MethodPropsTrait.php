@@ -5,7 +5,7 @@ namespace Wireframe;
 /**
  * Trait for adding public method property access support to Wireframe objects
  *
- * @version 0.3.0
+ * @version 0.3.1
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -248,7 +248,16 @@ trait MethodPropsTrait {
                     // key is prop name, value is prop signature and debug data
                     $return = $method->getReturnType();
                     if ($return !== null) {
-                        $return = ($return->allowsNull() ? '?' : '') . $return;
+                        $return_name = [];
+                        if ($return instanceof \ReflectionUnionType) {
+                            $return_types = $return->getTypes();
+                            foreach ($return_types as $return_type) {
+                                $return_name[] = $return_type->getName();
+                            }
+                        } else {
+                            $return_name[] = $return->getName();
+                        }
+                        $return = ($return->allowsNull() ? '?' : '') . implode('|', $return_name);
                     }
                     $comment = $method->getDocComment();
                     if ($comment !== false) {
