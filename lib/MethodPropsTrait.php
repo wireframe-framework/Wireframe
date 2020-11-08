@@ -5,7 +5,7 @@ namespace Wireframe;
 /**
  * Trait for adding public method property access support to Wireframe objects
  *
- * @version 0.2.0
+ * @version 0.3.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -208,6 +208,67 @@ trait MethodPropsTrait {
         if ($persistent_cache_name !== null && $value !== null) {
             $this->wire('cache')->save($persistent_cache_name, $value, $this->cacheable_methods[$name]);
         }
+    }
+
+    /**
+     * Get all method props
+     *
+     * @internal
+     *
+     * @param string $context
+     * @param int $return_mode
+     * @return array
+     */
+    final public function getMethodProps(string $context, int $return_mode = 1): array {
+        $reflection_class = new \ReflectionClass($this);
+        $props = [];
+        foreach ($reflection_class->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
+            if ((strpos($method->name, '_') === 0 && strpos($method->name, '___') !== 0) || in_array($method->name, ['init', 'render'])) {
+                continue;
+            }
+            $params = $method->getParameters();
+            $params_require_values = false;
+            if (!empty($params)) {
+                foreach ($params as $param) {
+                    if (!$param->isDefaultValueAvailable()) {
+                        $params_require_values = true;
+                        break;
+                    }
+                }
+            }
+            if ($params_require_values) {
+                // skip method if it has params that require values (won't work as plain prop)
+                continue;
+            }
+            if ($method->class === $reflection_class->getName()) {
+                if ($return_mode == 1) {
+                    // key is prop name, value is prop value
+                    $props[$method->name] = $this->getMethodProp($method->name, $context);
+                } else if ($return_mode == 2) {
+                    // key is prop name, value is prop signature and debug data
+                    $return = $method->getReturnType();
+                    if ($return !== null) {
+                        $return = ($return->allowsNull() ? '?' : '') . $return;
+                    }
+                    $comment = $method->getDocComment();
+                    if ($comment !== false) {
+                        $comment = trim(preg_replace('/\s+\*\s?/m', PHP_EOL, substr($comment, 3, -2)));
+                    }
+                    $cacheable = \in_array($method->name, $this->uncacheable_methods) ? 'none' : 'run-time';
+                    if (!empty($this->cacheable_methods[$method->name])) {
+                        $cacheable = $this->cacheable_methods[$method->name];
+                    }
+                    $props[$method->name] = [
+                        'params' => implode(', ', $method->getParameters()),
+                        'return' => $return,
+                        'caching' => $cacheable,
+                        'comment' => $comment,
+                        'value' => $this->getMethodProp($method->name, $context),
+                    ];
+                }
+            }
+        }
+        return $props;
     }
 
 }

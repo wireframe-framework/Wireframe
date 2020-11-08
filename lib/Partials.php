@@ -7,7 +7,7 @@ namespace Wireframe;
  *
  * This class holds Partial objects and provides method access to rendering them with optional arguments.
  *
- * @version 0.2.1
+ * @version 0.3.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -79,6 +79,19 @@ class Partials extends \ProcessWire\WireArray {
     public function setPath(string $path): Partials {
         $this->path = $path;
         return $this;
+    }
+
+    /**
+     * debugInfo magic method
+     *
+     * @return array
+     */
+    public function __debugInfo() {
+        $items = [];
+        foreach ($this->getArray() as $key => $item) {
+            $items[$key] = $item->__debugInfo();
+        }
+        return $items;
     }
 
 }
