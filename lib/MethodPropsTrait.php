@@ -245,7 +245,7 @@ trait MethodPropsTrait {
                     // key is prop name, value is prop value
                     $props[$method->name] = $this->getMethodProp($method->name, $context);
                 } else if ($return_mode == 2) {
-                    // key is prop name, value is prop signature and debug value
+                    // key is prop name, value is prop signature and debug data
                     $return = $method->getReturnType();
                     if ($return !== null) {
                         $return = ($return->allowsNull() ? '?' : '') . $return;
