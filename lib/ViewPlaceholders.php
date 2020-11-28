@@ -5,7 +5,7 @@ namespace Wireframe;
 /**
  * Container for View Placeholders
  *
- * @version 0.5.0
+ * @version 0.5.1
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -87,11 +87,9 @@ class ViewPlaceholders {
      *
      * @param string $key Name of a view placeholder
      * @param mixed $value Value to store in a view placeholder
-     * @return ViewPlaceholders Self-reference
      */
-    public function __set(string $key, $value): ViewPlaceholders {
+    public function __set(string $key, $value) {
         $this->data[$key] = $value;
-        return $this;
     }
 
     /**
