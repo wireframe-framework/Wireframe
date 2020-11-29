@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.2] - 2020-11-28
+
+### Fixed
+- PHP 8 requires __set() to either not declare a return type, or declare a void return type. This has been fixed.
+
 ## [0.18.1] - 2020-11-08
 
 ### Fixed

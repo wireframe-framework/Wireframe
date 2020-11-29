@@ -14,7 +14,7 @@
     ],
     "require": {
         "php": ">=7.1",
-        "processwire/processwire": "^3.0",
+        "processwire/processwire": ">=3.0.112",
         "wireframe-framework/processwire-composer-installer": "^1.0.0"
     }
 }

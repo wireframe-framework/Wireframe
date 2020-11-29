@@ -14,7 +14,7 @@ namespace ProcessWire;
  * @method static string|Page|NullPage page($source, $args = []) Static getter (factory) method for Pages.
  * @method static string|null partial(string $partial_name, array $args = []) Static getter (factory) method for Partials.
  *
- * @version 0.18.1
+ * @version 0.18.2
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -837,10 +837,9 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      *
      * @param string $key Name of the variable.
      * @param string $value Value for the variable.
-     * @return Wireframe Self-reference.
      */
-    public function __set($key, $value): Wireframe {
-        return $this->set($key, $value);
+    public function __set($key, $value) {
+        $this->set($key, $value);
     }
 
     /**
