@@ -8,7 +8,7 @@ use \Tracy\Dumper;
  *
  * See https://tracy.nette.org/en/extensions for docs about Tracy panels.
  *
- * @version 0.1.0
+ * @version 0.1.1
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -106,7 +106,8 @@ class WireframePanel extends BasePanel {
      */
     private function getPanelConfig(): string {
         $out = '<p><em>Config settings passed to the Wireframe module. <a href="https://wireframe-framework.com/docs/configuration-settings/">Documentation for config settings.</a></em></p>';
-        $out .= $this->renderTable($this->wireframe->getConfig());
+        $config = $this->wireframe->getConfig();
+        $out .= empty($config) ? '<pre>[]</pre>' : $this->renderTable($config);
         return $this->renderPanelSection('config', 'Config', $out, false);
     }
 
@@ -163,7 +164,7 @@ class WireframePanel extends BasePanel {
     private function getPanelView(): string {
         $out = '<p><em>Current View object. <a href="https://wireframe-framework.com/docs/view/">Documentation for the View layer.</a></em></p>';
         $view = $this->wireframe->view;
-        $out .= $this->renderTable([
+        $out .= $view === null ? '<pre>null</pre>' : $this->renderTable([
             'page' => $view->getPage(),
             'template' => $view->getTemplate(),
             'layout' => $view->getLayout(),
@@ -184,7 +185,7 @@ class WireframePanel extends BasePanel {
      */
     private function getPanelViewData(): string {
         $out = '<p><em>Data (variables) passed via the bootstrap file and/or the Controller class to the View. <a href="https://wireframe-framework.com/docs/view/">Documentation for the View layer.</a></em></p>';
-        $out .= $this->renderTable($this->wireframe->view->data());
+        $out .= $this->wireframe->view === null ? '<pre>null</pre>' : $this->renderTable($this->wireframe->view->data());
         return $this->renderPanelSection('viewData', 'View Data', $out, false);
     }
 
