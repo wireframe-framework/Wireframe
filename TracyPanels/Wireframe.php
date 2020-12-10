@@ -175,7 +175,8 @@ class WireframePanel extends BasePanel {
      */
     private function getPanelConfig(): string {
         $out = "<a class='wireframe-tracy-doc-link' target='_blank' href='https://wireframe-framework.com/docs/configuration-settings/' title='Config settings passed to the Wireframe module.'>{$this->iconHelp}</a>";
-        $out .= $this->renderTable($this->wireframe->getConfig());
+        $config = $this->wireframe->getConfig();
+        $out .= empty($config) ? '<pre>[]</pre>' : $this->renderTable($config);
         return $this->renderPanelSection('config', 'Config', $out, false);
     }
 
@@ -232,7 +233,7 @@ class WireframePanel extends BasePanel {
     private function getPanelView(): string {
         $out = "<a class='wireframe-tracy-doc-link' target='_blank' href='https://wireframe-framework.com/docs/view/' title='Current View object.'>{$this->iconHelp}</a>";
         $view = $this->wireframe->view;
-        $out .= $this->renderTable([
+        $out .= $view === null ? '<pre>null</pre>' : $this->renderTable([
             'page' => $view->getPage(),
             'template' => $view->getTemplate(),
             'layout' => $view->getLayout(),
@@ -253,7 +254,7 @@ class WireframePanel extends BasePanel {
      */
     private function getPanelViewData(): string {
         $out = "<a class='wireframe-tracy-doc-link' target='_blank' href='https://wireframe-framework.com/docs/view/' title='Data (variables) passed via the bootstrap file and/or the Controller class to the View.'>{$this->iconHelp}</a>";
-        $out .= $this->renderTable($this->wireframe->view->data());
+        $out .= $this->wireframe->view === null ? '<pre>null</pre>' : $this->renderTable($this->wireframe->view->data());
         return $this->renderPanelSection('viewData', 'View Data', $out, false);
     }
 
