@@ -7,7 +7,7 @@ namespace Wireframe;
  *
  * This class holds Partial objects and provides method access to rendering them with optional arguments.
  *
- * @version 0.3.0
+ * @version 0.4.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -18,7 +18,7 @@ class Partials extends \ProcessWire\WireArray {
      *
      * @var string
      */
-    private $path;
+    private $path = '';
 
     /**
      * Gateway for rendering partials with arguments
@@ -79,6 +79,36 @@ class Partials extends \ProcessWire\WireArray {
     public function setPath(string $path): Partials {
         $this->path = $path;
         return $this;
+    }
+
+    /**
+     * Get path
+     *
+     * @return string
+     */
+    public function getPath(): string {
+        return $this->path;
+    }
+
+    /**
+     * Get array of partial filenames
+     *
+     * @internal
+     *
+     * @param string|null $ext
+     * @param bool $with_ext
+     * @return array
+     */
+    public function getFilenames(string $ext = null, bool $with_ext = true): array {
+        $filenames = [];
+        foreach ($this->getArray() as $partial) {
+            if ($partial instanceof Partials) {
+                $filenames += $partial->getFilenames($ext, $with_ext);
+                continue;
+            }
+            $filenames[] = $partial->getFilename($ext, $with_ext);
+        }
+        return $filenames;
     }
 
     /**

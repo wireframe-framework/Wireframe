@@ -5,7 +5,7 @@ namespace Wireframe;
 /**
  * Wireframe Partial
  *
- * @version 0.1.4
+ * @version 0.2.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -84,11 +84,20 @@ class Partial extends \ProcessWire\Wire {
      * @return string
      */
     public function __toString() {
-        $ext = $this->wire('config')->templateExtension;
-        if (!empty($this->filenames[$ext])) {
-            return $this->filenames[$ext];
-        }
-        return array_values($this->filenames)[0] ?? '';
+        return $this->getFilename();
+    }
+
+    /**
+     * Get filename for this partial
+     *
+     * @param string|null $ext
+     * @param bool $with_ext
+     * @return string
+     */
+    public function getFilename(?string $ext = null, bool $with_ext = true): string {
+        $ext = $ext ?: $this->wire('config')->templateExtension;
+        $filename = $this->filenames[$ext] ?? (array_values($this->filenames)[0] ?? '');
+        return $with_ext ? $filename : substr($filename, 0, -strlen($ext)-1);
     }
 
     /**

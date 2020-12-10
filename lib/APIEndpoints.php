@@ -62,7 +62,7 @@ class APIEndpoints {
                 $out['rendered'] = $component->render();
             }
             return $out;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             if ($e->getCode() === 404) {
                 throw (new \Wireframe\APIException(sprintf(
                     'Unknown component (%s)',
@@ -70,8 +70,9 @@ class APIEndpoints {
                 )))->setResponseCode(404);
             }
             throw (new \Wireframe\APIException(sprintf(
-                'Error while processing component (%s)',
-                $component_name
+                'Error while processing component (%s)%s',
+                $component_name,
+                $this->verboseErrors() ? ' -- ' . trim($e->getMessage()) : ''
             )));
         }
     }
@@ -138,7 +139,7 @@ class APIEndpoints {
                 $out['rendered'] = $page->render();
             }
             return $out;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             if ($e instanceof \ProcessWire\Wire404Exception) {
                 throw (new \Wireframe\APIException(sprintf(
                     'Non-existing or non-viewable page (id=%s)',
@@ -146,8 +147,9 @@ class APIEndpoints {
                 )))->setResponseCode(404);
             }
             throw (new \Wireframe\APIException(sprintf(
-                'Error while processing page (id=%s)',
-                $page_id
+                'Error while processing page (id=%s)%s',
+                $page_id,
+                $this->verboseErrors() ? ' -- ' . trim($e->getMessage()) : ''
             )));
         }
     }
@@ -178,7 +180,7 @@ class APIEndpoints {
             return [
                 'rendered' => \Wireframe\Factory::partial($partial_name, $args),
             ];
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             if ($e->getCode() === 404) {
                 throw (new \Wireframe\APIException(sprintf(
                     'Unknown partial (%s)',
@@ -186,10 +188,20 @@ class APIEndpoints {
                 )))->setResponseCode(404);
             }
             throw (new \Wireframe\APIException(sprintf(
-                'Error while processing partial (%s)',
-                $partial_name
+                'Error while processing partial (%s)%s',
+                $partial_name,
+                $this->verboseErrors() ? ' -- ' . trim($e->getMessage()) : ''
             )));
         }
+    }
+
+    /**
+     * Should we display verbose error/debug messages?
+     *
+     * @return bool
+     */
+    private function verboseErrors(): bool {
+        return \ProcessWire\wire('config')->debug === true || \ProcessWire\wire('user')->isSuperuser();
     }
 
 }

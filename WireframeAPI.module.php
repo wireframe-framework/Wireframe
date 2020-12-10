@@ -8,7 +8,7 @@ namespace ProcessWire;
  * This module provides a JSON API for accessing Wireframe's features. For more details check out the documentation at
  * https://wireframe-framework.com/docs/wireframe-api/.
  *
- * @version 0.1.1
+ * @version 0.2.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -86,12 +86,28 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
     }
 
     /**
+     * Set config data
+     *
+     * @param array $data
+     */
+    public function setConfigData(array $data) {
+        if (isset($data['enabled_endpoints'])) {
+            $this->setEnabledEndpoints($data['enabled_endpoints']);
+        }
+    }
+
+    /**
      * Module configuration
      *
      * @param array $data
      * @return InputfieldWrapper
      */
     public function getModuleConfigInputfields(array $data): InputfieldWrapper {
+
+        // API debugger
+        if ($this->wire('input')->get('api_query') && $this->wire('user')->isSuperuser()) {
+            $this->renderAPIResponse();
+        }
 
         $fields = $this->wire(new InputfieldWrapper());
 
@@ -120,6 +136,22 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
         $fields->add($field);
 
         return $fields;
+    }
+
+    /**
+     * Render API response (API debugger)
+     */
+    private function renderAPIResponse() {
+        if ($this->wire('page')->template == 'admin') {
+            // make sure that field rendering works as expected (PageRender won't normally add this
+            // hook if current page's template is admin, which is something we actually need here)
+            $pageRender = $this->wire('modules')->get('PageRender');
+            $pageRender->addHookBefore('Page::render', $pageRender, 'beforeRenderPage', ['priority' => 1]);
+        }
+        $api_args = $this->wire('input')->get('api_args') ? json_decode($this->wire('input')->get('api_args'), true) : [];
+        $api = $this->init($this->wire('input')->get('api_query'), $api_args);
+        echo $api->sendHeaders()->render();
+        exit();
     }
 
     /**
