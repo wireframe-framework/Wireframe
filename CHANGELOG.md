@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0] - 2020-12-13
+
 ### Added
 - Wireframe API debugger for Tracy, currently only available for superusers.
 - New method `Partial::getFilename(?string $ext = null, bool $with_ext = true)`. This is otherwise the same as type juggling a Partial object to string, but provides more customizability via params when called directly.

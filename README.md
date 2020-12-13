@@ -22,14 +22,18 @@ There are a couple of ways to get the module:
 - Clone or download from GitHub: https://github.com/wireframe-framework/Wireframe
 - Install using Composer: https://packagist.org/packages/wireframe-framework/wireframe
 
-2. Set up the Wireframe directories within the /site/templates/ directory, or install a new site
-using the site-wireframe-boilerplate site profile.
+2. Set up the Wireframe directories within the /site/templates/ directory
 
-If your site already has identically named files or folders, you can rename the included files to
-something else, as long as you also adjust the paths in config settings ($config->wireframe array)
-accordingly. See https://wireframe-framework.com/docs/configuration-settings/ for more information.
+If your site already has identically named folders you can call them something else, as long as you
+also adjust the paths in config settings (`$config->wireframe` array) accordingly. For more details
+visit https://wireframe-framework.com/docs/configuration-settings/.
 
-3. Copy wireframe.php from the module's directory to /site/templates/.
+Alternatively you can install the site-wireframe-boilerplate site profile, available from GitHub:
+https://github.com/wireframe-framework/site-wireframe-docs. This is a complete site running on
+Wireframe, so you may find it useful if you're just starting a new project, but it's not something
+you'd want to use if you've already got an existing site set up.
+
+3. Copy wireframe.php from the module's directory to /site/templates/wireframe.php
 
 This is the file that bootstraps Wireframe. If you want to pass variables to Wireframe during init
 or render phases, you can directly modify this file.
