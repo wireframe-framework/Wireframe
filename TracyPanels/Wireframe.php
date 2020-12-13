@@ -156,10 +156,9 @@ class WireframePanel extends BasePanel {
     /**
      * Get panel footer
      *
-     * @param string $body
      * @return string
      */
-    private function getPanelFooter(string $body = ''): string {
+    private function getPanelFooter(): string {
         return \TracyDebugger::generatePanelFooter(
             $this->name,
             \Tracy\Debugger::timer($this->name),
