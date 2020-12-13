@@ -15,7 +15,7 @@ Wireframe, be sure to check out https://github.com/wireframe-framework/site-wire
 
 ## Getting started
 
-1. Download and install the Wireframe ProcessWire module.
+1. Download and install the Wireframe ProcessWire module
 
 There are a couple of ways to get the module:
 
@@ -43,8 +43,9 @@ or render phases, you can directly modify this file.
 This can be done via the Alternate Template Filename setting found from the template edit screen,
 and will redirect requests for pages using those templates through the Wireframe bootstrap file.
 
-Note: you don't actually have to route all your templates through Wireframe. In case you want to
-use other output strategies for other templates, that will work just fine.
+Note: you don't actually have to route *all* your templates through Wireframe. In case you want to
+use other output strategies for some of your templates, that will work just fine: just skip step 4
+for those templates.
 
 ## Resources
 
