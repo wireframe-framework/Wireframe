@@ -22,7 +22,7 @@ There are a couple of ways to get the module:
 - Clone or download from GitHub: https://github.com/wireframe-framework/Wireframe
 - Install using Composer: https://packagist.org/packages/wireframe-framework/wireframe
 
-2. Set up the Wireframe directories within the /site/templates/ directory
+2. Set up the Wireframe directories within the `/site/templates/` directory
 
 If your site already has identically named folders you can call them something else, as long as you
 also adjust the paths in config settings (`$config->wireframe` array) accordingly. For more details
@@ -33,12 +33,12 @@ https://github.com/wireframe-framework/site-wireframe-docs. This is a complete s
 Wireframe, so you may find it useful if you're just starting a new project, but it's not something
 you'd want to use if you've already got an existing site set up.
 
-3. Copy wireframe.php from the module's directory to /site/templates/wireframe.php
+3. Copy `wireframe.php` from the module's directory to `/site/templates/wireframe.php`
 
 This is the file that bootstraps Wireframe. If you want to pass variables to Wireframe during init
 or render phases, you can directly modify this file.
 
-4. Add wireframe.php as the filename of the template(s) you want to use Wirerame for
+4. Add `wireframe` as the alternate filename of the template(s) you want to use Wirerame for
 
 This can be done via the Alternate Template Filename setting found from the template edit screen,
 and will redirect requests for pages using those templates through the Wireframe bootstrap file.
