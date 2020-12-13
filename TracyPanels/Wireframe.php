@@ -271,7 +271,7 @@ class WireframePanel extends BasePanel {
 
         // Wireframe API module needs to be installed
         if (!$this->wire('modules')->isInstalled('WireframeAPI')) {
-            return '<p>Wireframe API module is not installed, API debug tool disabled.</p>';;
+            return '<p>Wireframe API module is not installed, API debug tool disabled.</p>';
         }
         $api = $this->wire('modules')->get('WireframeAPI');
 
@@ -320,15 +320,13 @@ class WireframePanel extends BasePanel {
         $out .= $this->renderInput('Arguments', 'return_format', 'textarea', null, "{\n\t\"argument\": \"value\"\n}", 'js-wireframe-tracy-api-args');
         $out .= '<p style="opacity: .9">You can provide arguments as JSON, in which case they will be passed to the API as GET param "api_args", or in URL format (param1=value1&amp;param2=value2) in which case they will be appended to the API GET request as is. Note that the default API root used by this debugger only supports JSON format arguments.</p>';
 
-        // Render form
-        $out = "<form class='wireframe-tracy-api-form' id='js-wireframe-tracy-api-form'>"
+        // Render and return form
+        return "<form class='wireframe-tracy-api-form' id='js-wireframe-tracy-api-form'>"
             . $out
             . "<div class='wireframe-tracy-api-code wireframe-tracy-api-code--break' id='js-wireframe-tracy-api-query'></div>"
             . "<div class='wireframe-tracy-api-code' id='js-wireframe-tracy-api-response' tabindex=-1 hidden></div>"
             . "<div class='wireframe-tracy-api-form-row'><input type='submit' value='Send request'></div>"
             . "</form>";
-
-        return $out;
     }
 
     /**
