@@ -1,6 +1,7 @@
 <?php
 
 use \ProcessWire\Wireframe;
+use \ProcessWire\WireframeAPI;
 use \Tracy\Dumper;
 
 /**
@@ -273,6 +274,7 @@ class WireframePanel extends BasePanel {
         if (!$this->wire('modules')->isInstalled('WireframeAPI')) {
             return '<p>Wireframe API module is not installed, API debug tool disabled.</p>';
         }
+        /** @var WireframeAPI */
         $api = $this->wire('modules')->get('WireframeAPI');
 
         // Fetch and check API endpoints
@@ -282,8 +284,8 @@ class WireframePanel extends BasePanel {
             return "<p>In order to perform API queries you need to <a href='{$edit_url}'>enable at least one API endpoint</a>.</p>";
         }
 
-        // API root
-        $api_root = $this->wire('modules')->getModuleEditUrl('WireframeAPI', false) . '&api_query=';
+        // API root path
+        $api_root = $api->getAPIRoot();
         $out = $this->renderInput('API root', 'api_root', 'text', null, $api_root);
 
         // API endpoint

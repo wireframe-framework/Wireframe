@@ -38,6 +38,17 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
     protected $response = null;
 
     /**
+     * API root path
+     *
+     * This value is used by the Wireframe API Hooks module to provide automatic API endpoint.
+     * Note that this endpoint is only intended for Tracy Debugger Wireframe panel and requires
+     * superuser access.
+     *
+     * @var string|null
+     */
+    protected $api_root = null;
+
+    /**
      * Constructor
      *
      * @throws WireException if config settings contain unrecognized properties.
@@ -62,6 +73,10 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
                     $this->setEnabledEndpoints($value);
                     break;
 
+                case 'api_root':
+                    $this->api_root = $value;
+                    break;
+
                 default:
                     throw new WireException(sprintf(
                         'Unable to set value for unrecognized property "%s"',
@@ -82,6 +97,7 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
     public function getConfigDefaults(): array {
         return [
             'enabled_endpoints' => [],
+            'api_root' => '',
         ];
     }
 
@@ -94,6 +110,9 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
         if (isset($data['enabled_endpoints'])) {
             $this->setEnabledEndpoints($data['enabled_endpoints']);
         }
+        if (isset($data['api_root'])) {
+            $this->api_root = '/' . trim($data['api_root'], '/') . '/';
+        }
     }
 
     /**
@@ -103,11 +122,6 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
      * @return InputfieldWrapper
      */
     public function getModuleConfigInputfields(array $data): InputfieldWrapper {
-
-        // API debugger
-        if ($this->wire('input')->get('api_query') && $this->wire('user')->isSuperuser()) {
-            $this->renderAPIResponse();
-        }
 
         $fields = $this->wire(new InputfieldWrapper());
 
@@ -135,23 +149,21 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
         }
         $fields->add($field);
 
-        return $fields;
-    }
-
-    /**
-     * Render API response (API debugger)
-     */
-    private function renderAPIResponse() {
-        if ($this->wire('page')->template == 'admin') {
-            // make sure that field rendering works as expected (PageRender won't normally add this
-            // hook if current page's template is admin, which is something we actually need here)
-            $pageRender = $this->wire('modules')->get('PageRender');
-            $pageRender->addHookBefore('Page::render', $pageRender, 'beforeRenderPage', ['priority' => 1]);
+        // API root
+        /** @var InputfieldText */
+        $field = $this->modules->get('InputfieldText');
+        $field->name = 'api_root';
+        $field->label = $this->_('API root path');
+        $field->description = $this->_('This setting is primarily for the Tracy Wireframe panel API debugger. Accessing the path configured here requires the Wireframe API Hooks module to be intalled, and current user needs to have superuser access.');
+        $field->value = $data[$field->name];
+        if (isset($config[$field->name])) {
+            $field->notes = $this->_('API root path is defined in site config. You cannot override site config settings here.');
+            $field->value = $config[$field->name];
+            $field->collapsed = Inputfield::collapsedNoLocked;
         }
-        $api_args = $this->wire('input')->get('api_args') ? json_decode($this->wire('input')->get('api_args'), true) : [];
-        $api = $this->init($this->wire('input')->get('api_query'), $api_args);
-        echo $api->sendHeaders()->render();
-        exit();
+        $fields->add($field);
+
+        return $fields;
     }
 
     /**
@@ -311,6 +323,15 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
      */
     public function getEnabledEndpoints(): array {
         return $this->enabled_endpoints;
+    }
+
+    /**
+     * Get Debugger API root path
+     *
+     * @return null|string
+     */
+    public function getAPIRoot(): ?string {
+        return $this->api_root;
     }
 
     /**

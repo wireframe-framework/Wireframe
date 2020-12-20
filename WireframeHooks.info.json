@@ -1,0 +1,14 @@
+{
+    "title": "Wireframe Hooks",
+    "summary": "Hooks for the Wireframe module",
+    "version": "0.1.0",
+    "author": "Teppo Koivula",
+    "href": "https://wireframe-framework.com",
+    "requires": [
+        "Wireframe>=0.12.0",
+        "ProcessWire>=3.0.112",
+        "PHP>=7.1.0"
+    ],
+    "singular": true,
+    "autoload": true
+}

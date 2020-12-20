@@ -65,8 +65,10 @@ class WireframeTracyPanel {
             });
         }
         const APIForm = document.getElementById("js-wireframe-tracy-api-form");
+        const APISubmit = APIForm.querySelector('input[type="submit"]');
         APIForm.addEventListener("submit", event => {
             event.preventDefault();
+            APISubmit.setAttribute('disabled', 'true');
             const xhr = new XMLHttpRequest();
             xhr.onload = function() {
                 const responseContainer = document.getElementById("js-wireframe-tracy-api-response");
@@ -83,8 +85,10 @@ class WireframeTracyPanel {
                 }
                 responseContainer.removeAttribute("hidden");
                 responseContainer.focus();
+                APISubmit.removeAttribute('disabled');
             };
-            const APIRequest = document.getElementById("js-wireframe-tracy-api-query").innerText + this.getAPIArgs();
+            let APIRequest = document.getElementById("js-wireframe-tracy-api-query").innerText;
+            APIRequest += (APIRequest.match(/\?/) ? '&' : '?') + this.getAPIArgs();
             xhr.open("GET", APIRequest);
             xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
             xhr.send();
@@ -101,9 +105,9 @@ class WireframeTracyPanel {
         if (APIArgs == "") return "";
         try {
             APIArgs = JSON.stringify(JSON.parse(APIArgs));
-            return "&api_args=" + encodeURIComponent(APIArgs);
+            return "api_args=" + encodeURIComponent(APIArgs);
         } catch (e) {
-            return "&" + APIArgs;
+            return APIArgs;
         }
     }
 
@@ -142,7 +146,7 @@ class WireframeTracyPanel {
                 APIQuery += "/";
             }
         });
-        APIQuery += this.getAPIArgs();
+        APIQuery += (APIQuery.match(/\?/) ? '&' : '?') + this.getAPIArgs();
         APIQueryElement.innerText = APIQuery;
     }
 }
