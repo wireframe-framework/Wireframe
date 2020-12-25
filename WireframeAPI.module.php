@@ -107,11 +107,19 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
      * @param array $data
      */
     public function setConfigData(array $data) {
-        if (isset($data['enabled_endpoints'])) {
-            $this->setEnabledEndpoints($data['enabled_endpoints']);
-        }
-        if (isset($data['api_root'])) {
-            $this->api_root = '/' . trim($data['api_root'], '/') . '/';
+        foreach ($data as $key => $value) {
+            switch ($key) {
+                case 'enabled_endpoints':
+                    $this->setEnabledEndpoints($data['enabled_endpoints']);
+                    break;
+
+                case 'api_root':
+                    $this->api_root = $value === '' ? '' : '/' . trim($data['api_root'], '/') . '/';
+                    break;
+
+                default:
+                    $this->$key = $value;
+            }
         }
     }
 
@@ -154,7 +162,8 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
         $field = $this->modules->get('InputfieldText');
         $field->name = 'api_root';
         $field->label = $this->_('API root path');
-        $field->description = $this->_('This setting is primarily for the Tracy Wireframe panel API debugger. Accessing the path configured here requires the Wireframe API Hooks module to be intalled, and current user needs to have superuser access.');
+        $field->description = $this->_('Define the base path for the API.');
+        $field->notes = $this->_('Accessing the path configured here requires the Wireframe Hooks module to be intalled, and current user needs to have superuser access. This setting is primarily for the Tracy Wireframe panel API debugger.');
         $field->value = $data[$field->name];
         if (isset($config[$field->name])) {
             $field->notes = $this->_('API root path is defined in site config. You cannot override site config settings here.');

@@ -265,31 +265,17 @@ class WireframePanel extends BasePanel {
      */
     private function getPanelAPI(): string {
 
-        // API debugger is limited to superusers
-        if (!$this->wire('user')->isSuperuser()) {
-            return '';
-        }
-
-        // Wireframe API module needs to be installed
-        if (!$this->wire('modules')->isInstalled('WireframeAPI')) {
-            return '<p>Wireframe API module is not installed, API debug tool disabled.</p>';
-        }
-        /** @var WireframeAPI */
-        $api = $this->wire('modules')->get('WireframeAPI');
-
-        // Fetch and check API endpoints
-        $enabled_endpoints = $api->getEnabledEndpoints();
-        if (empty($enabled_endpoints)) {
-            $edit_url = $this->wire('modules')->getModuleEditUrl($api);
-            return "<p>In order to perform API queries you need to <a href='{$edit_url}'>enable at least one API endpoint</a>.</p>";
+        // Get Wirefrmae API
+        $api = $this->maybeGetAPI();
+        if (!$api instanceof WireframeAPI) {
+            return $api === '' ? '' : '<p>' . $api . '</p>';
         }
 
         // API root path
-        $api_root = $api->getAPIRoot();
-        $out = $this->renderInput('API root', 'api_root', 'text', null, $api_root);
+        $out = $this->renderInput('API root', 'api_root', 'text', null, $api->getAPIRoot());
 
         // API endpoint
-        $out .= $this->renderInput('Endpoint', 'endpoint', 'select', null, $enabled_endpoints);
+        $out .= $this->renderInput('Endpoint', 'endpoint', 'select', null, $api->getEnabledEndpoints());
 
         // Page ID
         $out .= $this->renderInput('Page ID', 'page_id', 'number', 'pages', 1);
@@ -319,7 +305,7 @@ class WireframePanel extends BasePanel {
         ]);
 
         // Arguments
-        $out .= $this->renderInput('Arguments', 'return_format', 'textarea', null, "{\n\t\"argument\": \"value\"\n}", 'js-wireframe-tracy-api-args');
+        $out .= $this->renderInput('Arguments', 'api_args', 'textarea', null, "{\n\t\"argument\": \"value\"\n}", 'js-wireframe-tracy-api-args');
         $out .= '<p style="opacity: .9">You can provide arguments as JSON, in which case they will be passed to the API as GET param "api_args", or in URL format (param1=value1&amp;param2=value2) in which case they will be appended to the API GET request as is. Note that the default API root used by this debugger only supports JSON format arguments.</p>';
 
         // Render and return form
@@ -327,8 +313,40 @@ class WireframePanel extends BasePanel {
             . $out
             . "<div class='wireframe-tracy-api-code wireframe-tracy-api-code--break' id='js-wireframe-tracy-api-query'></div>"
             . "<div class='wireframe-tracy-api-code' id='js-wireframe-tracy-api-response' tabindex=-1 hidden></div>"
-            . "<div class='wireframe-tracy-api-form-row'><input type='submit' value='Send request'></div>"
+            . "<div class='wireframe-tracy-api-form-row'><input type='submit' id='js-wireframe-tracy-api-submit' value='Send request'></div>"
             . "</form>";
+    }
+
+    /**
+     * Attempt to get Wireframe API
+     *
+     * @return string|WireframeAPI Message string indicating an issue, or Wireframe API module if all checks out
+     */
+    protected function maybeGetAPI() {
+
+        // Superuer role is required
+        if (!$this->wire('user')->isSuperuser()) {
+            return 'Permission denied.';
+        }
+
+        // Wireframe API module needs to be installed
+        if (!$this->wire('modules')->isInstalled('WireframeAPI')) {
+            return 'Wireframe API module is not installed, API debug tool disabled.';
+        }
+
+        /** @var WireframeAPI */
+        $api = $this->wire('modules')->get('WireframeAPI');
+        $api_config_url = $this->wire('modules')->getModuleEditUrl($api);
+
+        // At least one endpoint needs to be enabled
+        if (empty($api->getEnabledEndpoints())) {
+            return sprintf(
+                'In order to perform API queries you need to <a href="%s">enable at least one API endpoint</a>.',
+                $api_config_url
+            );
+        }
+
+        return $api;
     }
 
     /**
@@ -356,11 +374,11 @@ class WireframePanel extends BasePanel {
             . ">"
             . "<span>{$label}</span>";
         if ($type == 'number') {
-            $out .= "<input type='number' min=1 step=1 name='{$name}' value='{$value}' class='{$class}'>";
+            $out .= "<input type='number' min=1 step=1 name='{$name}' value='{$value}' id='js-wireframe-tracy-api-{$name}' class='{$class}'>";
         } else if ($type == 'text') {
-            $out .= "<input type='text' name='{$name}' value='{$value}' class='{$class}'>";
+            $out .= "<input type='text' name='{$name}' value='{$value}' id='js-wireframe-tracy-api-{$name}' class='{$class}'>";
         } else if ($type == 'textarea') {
-            $out .= "<textarea name='{$name}' class='{$class}' rows=5>{$value}</textarea>";
+            $out .= "<textarea name='{$name}' id='js-wireframe-tracy-api-{$name}' class='{$class}' rows=5>{$value}</textarea>";
         } else if ($type == 'select') {
             $out .= "<select name='{$name}' id='js-wireframe-tracy-api-{$name}' class='{$class}'>"
                 . implode(array_map(function($value) {
