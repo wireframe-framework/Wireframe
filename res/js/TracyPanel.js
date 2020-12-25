@@ -139,7 +139,7 @@ class WireframeTracyPanel {
         this.cache.api.params.some(param => {
             let value = param.value;
             if (param.name === "api_root") {
-                value = '/' + value.replace(/^\/+|\/+$/g, '');
+                value = "/" + value.replace(/^\/+|\/+$/g, "");
                 if (value === "/") {
                     query = "";
                     return true;
@@ -157,21 +157,21 @@ class WireframeTracyPanel {
             }
         });
         if (query !== "") {
-            query += (query.match(/\?/) ? '&' : '?') + this.getAPIQueryArgs();
+            query += (query.match(/\?/) ? "&" : "?") + this.getAPIQueryArgs();
         }
         this.cache.api.query.innerText = query;
-        if (query === '') {
-            this.cache.api.submit.setAttribute('disabled', true);
+        if (query === "") {
+            this.cache.api.submit.setAttribute("disabled", true);
             return;
         }
-        this.cache.api.submit.removeAttribute('disabled');
+        this.cache.api.submit.removeAttribute("disabled");
     }
 
     /**
      * Send API query
      */
     sendAPIQuery() {
-        this.cache.api.submit.setAttribute('disabled', true);
+        this.cache.api.submit.setAttribute("disabled", true);
         const xhr = new XMLHttpRequest();
         xhr.onload = () => {
             if (xhr.status >= 200 && xhr.status < 300) {
@@ -187,14 +187,17 @@ class WireframeTracyPanel {
             }
             this.cache.api.response.removeAttribute("hidden");
             this.cache.api.response.focus();
-            this.cache.api.submit.removeAttribute('disabled');
+            this.cache.api.submit.removeAttribute("disabled");
         };
         let request = this.cache.api.query.innerText;
-        if (request === '') {
-            alert('Empty request, unable to proceed.');
+        if (request === "") {
+            this.cache.api.response.classList.add(this.cache.prefix + "api-code--error");
+            this.cache.api.response.innerText = "Empty request, unable to proceed.";
+            this.cache.api.response.removeAttribute("hidden");
+            this.cache.api.response.focus();
             return;
         }
-        request += (request.match(/\?/) ? '&' : '?') + this.getAPIQueryArgs();
+        request += (request.match(/\?/) ? "&" : "?") + this.getAPIQueryArgs();
         xhr.open("GET", request);
         xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
         xhr.send();
