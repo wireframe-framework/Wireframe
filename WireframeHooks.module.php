@@ -39,6 +39,10 @@ class WireframeHooks extends \ProcessWire\WireData implements Module {
         $api_root = $api->getAPIRoot();
         if (empty($api_root)) return;
 
+        // compare API root with current reques
+        $is_api_request = function_exists("mb_strpos") ? mb_strpos($this->input->url, $api_root) === 0 : strpos($this->input->url, $api_root);
+        if (!$is_api_request) return;
+
         // make sure that field rendering works as expected (PageRender won't normally add this
         // hook if current page's template is admin, which is something we actually need here)
         if ($this->wire('page')->template == 'admin') {
