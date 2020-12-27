@@ -72,7 +72,7 @@ class APIEndpoints {
             throw (new \Wireframe\APIException(sprintf(
                 'Error while processing component (%s)%s',
                 $component_name,
-                $this->verboseErrors() ? ' -- ' . trim($e->getMessage()) : ''
+                $this->verboseErrors() ? ': ' . trim($e->getMessage()) : ''
             )));
         }
     }
@@ -149,7 +149,7 @@ class APIEndpoints {
             throw (new \Wireframe\APIException(sprintf(
                 'Error while processing page (id=%s)%s',
                 $page_id,
-                $this->verboseErrors() ? ' -- ' . trim($e->getMessage()) : ''
+                $this->verboseErrors() ? ': ' . trim($e->getMessage()) : ''
             )));
         }
     }
@@ -190,7 +190,7 @@ class APIEndpoints {
             throw (new \Wireframe\APIException(sprintf(
                 'Error while processing partial (%s)%s',
                 $partial_name,
-                $this->verboseErrors() ? ' -- ' . trim($e->getMessage()) : ''
+                $this->verboseErrors() ? ': ' . trim($e->getMessage()) : ''
             )));
         }
     }
