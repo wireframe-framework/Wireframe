@@ -104,7 +104,7 @@ class WireframeTracyPanel {
      */
     getAPIQueryArgs() {
         let args = this.cache.api.args.value;
-        if (args == "") return "";
+        if (args === "") return "";
         try {
             args = JSON.stringify(JSON.parse(args));
             return "api_args=" + encodeURIComponent(args);
@@ -138,18 +138,20 @@ class WireframeTracyPanel {
         let query = "";
         this.cache.api.params.some(param => {
             let value = param.value;
-            if (param.name === "api_root") {
-                value = "/" + value.replace(/^\/+|\/+$/g, "");
-                if (value === "/") {
+            if (param.name === "api_root" && !value.match(/^https?\:\/\//)) {
+                value = "/" + value.replace(/^\/+|\/+$/g, "") + "/";
+                if (value === "//") {
+                    // API root not specified, make sure that query is empty and bail out early
                     query = "";
                     return true;
                 }
-            }
-            if (param.parentNode.getAttribute("hidden") || value === "") {
-                return false;
-            }
-            if (["api_root", "endpoint"].indexOf(param.name) === -1) {
+            } else if (param.name === "endpoint") {
+                value += "/";
+            } else if (param.name === "return_format" && value !== "") {
                 query += "/";
+            } else if (param.parentNode.getAttribute("hidden") || value === "") {
+                // field is hidden, skip
+                return false;
             }
             query += value;
             if (param.name === "api_root" && !value.match(/\/$|\?|\&/)) {
