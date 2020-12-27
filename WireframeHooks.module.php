@@ -30,8 +30,9 @@ class WireframeHooks extends \ProcessWire\WireData implements Module {
      */
     protected function handleAPIRequest(HookEvent $event) {
 
-        // require page (could be missing in some border cases)
-        if (!$this->wire('page')) return;
+        // params from event
+        $page = $event->arguments[0];
+        $url = $event->arguments[1];
 
         // get Wireframe API module and API root
         /** @var WireframeAPI */
@@ -39,25 +40,26 @@ class WireframeHooks extends \ProcessWire\WireData implements Module {
         $api_root = $api->getAPIRoot();
         if (empty($api_root)) return;
 
-        // compare API root with current reques
-        $is_api_request = function_exists("mb_strpos") ? mb_strpos($this->input->url, $api_root) === 0 : strpos($this->input->url, $api_root);
-        if (!$is_api_request) return;
+        // compare API root with current request
+        $is_mb = function_exists("mb_strpos");
+        if ($is_mb && mb_strpos($url, $api_root) !== 0 || !$is_mb && strpos($url, $api_root) !== 0) {
+            return;
+        }
 
         // make sure that field rendering works as expected (PageRender won't normally add this
         // hook if current page's template is admin, which is something we actually need here)
-        if ($this->wire('page')->template == 'admin') {
-            $pageRender = $this->wire('modules')->get('PageRender');
-            $pageRender->addHookBefore('Page::render', $pageRender, 'beforeRenderPage', ['priority' => 1]);
+        if ($page !== null && $page->template == 'admin') {
+            $pageRender = $this->modules->get('PageRender');
+            $pageRender->addHookBefore('Page::render', $pageRender, 'beforeRenderPage', [
+                'priority' => 1,
+            ]);
         }
 
         // prepare args and API query
-        $api_args = $this->wire('input')->get('api_args') ? json_decode($this->wire('input')->get('api_args'), true) : [];
-        $api_query = $this->wire('input')->get('api_query');
+        $api_args = $this->input->get('api_args') ? json_decode($this->input->get('api_args'), true) : [];
+        $api_query = $this->input->get('api_query');
         if ($api_query === null) {
-            $api_query = $this->wire('input')->url;
-            if (strpos($api_query, $api_root) === 0) {
-                $api_query = substr($api_query, strlen($api_root));
-            }
+            $api_query = $is_mb ? mb_substr($url, mb_strlen($api_root)) : substr($url, strlen($api_root));
         }
 
         // init API and render API response
