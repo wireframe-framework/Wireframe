@@ -265,7 +265,7 @@ class WireframePanel extends BasePanel {
      */
     private function getPanelAPI(): string {
 
-        // Get Wirefrmae API
+        // Get Wireframe API
         $api = $this->maybeGetAPI();
         if (!$api instanceof WireframeAPI) {
             return $api === '' ? '' : '<p>' . $api . '</p>';
@@ -324,7 +324,7 @@ class WireframePanel extends BasePanel {
      */
     protected function maybeGetAPI() {
 
-        // Superuer role is required
+        // Superuser role is required
         if (!$this->wire('user')->isSuperuser()) {
             return 'Permission denied.';
         }

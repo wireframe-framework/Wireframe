@@ -5,20 +5,20 @@ namespace ProcessWire;
 /**
  * Wireframe Hooks
  *
- * This is an autoloaded companion module for Wireframe.
+ * This is an autoloaded companion module for Wireframe and Wireframe API.
  *
  * @version 0.1.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
-class WireframeHooks extends \ProcessWire\WireData implements Module {
+class WireframeHooks extends WireData implements Module {
 
     /**
      * Init method
      */
     public function init() {
         // hook into page not found event to provide endpoint for API
-        if ($this->wire('modules')->isInstalled('WireframeAPI') && $this->wire('user')->isSuperuser()) {
+        if ($this->modules->isInstalled('WireframeAPI') && $this->user->isSuperuser()) {
             $this->addHookBefore('ProcessPageView::pageNotFound', $this, 'handleAPIRequest');
         }
     }
@@ -46,8 +46,8 @@ class WireframeHooks extends \ProcessWire\WireData implements Module {
             return;
         }
 
-        // make sure that field rendering works as expected (PageRender won't normally add this
-        // hook if current page's template is admin, which is something we actually need here)
+        // make sure that field rendering works as expected in admin (PageRender won't normally add
+        // this hook if current page's template is admin, which is something we actually need here)
         if ($page !== null && $page->template == 'admin') {
             $pageRender = $this->modules->get('PageRender');
             $pageRender->addHookBefore('Page::render', $pageRender, 'beforeRenderPage', [
@@ -57,6 +57,9 @@ class WireframeHooks extends \ProcessWire\WireData implements Module {
 
         // prepare args and API query
         $api_args = $this->input->get('api_args') ? json_decode($this->input->get('api_args'), true) : [];
+        if ($api_args === null) {
+            $api_args = [];
+        }
         $api_query = $this->input->get('api_query');
         if ($api_query === null) {
             $api_query = $is_mb ? mb_substr($url, mb_strlen($api_root)) : substr($url, strlen($api_root));

@@ -12,7 +12,7 @@ namespace ProcessWire;
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
-class WireframeAPI extends \ProcessWire\WireData implements Module, ConfigurableModule {
+class WireframeAPI extends WireData implements Module, ConfigurableModule {
 
     /**
      * Available endpoints
