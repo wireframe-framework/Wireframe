@@ -65,7 +65,7 @@ class WireframeAPI extends WireData implements Module, ConfigurableModule {
         // populate the default config data
         $config = array_merge(
             $this->getConfigDefaults(),
-            \is_array($this->wire('config')->wireframeAPI) ? $this->wire('config')->wireframeAPI : []
+            \is_array($this->config->wireframeAPI) ? $this->config->wireframeAPI : []
         );
         foreach ($config as $key => $value) {
             switch ($key) {
@@ -137,7 +137,7 @@ class WireframeAPI extends WireData implements Module, ConfigurableModule {
         $data = array_merge($this->getConfigDefaults(), $data);
 
         // Configuration settings from site config
-        $config = $this->wire('config')->wireframeAPI ?? [];
+        $config = $this->config->wireframeAPI ?? [];
 
         // Enabled API endpoints
         /** @var InputfieldCheckboxes */
@@ -186,12 +186,14 @@ class WireframeAPI extends WireData implements Module, ConfigurableModule {
 
         // define path
         if ($path === null) {
-            $path = trim($this->wire('input')->url, '/');
+            $path = trim($this->input->url, '/');
         }
 
         // make sure that Wireframe is initialized
         if (!Wireframe::isInitialized()) {
-            $this->wire('modules')->get('Wireframe')->init();
+            $this->modules->get('Wireframe')->init($this->page === null ? [
+                'page' => $this->pages->get($this->config->http404PageID),
+            ] : []);
         }
 
         // instantiate a response object
@@ -199,14 +201,14 @@ class WireframeAPI extends WireData implements Module, ConfigurableModule {
             ->setPath($path);
 
         // if debug mode is enabled, improve response readability by enabling JSON pretty print
-        if ($this->wire('config')->debug) {
+        if ($this->config->debug) {
             $this->response->setPretty(true);
         }
 
         // split path into parts and remove API root path if present
         if (!empty($path)) {
             $path = explode('/', trim($path, '/'));
-            if (!empty($path) && $path[0] == $this->wire('page')->name) {
+            if ($this->page !== null && !empty($path) && $path[0] == $this->page->name) {
                 array_shift($path);
             }
         }
