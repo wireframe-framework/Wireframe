@@ -145,13 +145,13 @@ class WireframeTracyPanel {
                     query = "";
                     return true;
                 }
+            } else if (param.parentNode.getAttribute("hidden") || value === "") {
+                // field is hidden or value is empty, skip
+                return false;
             } else if (param.name === "endpoint") {
                 value += "/";
-            } else if (param.name === "return_format" && value !== "") {
+            } else if (param.name === "return_format") {
                 query += "/";
-            } else if (param.parentNode.getAttribute("hidden") || value === "") {
-                // field is hidden, skip
-                return false;
             }
             query += value;
             if (param.name === "api_root" && !value.match(/\/$|\?|\&/)) {
