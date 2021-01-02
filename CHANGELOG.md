@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Wireframe API built-in endpoints now provide more verbose errors if debug mode is enabled or user is logged in as superuser.
+- When rendering view placeholder, skip most of the Wireframe init process. This is an optimization, but also lets us access any values previously set for the View object etc.
 
 ### Fixed
 - In some cases Wireframe API wasn't able to catch errors; this part should now work more consistently.

@@ -163,6 +163,15 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      */
     public function ___init(array $settings = []): Wireframe {
 
+        // check if we're currently rendering a view placeholder, in which case we'll skip most of the init process
+        if ($this->page && $this->page->_wireframe_context === 'placeholder' && $this->view) {
+            $this->initView([
+                'data' => $this->view->getArray(),
+            ]);
+            $this->setView();
+            return $this;
+        }
+
         // if page, view, or controller are already set, stash them
         if ($this->page || $this->view || $this->controller) {
             $this->stash[] = [
@@ -586,9 +595,11 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      *
      * This method initializes the View object and the $view API variable.
      *
+     * @param array $settings Array of additional settings (optional). Supported settings:
+     *  - `data` (array): variables for the View
      * @return \Wireframe\View View object.
      */
-    protected function ___initView(): \Wireframe\View {
+    protected function ___initView(array $settings = []): \Wireframe\View {
 
         // get current page's layout
         $page_layout = $this->page->getLayout();
@@ -601,7 +612,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         $this->view->setLayoutsPath($this->paths->layouts);
         $this->view->setExt($this->ext);
         $this->view->setPage($this->page);
-        $this->view->setData($this->data);
+        $this->view->setData($settings['data'] ?? $this->data);
         $this->view->setPartials($this->findPartials($this->paths->partials));
         $this->view->setPlaceholders(new \Wireframe\ViewPlaceholders($this->view));
         $this->view->setRenderer($this->renderer);
