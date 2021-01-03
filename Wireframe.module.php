@@ -572,7 +572,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             }
 
             // skip this item if URL is not a string, if it belongs to current page, or if it's invalid
-            if (!\is_string($url) || $url == $this->page->url || !$this->wire('sanitizer')->url($url)) {
+            if (!\is_string($url) || $url === $this->page->url || !$this->wire('sanitizer')->url($url)) {
                 continue;
             }
 
@@ -688,10 +688,10 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             $get_view = null;
             $template = $this->view->getTemplate() ?: $this->page->getViewTemplate();
             foreach ($this->config['allow_get_view'] as $get_template => $get_value) {
-                if (\is_string($get_template) && \is_array($get_value) && $template == $get_template) {
+                if (\is_string($get_template) && \is_array($get_value) && $template === $get_template) {
                     $get_view = \in_array($input->get->view, $get_value) ? $input->get->view : null;
                     break;
-                } else if (\is_int($get_template) && \is_string($get_value) && $input->get->view == $get_value) {
+                } else if (\is_int($get_template) && \is_string($get_value) && $input->get->view === $get_value) {
                     $get_view = $get_value;
                     break;
                 }
@@ -1094,7 +1094,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         // use the template name of the page for the next step
         if ($template_name === null) {
             if (isset($page->_wireframe_controller)) {
-                return $page->_wireframe_controller == '' ? null : $page->_wireframe_controller;
+                return $page->_wireframe_controller === '' ? null : $page->_wireframe_controller;
             }
             $template_name = $page->template->name;
         }

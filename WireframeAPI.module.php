@@ -208,7 +208,7 @@ class WireframeAPI extends WireData implements Module, ConfigurableModule {
         // split path into parts and remove API root path if present
         if (!empty($path)) {
             $path = explode('/', trim($path, '/'));
-            if ($this->page !== null && !empty($path) && $path[0] == $this->page->name) {
+            if ($this->page !== null && !empty($path) && $path[0] === $this->page->name) {
                 array_shift($path);
             }
         }

@@ -102,7 +102,7 @@ class Config extends \ProcessWire\Wire {
 
             // 1) check if we're dealing with a relative URL, in which case the path variable needs to be adjusted
             $real_path = $path;
-            if (substr($path, 0, 2) == '@ ') {
+            if (substr($path, 0, 2) === '@ ') {
                 $paths_include_urls = true;
                 $real_path = substr($path, 2);
             }

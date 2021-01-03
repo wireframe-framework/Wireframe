@@ -55,10 +55,10 @@ class APIEndpoints {
         try {
             $component = \Wireframe\Factory::component($component_name, $args);
             $out = [];
-            if ($return_format === null || $return_format == 'json') {
+            if ($return_format === null || $return_format === 'json') {
                 $out['json'] = json_decode($component->renderJSON());
             }
-            if ($return_format === null || $return_format == 'rendered') {
+            if ($return_format === null || $return_format === 'rendered') {
                 $out['rendered'] = $component->render();
             }
             return $out;
@@ -131,11 +131,11 @@ class APIEndpoints {
                 }
             }
             $out = [];
-            if ($return_format === null || $return_format == 'json') {
+            if ($return_format === null || $return_format === 'json') {
                 $controller = $page->getController();
                 $out['json'] = $controller ? json_decode($controller->renderJSON()) : null;
             }
-            if ($return_format === null || $return_format == 'rendered') {
+            if ($return_format === null || $return_format === 'rendered') {
                 $out['rendered'] = $page->render();
             }
             return $out;

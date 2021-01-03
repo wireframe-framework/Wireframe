@@ -373,13 +373,13 @@ class WireframePanel extends BasePanel {
             . ($endpoint !== null ? " hidden" : "")
             . ">"
             . "<span>{$label}</span>";
-        if ($type == 'number') {
+        if ($type === 'number') {
             $out .= "<input type='number' min=1 step=1 name='{$name}' value='{$value}' id='js-wireframe-tracy-api-{$name}' class='{$class}'>";
-        } else if ($type == 'text') {
+        } else if ($type === 'text') {
             $out .= "<input type='text' name='{$name}' value='{$value}' id='js-wireframe-tracy-api-{$name}' class='{$class}'>";
-        } else if ($type == 'textarea') {
+        } else if ($type === 'textarea') {
             $out .= "<textarea name='{$name}' id='js-wireframe-tracy-api-{$name}' class='{$class}' rows=5>{$value}</textarea>";
-        } else if ($type == 'select') {
+        } else if ($type === 'select') {
             $out .= "<select name='{$name}' id='js-wireframe-tracy-api-{$name}' class='{$class}'>"
                 . implode(array_map(function($value) {
                     return "<option value='{$value}'>{$value}</option>";

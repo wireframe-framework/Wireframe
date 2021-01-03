@@ -139,7 +139,7 @@ trait MethodPropsTrait {
 
         // only allow access to method names that are not prefixed with an underscore and haven't
         // been specifically disallowed by adding them to the disallowed_methods array.
-        if (!\is_string($name) || $name[0] == '_' || \in_array($name, $this->disallowed_methods)) {
+        if (!\is_string($name) || $name[0] === '_' || \in_array($name, $this->disallowed_methods)) {
             return null;
         }
 
@@ -241,10 +241,10 @@ trait MethodPropsTrait {
                 continue;
             }
             if ($method->class === $reflection_class->getName()) {
-                if ($return_mode == 1) {
+                if ($return_mode === 1) {
                     // key is prop name, value is prop value
                     $props[$method->name] = $this->getMethodProp($method->name, $context);
-                } else if ($return_mode == 2) {
+                } else if ($return_mode === 2) {
                     // key is prop name, value is prop signature and debug data
                     $return = $method->getReturnType();
                     if ($return !== null) {
