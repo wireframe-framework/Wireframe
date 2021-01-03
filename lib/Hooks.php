@@ -102,7 +102,7 @@ class Hooks extends \ProcessWire\Wire {
      * @param HookEvent $event The ProcessWire HookEvent object.
      */
     protected function pageLayout(HookEvent $event) {
-        if ($event->method == 'getLayout' || $event->method == 'layout' && !isset($event->arguments[0])) {
+        if ($event->method === 'getLayout' || $event->method === 'layout' && !isset($event->arguments[0])) {
             $event->return = $event->object->_wireframe_layout;
         } else {
             $event->object->_wireframe_layout = $event->arguments[0] ?? '';
@@ -141,7 +141,7 @@ class Hooks extends \ProcessWire\Wire {
      * @param HookEvent $event The ProcessWire HookEvent object.
      */
     protected function pageView(HookEvent $event) {
-        if ($event->method == 'getView' || $event->method == 'view' && !isset($event->arguments[0])) {
+        if ($event->method === 'getView' || $event->method === 'view' && !isset($event->arguments[0])) {
             $event->return = $event->object->_wireframe_view;
         } else {
             $view = $event->arguments[0] ?? '';
@@ -160,6 +160,8 @@ class Hooks extends \ProcessWire\Wire {
     /**
      * This method is used by Page::viewTemplate(), Page::getViewTemplate(), and Page::setViewTemplate()
      *
+     * When used as a getter, this method always returns template name (string).
+     *
      * Example use with combined getter/setter method:
      *
      * ```
@@ -177,10 +179,10 @@ class Hooks extends \ProcessWire\Wire {
      * @param HookEvent $event The ProcessWire HookEvent object.
      */
     protected function pageViewTemplate(HookEvent $event) {
-        if ($event->method == 'getViewTemplate' || $event->method == 'viewTemplate' && !isset($event->arguments[0])) {
-            $event->return = $event->object->_wireframe_view_template ?: $event->object->template;
+        if ($event->method === 'getViewTemplate' || $event->method === 'viewTemplate' && !isset($event->arguments[0])) {
+            $event->return = $event->object->_wireframe_view_template ?: (string) $event->object->template;
         } else {
-            $event->object->_wireframe_view_template = $event->arguments[0] ?? '';
+            $event->object->_wireframe_view_template = empty($event->arguments[0]) ? '' : (string) $event->arguments[0];
             $event->object = \Wireframe\Factory::page($event->object, [
                 'wireframe' => $this->wireframe,
             ]);
@@ -201,7 +203,7 @@ class Hooks extends \ProcessWire\Wire {
      * @param HookEvent $event The ProcessWire HookEvent object.
      */
     protected function pageController(HookEvent $event) {
-        if ($event->method == 'getController') {
+        if ($event->method === 'getController') {
             $controller = $event->object->_wireframe_controller ?: null;
             if ($controller === null) {
                 $controller = $this->wireframe->getController($event->object);

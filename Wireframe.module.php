@@ -14,7 +14,7 @@ namespace ProcessWire;
  * @method static string|Page|NullPage page($source, $args = []) Static getter (factory) method for Pages.
  * @method static string|null partial(string $partial_name, array $args = []) Static getter (factory) method for Partials.
  *
- * @version 0.18.3
+ * @version 0.19.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -162,6 +162,15 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      * @throws WireException if no valid Page object is found.
      */
     public function ___init(array $settings = []): Wireframe {
+
+        // check if we're currently rendering a view placeholder, in which case we'll skip most of the init process
+        if ($this->page && $this->page->_wireframe_context === 'placeholder' && $this->view) {
+            $this->initView([
+                'data' => $this->view->getArray(),
+            ]);
+            $this->setView();
+            return $this;
+        }
 
         // if page, view, or controller are already set, stash them
         if ($this->page || $this->view || $this->controller) {
@@ -563,7 +572,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             }
 
             // skip this item if URL is not a string, if it belongs to current page, or if it's invalid
-            if (!\is_string($url) || $url == $this->page->url || !$this->wire('sanitizer')->url($url)) {
+            if (!\is_string($url) || $url === $this->page->url || !$this->wire('sanitizer')->url($url)) {
                 continue;
             }
 
@@ -586,9 +595,11 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      *
      * This method initializes the View object and the $view API variable.
      *
+     * @param array $settings Array of additional settings (optional). Supported settings:
+     *  - `data` (array): variables for the View
      * @return \Wireframe\View View object.
      */
-    protected function ___initView(): \Wireframe\View {
+    protected function ___initView(array $settings = []): \Wireframe\View {
 
         // get current page's layout
         $page_layout = $this->page->getLayout();
@@ -601,7 +612,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         $this->view->setLayoutsPath($this->paths->layouts);
         $this->view->setExt($this->ext);
         $this->view->setPage($this->page);
-        $this->view->setData($this->data);
+        $this->view->setData($settings['data'] ?? $this->data);
         $this->view->setPartials($this->findPartials($this->paths->partials));
         $this->view->setPlaceholders(new \Wireframe\ViewPlaceholders($this->view));
         $this->view->setRenderer($this->renderer);
@@ -677,10 +688,10 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             $get_view = null;
             $template = $this->view->getTemplate() ?: $this->page->getViewTemplate();
             foreach ($this->config['allow_get_view'] as $get_template => $get_value) {
-                if (\is_string($get_template) && \is_array($get_value) && $template == $get_template) {
+                if (\is_string($get_template) && \is_array($get_value) && $template === $get_template) {
                     $get_view = \in_array($input->get->view, $get_value) ? $input->get->view : null;
                     break;
-                } else if (\is_int($get_template) && \is_string($get_value) && $input->get->view == $get_value) {
+                } else if (\is_int($get_template) && \is_string($get_value) && $input->get->view === $get_value) {
                     $get_view = $get_value;
                     break;
                 }
@@ -1083,7 +1094,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         // use the template name of the page for the next step
         if ($template_name === null) {
             if (isset($page->_wireframe_controller)) {
-                return $page->_wireframe_controller == '' ? null : $page->_wireframe_controller;
+                return $page->_wireframe_controller === '' ? null : $page->_wireframe_controller;
             }
             $template_name = $page->template->name;
         }

@@ -8,11 +8,11 @@ namespace ProcessWire;
  * This module provides a JSON API for accessing Wireframe's features. For more details check out the documentation at
  * https://wireframe-framework.com/docs/wireframe-api/.
  *
- * @version 0.1.1
+ * @version 0.2.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
-class WireframeAPI extends \ProcessWire\WireData implements Module, ConfigurableModule {
+class WireframeAPI extends WireData implements Module, ConfigurableModule {
 
     /**
      * Available endpoints
@@ -38,6 +38,17 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
     protected $response = null;
 
     /**
+     * API root path
+     *
+     * This value is used by the Wireframe API Hooks module to provide automatic API endpoint.
+     * Note that this endpoint is only intended for Tracy Debugger Wireframe panel and requires
+     * superuser access.
+     *
+     * @var string|null
+     */
+    protected $api_root = null;
+
+    /**
      * Constructor
      *
      * @throws WireException if config settings contain unrecognized properties.
@@ -54,12 +65,16 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
         // populate the default config data
         $config = array_merge(
             $this->getConfigDefaults(),
-            \is_array($this->wire('config')->wireframeAPI) ? $this->wire('config')->wireframeAPI : []
+            \is_array($this->config->wireframeAPI) ? $this->config->wireframeAPI : []
         );
         foreach ($config as $key => $value) {
             switch ($key) {
                 case 'enabled_endpoints':
                     $this->setEnabledEndpoints($value);
+                    break;
+
+                case 'api_root':
+                    $this->api_root = $value;
                     break;
 
                 default:
@@ -82,7 +97,30 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
     public function getConfigDefaults(): array {
         return [
             'enabled_endpoints' => [],
+            'api_root' => '',
         ];
+    }
+
+    /**
+     * Set config data
+     *
+     * @param array $data
+     */
+    public function setConfigData(array $data) {
+        foreach ($data as $key => $value) {
+            switch ($key) {
+                case 'enabled_endpoints':
+                    $this->setEnabledEndpoints($data['enabled_endpoints']);
+                    break;
+
+                case 'api_root':
+                    $this->api_root = $value === '' ? '' : '/' . trim($data['api_root'], '/') . '/';
+                    break;
+
+                default:
+                    $this->$key = $value;
+            }
+        }
     }
 
     /**
@@ -99,7 +137,7 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
         $data = array_merge($this->getConfigDefaults(), $data);
 
         // Configuration settings from site config
-        $config = $this->wire('config')->wireframeAPI ?? [];
+        $config = $this->config->wireframeAPI ?? [];
 
         // Enabled API endpoints
         /** @var InputfieldCheckboxes */
@@ -119,6 +157,21 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
         }
         $fields->add($field);
 
+        // API root
+        /** @var InputfieldText */
+        $field = $this->modules->get('InputfieldText');
+        $field->name = 'api_root';
+        $field->label = $this->_('API root path');
+        $field->description = $this->_('Define the base path for the API.');
+        $field->notes = $this->_('Accessing the path configured here requires the Wireframe Hooks module to be intalled, and current user needs to have superuser access. This setting is primarily for the Tracy Wireframe panel API debugger.');
+        $field->value = $data[$field->name];
+        if (isset($config[$field->name])) {
+            $field->notes = $this->_('API root path is defined in site config. You cannot override site config settings here.');
+            $field->value = $config[$field->name];
+            $field->collapsed = Inputfield::collapsedNoLocked;
+        }
+        $fields->add($field);
+
         return $fields;
     }
 
@@ -133,12 +186,14 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
 
         // define path
         if ($path === null) {
-            $path = trim($this->wire('input')->url, '/');
+            $path = trim($this->input->url, '/');
         }
 
         // make sure that Wireframe is initialized
         if (!Wireframe::isInitialized()) {
-            $this->wire('modules')->get('Wireframe')->init();
+            $this->modules->get('Wireframe')->init($this->page === null ? [
+                'page' => $this->pages->get($this->config->http404PageID),
+            ] : []);
         }
 
         // instantiate a response object
@@ -146,14 +201,14 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
             ->setPath($path);
 
         // if debug mode is enabled, improve response readability by enabling JSON pretty print
-        if ($this->wire('config')->debug) {
+        if ($this->config->debug) {
             $this->response->setPretty(true);
         }
 
         // split path into parts and remove API root path if present
         if (!empty($path)) {
             $path = explode('/', trim($path, '/'));
-            if (!empty($path) && $path[0] == $this->wire('page')->name) {
+            if ($this->page !== null && !empty($path) && $path[0] === $this->page->name) {
                 array_shift($path);
             }
         }
@@ -279,6 +334,15 @@ class WireframeAPI extends \ProcessWire\WireData implements Module, Configurable
      */
     public function getEnabledEndpoints(): array {
         return $this->enabled_endpoints;
+    }
+
+    /**
+     * Get Debugger API root path
+     *
+     * @return null|string
+     */
+    public function getAPIRoot(): ?string {
+        return $this->api_root;
     }
 
     /**

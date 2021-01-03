@@ -64,10 +64,10 @@ class View extends \ProcessWire\TemplateFile {
         // attempt to render markup using a renderer
         $renderer = $this->getRenderer();
         /** @noinspection PhpUndefinedMethodInspection */
-        if ($renderer && substr($this->filename, -\strlen($renderer->getExt())) == $renderer->getExt()) {
+        if ($renderer && substr($this->filename, -\strlen($renderer->getExt())) === $renderer->getExt()) {
             // since the filename we have stored locally matches the extension expected by the renderer, we can assume
             // that this renderer can be used to render said file
-            $view_path = $this->getViewData('context') == 'layout' ? 'layouts_path' : 'views_path';
+            $view_path = $this->getViewData('context') === 'layout' ? 'layouts_path' : 'views_path';
             $view_file = substr($this->filename, \strlen($this->getViewData($view_path)));
             // note: $globals is inherited from parent class TemplateFile, where it's marked as DEPRECATED; this may
             // need some attention in the near(ish) future
@@ -98,9 +98,9 @@ class View extends \ProcessWire\TemplateFile {
      * @return void
      */
     public function __set($key, $value) {
-        if ($key == 'placeholders') {
+        if ($key === 'placeholders') {
             $this->setPlaceholders($value);
-        } else if ($key == 'partials') {
+        } else if ($key === 'partials') {
             $this->setPartials($value);
         } else {
             parent::__set($key, $value);
@@ -117,9 +117,10 @@ class View extends \ProcessWire\TemplateFile {
      * @return mixed Value of the key or null
      */
     public function __get($key) {
-        if ($key == 'placeholders') {
+        if ($key === 'placeholders') {
             return $this->getPlaceholders();
-        } else if ($key == 'partials') {
+        }
+        if ($key === 'partials') {
             return $this->getPartials();
         }
         $value = $this->get($key);

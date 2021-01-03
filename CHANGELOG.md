@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0] - 2021-01-03
+
+### Added
+- New autoloaded (optional) companion module Wireframe Hooks.
+- Wireframe API debugger for Tracy, currently only available for superusers.
+- New method `Partial::getFilename(?string $ext = null, bool $with_ext = true)`. This is otherwise the same as type juggling a Partial object to string, but provides more customizability via params when called directly.
+- New methods `Partials::getPath()` and `Partials::getFilenames(string $ext = null, bool $with_ext = true)`.
+
+### Changed
+- Wireframe API built-in endpoints now provide more verbose errors if debug mode is enabled or user is logged in as superuser.
+- When rendering view placeholder, skip most of the Wireframe init process. This is an optimization, but also lets us access any values previously set for the View object etc.
+
+### Fixed
+- In some cases Wireframe API wasn't able to catch errors; this part should now work more consistently.
+- Enabled endpoints setting in Wireframe API module config now works as expected.
+
 ## [0.18.3] - 2020-11-30
 
 ### Fixed

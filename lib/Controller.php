@@ -113,7 +113,7 @@ abstract class Controller extends \ProcessWire\Wire {
      * @return mixed
      */
     public function __get($name) {
-        if ($name == 'page' || $name == 'view') {
+        if ($name === 'page' || $name === 'view') {
             return $this->$name ?: $this->wire($name);
         }
         return $this->getMethodProp($name, 'controller');
@@ -126,9 +126,9 @@ abstract class Controller extends \ProcessWire\Wire {
      * @param mixed $value
      */
     public function __set(string $name, $value) {
-        if ($name == 'page') {
+        if ($name === 'page') {
             $this->setPage($value, true);
-        } else if ($name == 'view') {
+        } else if ($name === 'view') {
             $this->setView($value);
         }
     }

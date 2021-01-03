@@ -1,0 +1,108 @@
+.tracy-panel .tracy-inner .wireframe-tracy-tab-link {
+    background: #eee !important;
+    border: 1px solid #ddd !important;
+    color: #333 !important;
+    display: inline-block;
+    margin: 0 .5rem -1px 0;
+    padding: .75rem 1.5rem;
+    position: relative;
+    z-index: 99;
+}
+
+.tracy-panel .tracy-inner .wireframe-tracy-tab-link--current {
+    background: #fff !important;
+    border-bottom: 1px solid #fff !important;
+    text-decoration: none !important;
+}
+
+.tracy-panel .tracy-inner .wireframe-tracy-tab {
+    border: 1px solid #ddd;
+    padding: 1rem 1rem 2rem;
+    position: relative;
+    z-index: 9;
+}
+
+#tracy-debug .wireframe-tracy-api-form {
+    padding-top: .5rem !important;
+}
+
+#tracy-debug .wireframe-tracy-api-form-row[hidden] {
+    display: none !important;
+}
+
+#tracy-debug .wireframe-tracy-api-form-row:not([hidden]) {
+    display: block !important;
+    margin: 0 0 1rem !important;
+}
+
+#tracy-debug .wireframe-tracy-doc-link {
+    position: absolute;
+    right: 0;
+    top: 0;
+    margin-top: -1rem;
+    opacity: .75;
+    transition: opacity .25s ease;
+}
+
+#tracy-debug .wireframe-tracy-doc-link:hover,
+#tracy-debug .wireframe-tracy-doc-link:focus {
+    opacity: 1;
+}
+
+#tracy-debug .wireframe-tracy-panel-section {
+    position: relative;
+    padding-top: .5rem;
+}
+
+#tracy-debug .wireframe-tracy-api-form label span {
+    display: block;
+    font-weight: bold;
+    padding: 0 0 .5rem;
+}
+
+#tracy-debug .wireframe-tracy-visually-hidden {
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    height: 1px;
+    overflow: hidden;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+}
+
+#tracy-debug .wireframe-tracy-api-form input,
+#tracy-debug .wireframe-tracy-api-form input[type="text"],
+#tracy-debug .wireframe-tracy-api-form textarea,
+#tracy-debug .wireframe-tracy-api-form select:not(#tfe_recently_opened) {
+    width: 100% !important;
+}
+
+#tracy-debug .wireframe-tracy-api-form textarea {
+    padding: 5px !important;
+}
+
+#tracy-debug .wireframe-tracy-api-code {
+    background: #eee !important;
+    border-radius: .25rem !important;
+    color: #333 !important;
+    display: inline-block !important;
+    font-family: monospace !important;
+    white-space: pre !important;
+    overflow: scroll !important;
+    padding: .5rem !important;
+    margin: 0 0 .5rem;
+    width: 100%;
+}
+
+#tracy-debug .wireframe-tracy-api-code--break {
+    white-space: normal !important;
+    word-break: break-all !important;
+}
+
+#tracy-debug .wireframe-tracy-api-code[hidden] {
+    display: none !important;
+}
+
+#tracy-debug .wireframe-tracy-api-code--error {
+    background: lightpink !important;
+}
