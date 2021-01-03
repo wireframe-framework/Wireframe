@@ -41,7 +41,7 @@ class WireframeHooks extends WireData implements Module {
         if (empty($api_root)) return;
 
         // compare API root with current request
-        $is_mb = function_exists("mb_strpos");
+        $is_mb = function_exists('mb_strpos');
         if ($is_mb && mb_strpos($url, $api_root) !== 0 || !$is_mb && strpos($url, $api_root) !== 0) {
             return;
         }
