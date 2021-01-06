@@ -64,12 +64,10 @@ class WireframeHooks extends WireData implements Module {
         }
 
         // set page
-        if ($page === null || !$page->id) {
-            if ($this->config->http404PageID) {
-                $page = $this->pages->get($this->config->http404PageID);
-                if ($page === null || !$page->id) {
-                    throw new WireException("config::http404PageID does not exist - please check your config");
-                }
+        if (($page === null || !$page->id) && $this->config->http404PageID) {
+            $page = $this->pages->get($this->config->http404PageID);
+            if (!$page->id) {
+                throw new WireException("config::http404PageID does not exist - please check your config");
             }
         }
         $this->wire('page', $page);
