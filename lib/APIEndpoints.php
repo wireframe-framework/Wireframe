@@ -9,7 +9,7 @@ namespace Wireframe;
  *
  * @internal This class is only intended for use within the Wireframe internals.
  *
- * @version 0.1.1
+ * @version 0.1.2
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -136,7 +136,14 @@ class APIEndpoints {
                 $out['json'] = $controller ? json_decode($controller->renderJSON()) : null;
             }
             if ($return_format === null || $return_format === 'rendered') {
-                $out['rendered'] = $page->render();
+                try {
+                    ob_start();
+                    $out['rendered'] = $page->render();
+                } catch (\Throwable $e) {
+                    throw $e;
+                } finally {
+                    ob_end_clean();
+                }
             }
             return $out;
         } catch (\Throwable $e) {
