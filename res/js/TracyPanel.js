@@ -1,7 +1,7 @@
 /**
  * Wireframe Tracy Panel
  *
- * @version 0.1.0
+ * @version 0.1.1
  */
 class WireframeTracyPanel {
 
@@ -100,7 +100,7 @@ class WireframeTracyPanel {
     /**
      * Get args for API query
      *
-     * @return {String}
+     * @returns {String}
      */
     getAPIQueryArgs() {
         let args = this.cache.api.args.value;
