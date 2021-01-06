@@ -1,7 +1,7 @@
 {
     "title": "Wireframe API",
     "summary": "Wireframe API provides a JSON API for accessing Wireframe's features.",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "author": "Teppo Koivula",
     "href": "https://wireframe-framework.com",
     "requires": [
