@@ -106,3 +106,8 @@
 #tracy-debug .wireframe-tracy-api-code--error {
     background: lightpink !important;
 }
+
+#tracy-debug .wireframe-tracy-api-info {
+    padding: 0 0 .35rem !important;
+    opacity: .9;
+}

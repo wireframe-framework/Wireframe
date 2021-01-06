@@ -8,7 +8,9 @@ namespace ProcessWire;
  * This module provides a JSON API for accessing Wireframe's features. For more details check out the documentation at
  * https://wireframe-framework.com/docs/wireframe-api/.
  *
- * @version 0.2.0
+ * @method WireframeAPI init(?string $path = null, array $args = []) Init API
+ *
+ * @version 0.2.1
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -144,6 +146,7 @@ class WireframeAPI extends WireData implements Module, ConfigurableModule {
         $field = $this->modules->get('InputfieldCheckboxes');
         $field->name = 'enabled_endpoints';
         $field->label = $this->_('Enabled endpoints');
+        $field->notes = $this->_('You can find more information about [available API endpoints](https://wireframe-framework.com/docs/wireframe-api/available-api-endpoints/) and [enabling API endpoints via site config](https://wireframe-framework.com/docs/wireframe-api/configuration-settings/) from the Wireframe API docs.');
         $field->addOptions([
             'components' => $this->_('Components'),
             'pages' => $this->_('Pages'),
@@ -163,7 +166,8 @@ class WireframeAPI extends WireData implements Module, ConfigurableModule {
         $field->name = 'api_root';
         $field->label = $this->_('API root path');
         $field->description = $this->_('Define the base path for the API.');
-        $field->notes = $this->_('Accessing the path configured here requires the Wireframe Hooks module to be intalled, and current user needs to have superuser access. This setting is primarily for the Tracy Wireframe panel API debugger.');
+        $field->notes = $this->_('Accessing the path defined here requires the Wireframe Hooks module and is currently only available for superusers.')
+            . ' *' . $this->_('This setting is primarily intended for the API debugger found from the Wireframe Tracy panel.') . '*';
         $field->value = $data[$field->name];
         if (isset($config[$field->name])) {
             $field->notes = $this->_('API root path is defined in site config. You cannot override site config settings here.');

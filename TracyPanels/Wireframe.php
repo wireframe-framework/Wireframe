@@ -9,7 +9,7 @@ use \Tracy\Dumper;
  *
  * See https://tracy.nette.org/en/extensions for docs about Tracy panels.
  *
- * @version 0.2.0
+ * @version 0.2.1
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -273,9 +273,17 @@ class WireframePanel extends BasePanel {
 
         // API root path
         $out = $this->renderInput('API root', 'api_root', 'text', null, $api->getAPIRoot());
+        if (!$this->wire('modules')->isInstalled('WireframeHooks')) {
+            $out .= '<p class="wireframe-tracy-api-info">'
+                . 'Note: the <a href="' . $this->wire('config')->urls->admin . 'module/#tab_install_modules" target="_blank">Wireframe Hooks</a> module is not installed, so you\'ll need to initialize the API manually.'
+                . '</p>';
+        }
 
         // API endpoint
         $out .= $this->renderInput('Endpoint', 'endpoint', 'select', null, $api->getEnabledEndpoints());
+        $out .= '<p class="wireframe-tracy-api-info">'
+            . 'You can configure enabled endpoints via <a href="' . $this->wire('modules')->getModuleEditUrl($api) . '" target="_blank">Wireframe API module settings</a>.'
+            . '</p>';
 
         // Page ID
         $out .= $this->renderInput('Page ID', 'page_id', 'number', 'pages', 1);
@@ -305,8 +313,8 @@ class WireframePanel extends BasePanel {
         ]);
 
         // Arguments
-        $out .= $this->renderInput('Arguments', 'api_args', 'textarea', null, "{\n\t\"argument\": \"value\"\n}", 'js-wireframe-tracy-api-args');
-        $out .= '<p style="opacity: .9">You can provide arguments as JSON, in which case they will be passed to the API as GET param "api_args", or in URL format (param1=value1&amp;param2=value2) in which case they will be appended to the API GET request as is. Note that the default API root used by this debugger only supports JSON format arguments.</p>';
+        $out .= $this->renderInput('Arguments', 'args', 'textarea', null, "{\n\t\"argument\": \"value\"\n}", 'js-wireframe-tracy-api-args');
+        $out .= '<p class="wireframe-tracy-api-info">You can provide arguments as JSON, in which case they will be passed to the API as GET param "args", or in URL format (param1=value1&amp;param2=value2) in which case they will be appended to the API GET request as is. Note that the default API root used by this debugger only supports JSON format arguments.</p>';
 
         // Render and return form
         return "<form class='wireframe-tracy-api-form' id='js-wireframe-tracy-api-form'>"
@@ -331,7 +339,10 @@ class WireframePanel extends BasePanel {
 
         // Wireframe API module needs to be installed
         if (!$this->wire('modules')->isInstalled('WireframeAPI')) {
-            return 'Wireframe API module is not installed, API debug tool disabled.';
+            return sprintf(
+                'API Debugger is a tool for debugging Wireframe API requests. If you want to use this feature, please <a href="%s" target="_blank">install the Wireframe API module</a> first.',
+                $this->wire('config')->urls->admin . 'module/#tab_install_modules'
+            );
         }
 
         /** @var WireframeAPI */
@@ -341,7 +352,7 @@ class WireframePanel extends BasePanel {
         // At least one endpoint needs to be enabled
         if (empty($api->getEnabledEndpoints())) {
             return sprintf(
-                'In order to perform API queries you need to <a href="%s">enable at least one API endpoint</a>.',
+                'In order to perform API queries you need to <a href="%s" target="_blank">enable at least one API endpoint</a>.',
                 $api_config_url
             );
         }

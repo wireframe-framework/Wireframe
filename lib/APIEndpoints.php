@@ -9,7 +9,7 @@ namespace Wireframe;
  *
  * @internal This class is only intended for use within the Wireframe internals.
  *
- * @version 0.1.1
+ * @version 0.1.2
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -53,6 +53,7 @@ class APIEndpoints {
         }
 
         try {
+            ob_start();
             $component = \Wireframe\Factory::component($component_name, $args);
             $out = [];
             if ($return_format === null || $return_format === 'json') {
@@ -74,6 +75,8 @@ class APIEndpoints {
                 $component_name,
                 $this->verboseErrors() ? ': ' . trim($e->getMessage()) : ''
             )));
+        } finally {
+            ob_end_clean();
         }
     }
 
@@ -118,6 +121,7 @@ class APIEndpoints {
         }
 
         try {
+            ob_start();
             $page = \Wireframe\Factory::page($page_id, $args);
             if ($page instanceof \ProcessWire\NullPage || !$page->viewable()) {
                 throw new \ProcessWire\Wire404Exception();
@@ -151,6 +155,8 @@ class APIEndpoints {
                 $page_id,
                 $this->verboseErrors() ? ': ' . trim($e->getMessage()) : ''
             )));
+        } finally {
+            ob_end_clean();
         }
     }
 
@@ -177,6 +183,7 @@ class APIEndpoints {
         $partial_name = implode('/', $path);
 
         try {
+            ob_start();
             return [
                 'rendered' => \Wireframe\Factory::partial($partial_name, $args),
             ];
@@ -192,6 +199,8 @@ class APIEndpoints {
                 $partial_name,
                 $this->verboseErrors() ? ': ' . trim($e->getMessage()) : ''
             )));
+        } finally {
+            ob_end_clean();
         }
     }
 
