@@ -78,29 +78,28 @@ class WireframeHooks extends WireData implements Module {
         $event->object->ready();
 
         // handle API request
-        $event->return = $this->renderAPIReponse($page, $url);
+        $event->return = $this->renderAPIReponse($url);
         $event->replace = true;
     }
 
     /**
      * Render API response
      *
-     * @param Page $page
      * @param string $url
      * @return string
      */
-    protected function renderAPIReponse(Page $page, string $url): string {
+    protected function renderAPIReponse(string $url): string {
 
-        // prepare API args and query
-        $api_args = $this->input->get('api_args') ? json_decode($this->input->get('api_args'), true) : [];
-        if ($api_args === null) {
-            $api_args = [];
+        // params for API query
+        $args = $this->input->get('args') ? json_decode($this->input->get('args'), true) : [];
+        if ($args === null) {
+            $args = [];
         }
-        $api_root = $this->api->getAPIRoot();
-        $api_query = $this->is_mb ? mb_substr($url, mb_strlen($api_root)) : substr($url, strlen($api_root));
+        $root = $this->api->getAPIRoot();
+        $path = $this->is_mb ? mb_substr($url, mb_strlen($root)) : substr($url, strlen($root));
 
         // init API, render and return API response
-        $this->api->init($api_query, $api_args);
+        $this->api->init($path, $args);
         $this->api->sendHeaders();
         return $this->api->render();
     }
