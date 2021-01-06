@@ -7,69 +7,102 @@ namespace ProcessWire;
  *
  * This is an autoloaded companion module for Wireframe and Wireframe API.
  *
- * @version 0.1.0
+ * @version 0.2.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
 class WireframeHooks extends WireData implements Module {
 
     /**
+     * Wireframe API instance
+     *
+     * @var null|WireframeAPI
+     */
+    protected $api;
+
+    /**
+     * Is multibyte support enabled?
+     *
+     * @var bool
+     */
+    protected $is_mb = false;
+
+    /**
      * Init method
      */
-    public function init() {
+    protected function init() {
         // hook into page not found event to provide endpoint for API
         if ($this->modules->isInstalled('WireframeAPI') && $this->user->isSuperuser()) {
-            $this->addHookBefore('ProcessPageView::pageNotFound', $this, 'handleAPIRequest');
+            $this->addHookBefore('ProcessPageView::pageNotFound', $this, 'interceptAPIRequest');
         }
     }
 
     /**
-     * Set up Wireframe API endpoint
+     * Intercept API requests
      *
      * @param HookEvent $event
+     *
+     * @throws WireException if required config::http404PageID doesn't exist
      */
-    protected function handleAPIRequest(HookEvent $event) {
+    protected function interceptAPIRequest(HookEvent $event) {
 
         // params from event
         $page = $event->arguments[0];
         $url = $event->arguments[1];
 
         // get Wireframe API module and API root
-        /** @var WireframeAPI */
-        $api = $this->modules->get('WireframeAPI');
-        $api_root = $api->getAPIRoot();
+        $this->api = $this->modules->get('WireframeAPI');
+        $api_root = $this->api->getAPIRoot();
         if (empty($api_root)) return;
 
+        // check if multibyte encoding is enabled
+        $this->is_mb = function_exists('mb_strpos');
+
         // compare API root with current request
-        $is_mb = function_exists('mb_strpos');
-        if ($is_mb && mb_strpos($url, $api_root) !== 0 || !$is_mb && strpos($url, $api_root) !== 0) {
+        if ($this->is_mb && mb_strpos($url, $api_root) !== 0 || !$this->is_mb && strpos($url, $api_root) !== 0) {
             return;
         }
 
-        // make sure that field rendering works as expected in admin (PageRender won't normally add
-        // this hook if current page's template is admin, which is something we actually need here)
-        if ($page !== null && $page->template == 'admin') {
-            $pageRender = $this->modules->get('PageRender');
-            $pageRender->addHookBefore('Page::render', $pageRender, 'beforeRenderPage', [
-                'priority' => 1,
-            ]);
+        // set page
+        if ($page === null || !$page->id) {
+            if ($this->config->http404PageID) {
+                $page = $this->pages->get($this->config->http404PageID);
+                if ($page === null || !$page->id) {
+                    throw new WireException("config::http404PageID does not exist - please check your config");
+                }
+            }
         }
+        $this->wire('page', $page);
 
-        // prepare args and API query
+        // set system ready state
+        $event->object->ready();
+
+        // handle API request
+        $event->return = $this->renderAPIReponse($page, $url);
+        $event->replace = true;
+    }
+
+    /**
+     * Render API response
+     *
+     * @param Page $page
+     * @param string $url
+     * @return string
+     */
+    protected function renderAPIReponse(Page $page, string $url): string {
+
+        // prepare API args and query
         $api_args = $this->input->get('api_args') ? json_decode($this->input->get('api_args'), true) : [];
         if ($api_args === null) {
             $api_args = [];
         }
-        $api_query = $this->input->get('api_query');
-        if ($api_query === null) {
-            $api_query = $is_mb ? mb_substr($url, mb_strlen($api_root)) : substr($url, strlen($api_root));
-        }
+        $api_root = $this->api->getAPIRoot();
+        $api_query = $this->is_mb ? mb_substr($url, mb_strlen($api_root)) : substr($url, strlen($api_root));
 
-        // init API and render API response
-        $api->init($api_query, $api_args);
-        $api->sendHeaders();
-        echo $api->render();
-        exit();
+        // init API, render and return API response
+        $this->api->init($api_query, $api_args);
+        $this->api->sendHeaders();
+        return $this->api->render();
     }
 
 }
