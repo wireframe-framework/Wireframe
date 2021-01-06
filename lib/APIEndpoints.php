@@ -53,6 +53,7 @@ class APIEndpoints {
         }
 
         try {
+            ob_start();
             $component = \Wireframe\Factory::component($component_name, $args);
             $out = [];
             if ($return_format === null || $return_format === 'json') {
@@ -74,6 +75,8 @@ class APIEndpoints {
                 $component_name,
                 $this->verboseErrors() ? ': ' . trim($e->getMessage()) : ''
             )));
+        } finally {
+            ob_end_clean();
         }
     }
 
@@ -118,6 +121,7 @@ class APIEndpoints {
         }
 
         try {
+            ob_start();
             $page = \Wireframe\Factory::page($page_id, $args);
             if ($page instanceof \ProcessWire\NullPage || !$page->viewable()) {
                 throw new \ProcessWire\Wire404Exception();
@@ -136,14 +140,7 @@ class APIEndpoints {
                 $out['json'] = $controller ? json_decode($controller->renderJSON()) : null;
             }
             if ($return_format === null || $return_format === 'rendered') {
-                try {
-                    ob_start();
-                    $out['rendered'] = $page->render();
-                } catch (\Throwable $e) {
-                    throw $e;
-                } finally {
-                    ob_end_clean();
-                }
+                $out['rendered'] = $page->render();
             }
             return $out;
         } catch (\Throwable $e) {
@@ -158,6 +155,8 @@ class APIEndpoints {
                 $page_id,
                 $this->verboseErrors() ? ': ' . trim($e->getMessage()) : ''
             )));
+        } finally {
+            ob_end_clean();
         }
     }
 
@@ -184,6 +183,7 @@ class APIEndpoints {
         $partial_name = implode('/', $path);
 
         try {
+            ob_start();
             return [
                 'rendered' => \Wireframe\Factory::partial($partial_name, $args),
             ];
@@ -199,6 +199,8 @@ class APIEndpoints {
                 $partial_name,
                 $this->verboseErrors() ? ': ' . trim($e->getMessage()) : ''
             )));
+        } finally {
+            ob_end_clean();
         }
     }
 
