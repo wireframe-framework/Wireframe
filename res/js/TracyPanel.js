@@ -26,7 +26,7 @@ class WireframeTracyPanel {
             form: document.getElementById(this.cache.jsPrefix + "api-form"),
             params: Array.from(document.querySelectorAll("." + this.cache.jsPrefix + "api-param")),
             endpoint: document.getElementById(this.cache.jsPrefix + "api-endpoint"),
-            args: document.getElementById(this.cache.jsPrefix + "api-api_args"),
+            args: document.getElementById(this.cache.jsPrefix + "api-args"),
             query: document.getElementById(this.cache.jsPrefix + "api-query"),
             submit: document.getElementById(this.cache.jsPrefix + "api-submit"),
             response: document.getElementById(this.cache.jsPrefix + "api-response"),
@@ -107,7 +107,7 @@ class WireframeTracyPanel {
         if (args === "") return "";
         try {
             args = JSON.stringify(JSON.parse(args));
-            return "api_args=" + encodeURIComponent(args);
+            return "args=" + encodeURIComponent(args);
         } catch (e) {
             return args;
         }

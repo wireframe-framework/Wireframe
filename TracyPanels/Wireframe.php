@@ -313,8 +313,8 @@ class WireframePanel extends BasePanel {
         ]);
 
         // Arguments
-        $out .= $this->renderInput('Arguments', 'api_args', 'textarea', null, "{\n\t\"argument\": \"value\"\n}", 'js-wireframe-tracy-api-args');
-        $out .= '<p class="wireframe-tracy-api-info">You can provide arguments as JSON, in which case they will be passed to the API as GET param "api_args", or in URL format (param1=value1&amp;param2=value2) in which case they will be appended to the API GET request as is. Note that the default API root used by this debugger only supports JSON format arguments.</p>';
+        $out .= $this->renderInput('Arguments', 'args', 'textarea', null, "{\n\t\"argument\": \"value\"\n}", 'js-wireframe-tracy-api-args');
+        $out .= '<p class="wireframe-tracy-api-info">You can provide arguments as JSON, in which case they will be passed to the API as GET param "args", or in URL format (param1=value1&amp;param2=value2) in which case they will be appended to the API GET request as is. Note that the default API root used by this debugger only supports JSON format arguments.</p>';
 
         // Render and return form
         return "<form class='wireframe-tracy-api-form' id='js-wireframe-tracy-api-form'>"
