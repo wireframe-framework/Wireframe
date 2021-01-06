@@ -7,10 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.19.1] - 2021-01-06
+## [0.19.1] - 2021-01-07
 
 ### Changed
-- Various smaller updates to the Tracy Debugger panel GUI, as well as Wireframe API and Wireframe Hooks.
+- Various minor updates and additions to the Tracy Debugger panel GUI, Wireframe API, and Wireframe Hooks.
 
 ## [0.19.0] - 2021-01-03
 

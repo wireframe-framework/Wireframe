@@ -78,7 +78,7 @@ class WireframeHooks extends WireData implements Module {
         $event->object->ready();
 
         // handle API request
-        $event->return = $this->renderAPIReponse($url);
+        $event->return = $this->renderAPIResponse($url);
         $event->replace = true;
     }
 
@@ -88,7 +88,7 @@ class WireframeHooks extends WireData implements Module {
      * @param string $url
      * @return string
      */
-    protected function renderAPIReponse(string $url): string {
+    protected function renderAPIResponse(string $url): string {
 
         // params for API query
         $args = $this->input->get('args') ? json_decode($this->input->get('args'), true) : [];
