@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.2] - 2021-01-09
+
+### Fixed
+- Fix an issue where rendering subsequent pages within a view placeholder wasn't working properly. This issue was caused by view placeholder optimizations introduced in 0.19.0.
+
 ## [0.19.1] - 2021-01-07
 
 ### Changed

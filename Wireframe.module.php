@@ -14,7 +14,7 @@ namespace ProcessWire;
  * @method static string|Page|NullPage page($source, $args = []) Static getter (factory) method for Pages.
  * @method static string|null partial(string $partial_name, array $args = []) Static getter (factory) method for Partials.
  *
- * @version 0.19.1
+ * @version 0.19.2
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -163,8 +163,14 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      */
     public function ___init(array $settings = []): Wireframe {
 
+        // make sure that we have a valid Page
+        $current_page = $settings['page'] ?? $this->wire('page');
+        if (!$current_page instanceof Page || !$current_page->id) {
+            throw new WireException('No valid Page object found');
+        }
+
         // check if we're currently rendering a view placeholder, in which case we'll skip most of the init process
-        if ($this->page && $this->page->_wireframe_context === 'placeholder' && $this->view) {
+        if ($this->page && $this->page->id === $current_page->id && $this->page->_wireframe_context === 'placeholder' && $this->view) {
             $this->initView([
                 'data' => $this->view->getArray(),
             ]);
@@ -179,10 +185,12 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
                 'view' => $this->view,
                 'controller' => $this->controller,
             ];
-            $this->page = null;
             $this->view = null;
             $this->controller = null;
         }
+
+        // set current page
+        $this->page = $current_page;
 
         // lock settings hash
         $this->settings_hash_locked = true;
@@ -192,12 +200,6 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
 
         // set any additional settings
         $this->setArray($settings);
-
-        // make sure that we have a valid Page
-        $this->page = $settings['page'] ?? $this->wire('page');
-        if (!$this->page || !$this->page->id) {
-            throw new WireException('No valid Page object found');
-        }
 
         // check for redirects
         $this->checkRedirects();
@@ -236,7 +238,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         $hooks = $this->wire(new \Wireframe\Hooks($this));
         $hooks->init();
 
-        // remember that this method has been run and return true
+        // remember that this method has been run
         static::$initialized[] = $this->wire()->instanceID;
 
         // return true on first run
