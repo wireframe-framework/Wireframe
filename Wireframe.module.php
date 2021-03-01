@@ -187,6 +187,11 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             ];
             $this->view = null;
             $this->controller = null;
+            if ($this->page && $this->page->id === $current_page->id && $current_page->_wireframe_controller !== null) {
+                // if current page is the same as the page being stashed and it has controller defined, discard it;
+                // we've already stashed the controller, so there's no point in leaving a reference to it in place.
+                $current_page->_wireframe_controller = null;
+            }
         }
 
         // set current page
@@ -829,6 +834,9 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             $this->page = $stashed_context['page'];
             $this->view = $stashed_context['view'];
             $this->controller = $stashed_context['controller'];
+            if ($this->page && $this->controller) {
+                $this->page->_wireframe_controller = $this->controller;
+            }
         }
 
         return $output;
