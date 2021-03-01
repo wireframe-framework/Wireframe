@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Support for short-circuiting Page rendering at Controller by returning a string from Controller::render().
+
 ## [0.19.2] - 2021-01-09
 
 ### Fixed
