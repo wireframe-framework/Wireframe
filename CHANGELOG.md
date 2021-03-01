@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.0] - 2021-03-02
+
+### Added
+- Support for short-circuiting Page rendering at Controller by returning a string from Controller::render().
+
+### Fixed
+- In case a Page was rendered more than once during a single request, there was a chance that it might've had a reference to a stashed Controller object.
+
 ## [0.19.2] - 2021-01-09
 
 ### Fixed

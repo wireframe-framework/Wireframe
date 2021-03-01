@@ -14,7 +14,7 @@ namespace ProcessWire;
  * @method static string|Page|NullPage page($source, $args = []) Static getter (factory) method for Pages.
  * @method static string|null partial(string $partial_name, array $args = []) Static getter (factory) method for Partials.
  *
- * @version 0.19.2
+ * @version 0.20.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -187,6 +187,11 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             ];
             $this->view = null;
             $this->controller = null;
+            if ($this->page && $this->page->id === $current_page->id && $current_page->_wireframe_controller !== null) {
+                // if current page is the same as the page being stashed and it has controller defined, discard it;
+                // we've already stashed the controller, so there's no point in leaving a reference to it in place.
+                $current_page->_wireframe_controller = null;
+            }
         }
 
         // set current page
@@ -787,7 +792,10 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
 
         // execute optional Controller::render()
         if (!empty($controller)) {
-            $controller->render();
+            $render_value = $controller->render();
+            if (\is_string($render_value)) {
+                return $render_value;
+            }
         }
 
         // render output
@@ -826,6 +834,9 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             $this->page = $stashed_context['page'];
             $this->view = $stashed_context['view'];
             $this->controller = $stashed_context['controller'];
+            if ($this->page && $this->controller) {
+                $this->page->_wireframe_controller = $this->controller;
+            }
         }
 
         return $output;

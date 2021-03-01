@@ -75,6 +75,11 @@ abstract class Controller extends \ProcessWire\Wire {
      * This method is called automatically right before a page is rendered. This is where you can,
      * for an example, pass data (properties/variables) to the View, so that you can later access
      * said data as locally scoped variables in your view files and layouts.
+     *
+     * If you return a string from the render method of a Controller, Page rendering stops and that
+     * value is used as the rendered value, short-circuiting the process.
+     *
+     * @return void|string
      */
     public function render() {
         if (method_exists($this, '___render')) {
