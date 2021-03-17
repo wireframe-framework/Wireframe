@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.2] - 2021-03-17
+
+### Fixed
+- Fixed an issue where View arguments were accidentally overriding arguments provided for partials during rendering.
+
 ## [0.20.1] - 2021-03-16
 
 ### Fixed

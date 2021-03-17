@@ -10,7 +10,7 @@ use \ProcessWire\Wireframe;
  *
  * @internal This class is only intended for use within the Wireframe internals.
  *
- * @version 0.1.0
+ * @version 0.1.1
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -73,13 +73,16 @@ class Hooks extends \ProcessWire\Wire {
             // View doesn't exist or we're currently rendering a Wireframe View
             return;
         }
-        $event->object->setArray(array_merge($view->data(), array_filter([
-            'page' => $event->object->page, // used by field rendering
-            'value' => $event->object->value, // used by field rendering
-            'field' => $event->object->field, // used by field rendering
-            'partials' => $view->partials,
-            'placeholders' => $view->placeholders,
-        ])));
+        $event->object->setArray(array_merge(
+            array_diff_key($view->data(), $event->object->data()),
+            array_filter([
+                'page' => $event->object->page, // used by field rendering
+                'value' => $event->object->value, // used by field rendering
+                'field' => $event->object->field, // used by field rendering
+                'partials' => $view->partials,
+                'placeholders' => $view->placeholders,
+            ])
+        ));
     }
 
     /**
