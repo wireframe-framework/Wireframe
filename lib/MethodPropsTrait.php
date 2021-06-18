@@ -5,7 +5,7 @@ namespace Wireframe;
 /**
  * Trait for adding public method property access support to Wireframe objects
  *
- * @version 0.3.1
+ * @version 0.4.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -154,11 +154,7 @@ trait MethodPropsTrait {
 
         if (!empty($this->cacheable_methods[$name])) {
             // attempt to return value from persistent cache (WireCache)
-            $persistent_cache_name = 'Wireframe/MethodProp'
-                . '/' . $context
-                . '/' . static::class
-                . '/' . $name
-                . '/' . $this->wire('page');
+            $persistent_cache_name = $this->getMethodPropCacheName($name, $context);
             $value = $this->wire('cache')->get($persistent_cache_name, $this->cacheable_methods[$name]);
             if ($value !== null) {
                 $this->cacheMethodProp($name, $value, $runtime_cache_enabled, null);
@@ -187,6 +183,22 @@ trait MethodPropsTrait {
 
         $this->cacheMethodProp($name, $value, $runtime_cache_enabled, $persistent_cache_name);
         return $value;
+    }
+
+    /**
+     * Get method prop cache name
+     *
+     * @param string $name
+     * @param string $context
+     * @return string
+     */
+    final protected function ___getMethodPropCacheName(string $name, string $context): string {
+        return 'Wireframe/MethodProp'
+            . '/' . $context
+            . '/' . substr(strrchr(static::class, '\\'), 1)
+            . '/' . $name
+            . '/' . $this->wire('page')
+            . '/' . $this->wire('user')->language;
     }
 
     /**
