@@ -7,7 +7,7 @@ use ProcessWire\Wire;
 /**
  * Trait for adding event listener support to Wireframe objects
  *
- * @version 0.1.0
+ * @version 0.1.1
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -47,7 +47,7 @@ trait EventListenerTrait {
      * Trigger an action on current object
      *
      * @param string $event Event name.
-     * @param callable $callback Callback.
+     * @param callable $callback Callback function, gets an instance of HookEvent class as an argument.
      * @param array $options Additional options.
      * @return Wire Self-reference.
      */
@@ -64,9 +64,9 @@ trait EventListenerTrait {
                     'arguments' => $hook_event->arguments,
                 ])));
                 if ($run_once) {
-                    // Note: removing local hook currently needs to be done "by hand", which is why
-                    // we've duplicated some logic from WireHooks here. For more details check out
-                    // https://github.com/processwire/processwire-issues/issues/1067.
+                    // Note: removing local hook needs to be done "by hand", so we've duplicated some logic from
+                    // WireHooks. Related issue https://github.com/processwire/processwire-issues/issues/1067 was
+                    // resolved in ProcessWire 3.0.149, keeping this here until Wireframe requirements are bumped.
                     list(, $priority, $method) = explode(':', $hook_event->id);
                     $local_hooks = $hook_event->object->getLocalHooks();
                     unset($local_hooks[$method][$priority]);
@@ -76,6 +76,7 @@ trait EventListenerTrait {
             'callback' => $callback,
             'once' => $run_once,
         ];
+        $this->processEventQueue();
         return $this;
     }
 
