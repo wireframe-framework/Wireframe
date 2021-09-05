@@ -11,7 +11,7 @@ namespace Wireframe;
  * @property ViewPlaceholders|null $placeholders ViewPlaceholders object.
  * @property Partials|null $partials Object containing partial paths.
  *
- * @version 0.8.0
+ * @version 0.8.1
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -124,7 +124,7 @@ class View extends \ProcessWire\TemplateFile {
             return $this->getPartials();
         }
         $value = $this->get($key);
-        if (!$value) {
+        if ($value === null) {
             $value = $this->getFromController($key);
         }
         return $value;
@@ -217,8 +217,9 @@ class View extends \ProcessWire\TemplateFile {
      *
      * @internal
      *
-     * @return string|null Context identifier.
-     * @see View::setContext() for more details.
+     * @return string|null Context identifier
+     *
+     * @see View::setContext()
      */
     public function getContext(): ?string {
         return $this->getViewData('context');
