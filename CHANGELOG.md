@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.2] - 2021-09-05
+
+### Fixed
+- Second fix for the issue with non-null falsy value handling in View. Fix introduced in 0.21.1 was not fully functional yet.
+
 ## [0.21.1] - 2021-09-05
 
 ### Fixed

@@ -11,7 +11,7 @@ namespace Wireframe;
  * @property ViewPlaceholders|null $placeholders ViewPlaceholders object.
  * @property Partials|null $partials Object containing partial paths.
  *
- * @version 0.8.1
+ * @version 0.8.2
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -125,6 +125,9 @@ class View extends \ProcessWire\TemplateFile {
         }
         $value = $this->get($key);
         if ($value === null) {
+            if (isset($this->data[$key]) && $this->data[$key] !== null) {
+                return $this->data[$key];
+            }
             $value = $this->getFromController($key);
         }
         return $value;
