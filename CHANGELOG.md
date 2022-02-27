@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.3] - 2022-02-27
+
+### Fixed
+- Fixes and improvements to make it easier to use components (and other Wireframe features) outside the context of Wireframe rendered templates.
+
 ## [0.21.2] - 2021-09-05
 
 ### Fixed
