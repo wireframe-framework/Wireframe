@@ -9,7 +9,7 @@ use ProcessWire\Wire;
  *
  * @property \ProcessWire\Module|null $renderer Renderer object.
  *
- * @version 0.1.3
+ * @version 0.1.4
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -54,7 +54,14 @@ trait RendererTrait {
      * @return \ProcessWire\Module|null Wireframe renderer module or null.
      */
     final public function getRenderer(): ?\ProcessWire\Module {
-        return $this->renderer ?: (!$this instanceof View ? $this->wire('view')->getRenderer() : null);
+        return $this->renderer
+            ?: (!$this instanceof View
+                ? ($this->wire('view') !== null
+                    ? $this->wire('view')->getRenderer()
+                    : null
+                )
+                : null
+            );
     }
 
 }
