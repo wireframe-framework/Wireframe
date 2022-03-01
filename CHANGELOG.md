@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.1] - 2022-03-01
+
+### Fixed
+- Second argument to Partials::get() wasn't applicable unless partial name had at least one slash; this has now been fixed.
+
 ## [0.22.0] - 2022-03-01
 
 ### Added

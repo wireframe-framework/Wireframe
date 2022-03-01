@@ -70,14 +70,14 @@ class Partials extends \ProcessWire\WireArray {
      */
     public function get($key) {
         $partial = null;
-        if (\is_string($key) && strpos($key, '/')) {
-            $subkeys = array_filter(explode('/', $key));
-            if (!empty($subkeys)) {
-                foreach ($subkeys as $subkey) {
-                    $partial = ($partial ?? $this)->data[$subkey] ?? null;
+        if (\is_string($key)) {
+            $names = strpos($key, '/') ? array_filter(explode('/', $key)) : [$key];
+            if (!empty($names)) {
+                foreach ($names as $name) {
+                    $partial = ($partial ?? $this)->data[$name] ?? null;
                     if ($partial === null) break;
                 }
-                if (\func_num_args() > 1) {
+                if ($partial !== null && \func_num_args() > 1) {
                     $arguments = \func_get_arg(1);
                     if (\is_array($arguments)) {
                         return $partial->render($arguments);
