@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.0] - 2022-03-01
+
+### Added
+- New method Partials::get('path/to/partial') for getting a partial with path. If an array is provided as second argument for this method, rendered markup is returned instead of a Partial object.
+- New method Partials::render('path/to/partial', $args) for returning the rendered markup of a Partial object.
+
 ## [0.21.3] - 2022-02-27
 
 ### Fixed

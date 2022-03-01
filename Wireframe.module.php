@@ -14,7 +14,7 @@ namespace ProcessWire;
  * @method static string|Page|NullPage page($source, $args = []) Static getter (factory) method for Pages.
  * @method static string|null partial(string $partial_name, array $args = []) Static getter (factory) method for Partials.
  *
- * @version 0.21.3
+ * @version 0.22.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -669,7 +669,14 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         }
 
         // priority for different sources: 1) View object, 2) Page object, 3) GET param, 4) "default"
-        $this->view->setView(basename($this->view->getView() ?: ($this->page->getView() ?: ($this->getViewFromInput() ?: 'default'))));
+        $this->view->setView(basename(
+            $this->view->getView()
+                ?: ($this->page->getView()
+                    ?: ($this->getViewFromInput()
+                        ?: 'default'
+                    )
+                )
+        ));
 
         return $this;
     }
