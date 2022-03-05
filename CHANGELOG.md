@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.2] - 2022-03-05
+
+### Fixed
+- Issue in Wireframe::partial() where dot was missing from before extension when using ProcessWire's native template extension.
+
 ## [0.22.1] - 2022-03-01
 
 ### Fixed

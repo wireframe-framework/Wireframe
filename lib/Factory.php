@@ -14,7 +14,7 @@ use function ProcessWire\wire;
 /**
  * Factory class for Wireframe
  *
- * @version 0.2.2
+ * @version 0.2.3
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -306,6 +306,9 @@ class Factory {
                 $ext = $config->templateExtension;
                 if (\is_array($config->wireframe) && !empty($config->wireframe->ext)) {
                     $ext = $config->wireframe->ext;
+                }
+                if (mb_substr($ext, 0, 1) !== '.') {
+                    $ext = '.' . $ext;
                 }
             }
         }
