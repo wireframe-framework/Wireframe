@@ -279,7 +279,7 @@ class Factory {
     public static function partial(string $partial_name, array $args = null) {
 
         // validate partial name
-        if (\strpos($partial_name, '..') !== false) {
+        if (strpos($partial_name, '..') !== false) {
             throw new WireException(sprintf(
                 'Partial name is invalid (%s)',
                 $partial_name
@@ -310,16 +310,16 @@ class Factory {
         if (empty($partials_path)) {
             throw new WireException('Partials path is undefined.');
         }
-        if (strpos($partials_path, $config->paths->site) !== 0) {
+        if (strpos($partials_path, $config->paths->site) !== 0 || strpos($partials_path, '..') !== false) {
             throw new WireException(sprintf(
-                'Partials path is invalid (%s). Path must be within site directory.',
+                'Partials path is invalid (%s). Specify an absolute path within site directory.',
                 $partials_path
             ));
         }
 
         // get name and ext for partial
         $ext = '';
-        if (\strpos($partial_name, '.') !== false) {
+        if (strpos($partial_name, '.') !== false) {
             $ext_pos = strrpos($partial_name, '.');
             $ext = substr($partial_name, $ext_pos);
             $partial_name = substr($partial_name, 0, $ext_pos);
