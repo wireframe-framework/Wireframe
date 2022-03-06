@@ -7,7 +7,7 @@ namespace Wireframe;
  *
  * This class holds Partial objects and provides method access to rendering them with optional arguments.
  *
- * @version 0.5.0
+ * @version 0.6.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -64,28 +64,44 @@ class Partials extends \ProcessWire\WireArray {
      * @param int|string|array $key
      * @param array $arguments Optional array of arguments
      * @return WireData|Page|mixed|array|null Value of item requested, or null if it doesn't exist.
-     * @throws WireException
      *
      * @see \ProcessWire\WireArray::get()
      */
     public function get($key) {
         $partial = null;
         if (\is_string($key)) {
-            $names = strpos($key, '/') ? array_filter(explode('/', $key)) : [$key];
-            if (!empty($names)) {
-                foreach ($names as $name) {
-                    $partial = ($partial ?? $this)->data[$name] ?? null;
-                    if ($partial === null) break;
-                }
-                if ($partial !== null && \func_num_args() > 1) {
-                    $arguments = \func_get_arg(1);
-                    if (\is_array($arguments)) {
-                        return $partial->render($arguments);
+            if (strpos($key, '::') !== false) {
+                $partial = $this->getByPath($key);
+            } else {
+                $names = strpos($key, '/') ? array_filter(explode('/', $key)) : [$key];
+                if (!empty($names)) {
+                    foreach ($names as $name) {
+                        $partial = ($partial ?? $this)->data[$name] ?? null;
+                        if ($partial === null) break;
                     }
+                }
+            }
+            if ($partial !== null && \func_num_args() > 1) {
+                $arguments = \func_get_arg(1);
+                if (\is_array($arguments)) {
+                    return $partial->render($arguments);
                 }
             }
         }
         return $partial ?? parent::get($key);
+    }
+
+    /**
+     * Get partial by path
+     *
+     * Behaviour required here is identical with static factory method Wireframe::partial(), implemented in the Factory
+     * class, so we'll use said method directly.
+     *
+     * @param string $path
+     * @return Partial|null
+     */
+    protected function getByPath(string $path) {
+        return Factory::partial($path);
     }
 
     /**

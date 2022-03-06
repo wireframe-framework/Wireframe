@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.0] - 2022-03-06
+
+### Added
+- Support for view namespaces, initially implemented for partial files only. Namespaces are mapped via the view_namespaces config setting to directories within site path, after which files from said directories can be fetched with $partials->get('namespace::partial'), $partials->render('namespace::partial'), or Wireframe::partial('namespace::partial').
+
 ## [0.22.2] - 2022-03-05
 
 ### Fixed
