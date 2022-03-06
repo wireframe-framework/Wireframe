@@ -350,7 +350,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             //     'json',
             // ],
             // 'view_namespaces' => [
-            //     'sublayouts' => __DIR__ . 'sublayouts/',
+            //     'sublayouts' => $this->wire('config')->paths->templates . 'sublayouts/',
             // ],
             'paths' => [
                 'lib' => $this->wire('config')->paths->templates . "lib/",
