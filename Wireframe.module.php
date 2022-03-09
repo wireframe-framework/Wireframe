@@ -14,7 +14,7 @@ namespace ProcessWire;
  * @method static string|Page|NullPage page($source, $args = []) Static getter (factory) method for Pages.
  * @method static string|null partial(string $partial_name, array $args = []) Static getter (factory) method for Partials.
  *
- * @version 0.23.1
+ * @version 0.24.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -360,6 +360,9 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
                 'components' => $this->wire('config')->paths->templates . "components/",
                 'controllers' => $this->wire('config')->paths->templates . "controllers/",
             ],
+            'global_config_paths' => [
+                'partials',
+            ],
             'urls' => [
                 'dist' => $this->wire('config')->urls->assets . "dist/",
                 'resources' => $this->wire('config')->urls->templates . "resources/",
@@ -392,9 +395,9 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             );
         }
 
-        // if partials path is being defined, also set or update the partials path stored in global config settings
-        if (isset($paths['partials'])) {
-            $this->wire('config')->paths->set('partials', $paths['partials']);
+        // set or update paths stored in the global ProcessWire Config object
+        foreach ($this->config['global_config_paths'] as $path) {
+            $this->wire('config')->paths->set($path, $paths[$path] ?? null);
         }
 
         // store paths locally as an object and add Wireframe namespaces to ProcessWire's class autoloader (namespaces

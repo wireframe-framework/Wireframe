@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.0] - 2022-03-08
+
+### Added
+- New config setting global_config_paths for defining which Wireframe paths get automtically added to ProcessWire's $config->paths config object.
+
 ## [0.23.1] - 2022-03-06
 
 ### Fixed
