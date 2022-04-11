@@ -10,7 +10,7 @@ use \ProcessWire\Wireframe;
  *
  * @internal This class is only intended for use within the Wireframe internals.
  *
- * @version 0.1.1
+ * @version 0.2.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -102,7 +102,7 @@ class Hooks extends \ProcessWire\Wire {
      * <?= $page->setLayout('another-layout')->render() ?>
      * ```
      *
-     * @param HookEvent $event The ProcessWire HookEvent object.
+     * @param HookEvent $event
      */
     protected function pageLayout(HookEvent $event) {
         if ($event->method === 'getLayout' || $event->method === 'layout' && !isset($event->arguments[0])) {
@@ -141,7 +141,7 @@ class Hooks extends \ProcessWire\Wire {
      * <?= $page->setView('home/json')->render() ?>
      * ```
      *
-     * @param HookEvent $event The ProcessWire HookEvent object.
+     * @param HookEvent $event
      */
     protected function pageView(HookEvent $event) {
         if ($event->method === 'getView' || $event->method === 'view' && !isset($event->arguments[0])) {
@@ -156,6 +156,7 @@ class Hooks extends \ProcessWire\Wire {
             $event->object = \Wireframe\Factory::page($event->object, [
                 'wireframe' => $this->wireframe,
             ]);
+            $event->object->addHookBefore('render', $this, 'isCacheablePage');
             $event->return = $event->object;
         }
     }
@@ -179,7 +180,7 @@ class Hooks extends \ProcessWire\Wire {
      * <?= $page->setViewTemplate('home')->render() ?>
      * ```
      *
-     * @param HookEvent $event The ProcessWire HookEvent object.
+     * @param HookEvent $event
      */
     protected function pageViewTemplate(HookEvent $event) {
         if ($event->method === 'getViewTemplate' || $event->method === 'viewTemplate' && !isset($event->arguments[0])) {
@@ -203,7 +204,7 @@ class Hooks extends \ProcessWire\Wire {
      * <?= $page->setController('home')->render() ?>
      * ```
      *
-     * @param HookEvent $event The ProcessWire HookEvent object.
+     * @param HookEvent $event
      */
     protected function pageController(HookEvent $event) {
         if ($event->method === 'getController') {
@@ -222,6 +223,19 @@ class Hooks extends \ProcessWire\Wire {
                 'wireframe' => $this->wireframe,
             ]);
             $event->return = $event->object;
+        }
+    }
+
+    /**
+     * This methods prevents pages being cached while being rendered using non-default view
+     *
+     * @param HookEvent $event
+     */
+    protected function isCacheablePage(HookEvent $event) {
+        if (!isset($event->arguments[0]['allowCache']) && $event->object->_wireframe_view && $event->object->_wireframe_view != 'default') {
+            $event->arguments(0, array_merge([
+                'allowCache' => false,
+            ], $event->arguments[0] ?? []));
         }
     }
 

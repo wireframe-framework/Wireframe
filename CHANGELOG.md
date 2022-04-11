@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.2] - 2022-04-11
+
+### Fixed
+- An issue where rendering pages with non-default view was unintentionally generating cached files if view had been set via Page::setView() or Page::view().
+
 ## [0.24.1] - 2022-03-14
 
 ### Added
