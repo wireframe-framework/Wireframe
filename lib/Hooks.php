@@ -174,15 +174,7 @@ class Hooks extends \ProcessWire\Wire {
         $original_view = $event->object->_wireframe_view;
         $original_view_template = $event->object->_wireframe_view_template;
         $event->object->_wireframe_layout = '';
-        $view = $event->arguments[0] ?? '';
-        if ($view !== '' && strpos($view, '/') !== false) {
-            list($view_template, $view) = explode('/', $view);
-            $event->object->_wireframe_view_template = $view_template;
-        }
-        $event->object->_wireframe_view = $view;
-        $event->object = \Wireframe\Factory::page($event->object, [
-            'wireframe' => $this->wireframe,
-        ]);
+        $event->object->setView($event->arguments[0]);
         $event->return = $event->object->render();
         $event->object->_wireframe_layout = $original_layout;
         $event->object->_wireframe_view = $original_view;
