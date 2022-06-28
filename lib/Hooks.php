@@ -10,7 +10,7 @@ use \ProcessWire\Wireframe;
  *
  * @internal This class is only intended for use within the Wireframe internals.
  *
- * @version 0.2.0
+ * @version 0.3.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -49,6 +49,9 @@ class Hooks extends \ProcessWire\Wire {
         $this->addHookMethod('Page::view', $this, 'pageView');
         $this->addHookMethod('Page::getView', $this, 'pageView');
         $this->addHookMethod('Page::setView', $this, 'pageView');
+
+        // helper method for rendering page with specified view
+        $this->addHookMethod('Page::renderView', $this, 'pageRenderView');
 
         // helper methods for getting or setting page view template
         $this->addHookMethod('Page::viewTemplate', $this, 'pageViewTemplate');
@@ -159,6 +162,31 @@ class Hooks extends \ProcessWire\Wire {
             $event->object->addHookBefore('render', $this, 'isCacheablePage');
             $event->return = $event->object;
         }
+    }
+
+    /**
+     * Render page with specified view
+     *
+     * @param HookEvent $event
+     */
+    protected function pageRenderView(HookEvent $event) {
+        $original_layout = $event->object->_wireframe_layout;
+        $original_view = $event->object->_wireframe_view;
+        $original_view_template = $event->object->_wireframe_view_template;
+        $event->object->_wireframe_layout = '';
+        $view = $event->arguments[0] ?? '';
+        if ($view !== '' && strpos($view, '/') !== false) {
+            list($view_template, $view) = explode('/', $view);
+            $event->object->_wireframe_view_template = $view_template;
+        }
+        $event->object->_wireframe_view = $view;
+        $event->object = \Wireframe\Factory::page($event->object, [
+            'wireframe' => $this->wireframe,
+        ]);
+        $event->return = $event->object->render();
+        $event->object->_wireframe_layout = $original_layout;
+        $event->object->_wireframe_view = $original_view;
+        $event->object->_wireframe_view_template = $original_view_template;
     }
 
     /**

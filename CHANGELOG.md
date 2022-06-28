@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.0] - 2022-06-29
+
+### Added
+- New method View::renderView() for rendering View with specific view file, without layout.
+- New method Page::renderView() for rendering Page with specific view file, without layout.
+
+### Fixed
+- Malformed sprintf statement for exceptions thrown by View::setViewsPath().
+
 ## [0.24.2] - 2022-04-11
 
 ### Fixed
