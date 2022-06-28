@@ -10,6 +10,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fixed an issue where calling on() for component did not trigger emitted/queued events as intended.
 
+## [0.24.2] - 2022-04-11
+
+### Fixed
+- An issue where rendering pages with non-default view was unintentionally generating cached files if view had been set via Page::setView() or Page::view().
+
+## [0.24.1] - 2022-03-14
+
+### Added
+- Resources added to paths (in addition to urls) for convenience.
+
+## [0.24.0] - 2022-03-08
+
+### Added
+- New config setting global_config_paths for defining which Wireframe paths get automatically added to ProcessWire's $config->paths config object.
+
+## [0.23.1] - 2022-03-06
+
+### Fixed
+- Additional validation rule to prevent relative view namespace root paths.
+
+## [0.23.0] - 2022-03-06
+
+### Added
+- Support for view namespaces, initially implemented for partial files only. Namespaces are mapped via the view_namespaces config setting to directories within site path, after which files from said directories can be fetched with $partials->get('namespace::partial'), $partials->render('namespace::partial'), or Wireframe::partial('namespace::partial').
+
+## [0.22.2] - 2022-03-05
+
+### Fixed
+- Issue in Wireframe::partial() where dot was missing from before extension when using ProcessWire's native template extension.
+
+## [0.22.1] - 2022-03-01
+
+### Fixed
+- Second argument to Partials::get() wasn't applicable unless partial name had at least one slash; this has now been fixed.
+
+## [0.22.0] - 2022-03-01
+
+### Added
+- New method Partials::get('path/to/partial') for getting a partial with path. If an array is provided as second argument for this method, rendered markup is returned instead of a Partial object.
+- New method Partials::render('path/to/partial', $args) for returning the rendered markup of a Partial object.
+
+## [0.21.3] - 2022-02-27
+
+### Fixed
+- Fixes and improvements to make it easier to use components (and other Wireframe features) outside the context of Wireframe rendered templates.
+
 ## [0.21.2] - 2021-09-05
 
 ### Fixed

@@ -52,7 +52,7 @@ for those templates.
 - An introduction to Wireframe and output strategies in general: https://wireframe-framework.com/about/
 - A more in-depth getting started guide for Wireframe: https://wireframe-framework.com/getting-started/
 - Wireframe documentation: https://wireframe-framework.com/docs/
-- Support forum: https://processwire.com/talk/topic/21893-wireframe/
+- Support forum: https://processwire.com/talk/forum/61-wireframe/
 
 ## License
 

@@ -2,13 +2,19 @@
 
 namespace Wireframe;
 
-use ProcessWire\{HookEvent, NullPage, Page, WireException, Wireframe};
+use ProcessWire\ProcessWire;
+use ProcessWire\HookEvent;
+use ProcessWire\NullPage;
+use ProcessWire\Page;
+use ProcessWire\WireException;
+use ProcessWire\Wireframe;
+
 use function ProcessWire\wire;
 
 /**
  * Factory class for Wireframe
  *
- * @version 0.2.1
+ * @version 0.3.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -52,6 +58,11 @@ class Factory {
      * @throws WireException if Component class isn't found.
      */
     public static function component(string $component_name, array $args = []): \Wireframe\Component {
+
+        // make sure that basic Wireframe features have been initialized
+        if (!Wireframe::isInitialized(wire()->instanceID)) {
+            wire()->modules->get('Wireframe')->initOnce();
+        }
 
         $component_class = '\Wireframe\Component\\' . $component_name;
 
@@ -150,8 +161,13 @@ class Factory {
      */
     public static function page($source, $args = []) {
 
-        // ProcessWire instance
+        /** @var ProcessWire */
         $wire = $args['wire'] ?? ($source instanceof Page ? $source->getWire() : wire());
+
+        // make sure that basic Wireframe features have been initialized
+        if (!Wireframe::isInitialized($wire->instanceID)) {
+            ($args['wireframe'] ?? $wire->modules->get('Wireframe'))->initOnce();
+        }
 
         // get a page
         $page = null;
@@ -238,11 +254,6 @@ class Factory {
             }
         }
 
-        // make sure that basic Wireframe features have been intiialized
-        if (!Wireframe::isInitialized($wire->instanceID)) {
-           ($args['wireframe'] ?? $wire->modules->get('Wireframe'))->initOnce();
-        }
-
         // set view, layout, and view template
         if ($args['layout'] != 'default') $page->setLayout($args['layout']);
         if ($args['view'] != 'default') $page->setView($args['view']);
@@ -261,22 +272,54 @@ class Factory {
      * @since 0.1.0 (Wireframe 0.10.0)
      *
      * @throws WireException if partial name is invalid.
-     * @throws WireException if partials path isn't found from config.
+     * @throws WireException if namespaced partial name is invalid.
+     * @throws WireException if partials path is undefined.
+     * @throws WireException if partials path is invalid.
      */
     public static function partial(string $partial_name, array $args = null) {
-        if (\strpos($partial_name, '..') !== false) {
+
+        // validate partial name
+        if (strpos($partial_name, '..') !== false) {
             throw new WireException(sprintf(
                 'Partial name is invalid (%s)',
                 $partial_name
             ));
         }
+
+        // make sure that basic Wireframe features have been initialized
+        if (!Wireframe::isInitialized(wire()->instanceID)) {
+            wire()->modules->get('Wireframe')->initOnce();
+        }
+
+        // get root path for partials
         $config = wire('config');
         $partials_path = $config->paths->partials;
-        if (empty($partials_path)) {
-            throw new WireException('Partials path not found from config.');
+        if (strpos($partial_name, '::')) {
+            list($namespace, $partial_name) = explode('::', $partial_name);
+            if (empty($partial_name)) {
+                throw new WireException(sprintf(
+                    'Namespaced partial name is invalid (%s::%s)',
+                    $namespace,
+                    $partial_name
+                ));
+            }
+            if (strlen($namespace) && \is_array($config->wireframe)) {
+                $partials_path = $config->wireframe['view_namespaces'][$namespace] ?? '';
+            }
         }
+        if (empty($partials_path)) {
+            throw new WireException('Partials path is undefined.');
+        }
+        if (strpos($partials_path, $config->paths->site) !== 0 || strpos($partials_path, '..') !== false) {
+            throw new WireException(sprintf(
+                'Partials path is invalid (%s). Specify an absolute path within site directory.',
+                $partials_path
+            ));
+        }
+
+        // get name and ext for partial
         $ext = '';
-        if (\strpos($partial_name, '.') !== false) {
+        if (strpos($partial_name, '.') !== false) {
             $ext_pos = strrpos($partial_name, '.');
             $ext = substr($partial_name, $ext_pos);
             $partial_name = substr($partial_name, 0, $ext_pos);
@@ -284,11 +327,16 @@ class Factory {
             $ext = $config->_wireframeTemplateExtension;
             if (!$ext) {
                 $ext = $config->templateExtension;
-                if (\is_array($config->wireframe) && !empty($config->wireframe->ext)) {
-                    $ext = $config->wireframe->ext;
+                if (\is_array($config->wireframe) && !empty($config->wireframe['ext'])) {
+                    $ext = $config->wireframe['ext'];
+                }
+                if (mb_substr($ext, 0, 1) !== '.') {
+                    $ext = '.' . $ext;
                 }
             }
         }
+
+        // instantiate and return/render partial
         $partial = new Partial([
             \ltrim($ext, '.') => $partials_path . $partial_name . $ext,
         ]);
