@@ -11,7 +11,7 @@ namespace Wireframe;
  * @property ViewPlaceholders|null $placeholders ViewPlaceholders object.
  * @property Partials|null $partials Object containing partial paths.
  *
- * @version 0.8.2
+ * @version 0.9.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -85,6 +85,29 @@ class View extends \ProcessWire\TemplateFile {
         if ($set_page) {
             unset($this->page);
         }
+        return $out;
+    }
+
+    /**
+     * Render specified view file
+     *
+     * @param string $view View file name
+     * @return string Rendered markup for the View.
+     *
+     * @throws Exception if provided view file cannot be located.
+     */
+    public function renderView(string $view): string {
+        $original_layout = $this->getLayout();
+        $original_view = $this->getView();
+        $this->setLayout(null)->setView($view);
+        if ($this->getView() !== $view) {
+            throw new \Exception(sprintf(
+                'View not found: "%s"',
+                $view
+            ));
+        }
+        $out = $this->render();
+        $this->setLayout($original_layout)->setView($original_view);
         return $out;
     }
 
@@ -354,7 +377,7 @@ class View extends \ProcessWire\TemplateFile {
     public function setViewsPath(string $views_path): View {
         if (!\is_dir($views_path)) {
             throw new \Exception(sprintf(
-                'Missing or unreadable path to the views directory: "%"',
+                'Missing or unreadable path to the views directory: "%s"',
                 $views_path
             ));
         }
