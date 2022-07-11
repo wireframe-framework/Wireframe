@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.0] - 2022-07-11
+
+### Added
+- New method ComponentView::getComponent() for accessing the Component instance from within comnponent view.
+
 ### Fixed
 - Fixed an issue where calling on() for component did not trigger emitted/queued events as intended.
 

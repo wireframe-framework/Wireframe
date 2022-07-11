@@ -8,7 +8,7 @@ namespace Wireframe;
  * This class is a wrapper for the ProcessWire TemplateFile class with some additional features and
  * the Wireframe namespace.
  *
- * @version 0.1.0
+ * @version 0.2.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -72,6 +72,15 @@ class ComponentView extends \ProcessWire\TemplateFile {
             $value = $this->getFromComponent($key);
         }
         return $value;
+    }
+
+    /**
+     * Getter method for the Component class
+     *
+     * @return Component Component instance
+     */
+    public function getComponent(): Component {
+        return $this->getViewData('component');
     }
 
     /**
