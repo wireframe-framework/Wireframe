@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.1] - 2022-07-11
+
+### Changed
+- Use TracyDebugger::COLOR_NORMAL for Wireframe Tracy Debugger panel icon and help icon fill color.
+
 ## [0.26.0] - 2022-07-11
 
 ### Added
