@@ -14,7 +14,7 @@ use function ProcessWire\wire;
 /**
  * Factory class for Wireframe
  *
- * @version 0.3.0
+ * @version 0.3.1
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -162,7 +162,7 @@ class Factory {
     public static function page($source, $args = []) {
 
         /** @var ProcessWire */
-        $wire = $args['wire'] ?? ($source instanceof Page ? $source->getWire() : wire());
+        $wire = $args['wire'] ?? ($source instanceof Page ? $source->getWire() ?? wire() : wire());
 
         // make sure that basic Wireframe features have been initialized
         if (!Wireframe::isInitialized($wire->instanceID)) {

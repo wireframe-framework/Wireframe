@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.2] - 2022-08-31
+
+### Fixed
+- Fixed an issue where Wireframe::page() wasn't handling "non-wired" Page objects properly, resulting in a notice.
+
 ## [0.26.1] - 2022-07-11
 
 ### Changed
