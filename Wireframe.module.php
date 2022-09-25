@@ -14,7 +14,7 @@ namespace ProcessWire;
  * @method static string|Page|NullPage page($source, $args = []) Static getter (factory) method for Pages.
  * @method static string|null partial(string $partial_name, array $args = []) Static getter (factory) method for Partials.
  *
- * @version 0.26.2
+ * @version 0.27.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -178,20 +178,22 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             return $this;
         }
 
-        // if page, view, or controller are already set, stash them
-        if ($this->page || $this->view || $this->controller) {
+        // if page, view, controller, or data are already set, stash them
+        if ($this->page || $this->view || $this->controller || !empty($this->data)) {
             $this->stash[] = [
                 'page' => $this->page,
                 'view' => $this->view,
                 'controller' => $this->controller,
+                'data' => $this->data,
             ];
-            $this->view = null;
-            $this->controller = null;
             if ($this->page && $this->page->id === $current_page->id && $current_page->_wireframe_controller !== null) {
                 // if current page is the same as the page being stashed and it has controller defined, discard it;
                 // we've already stashed the controller, so there's no point in leaving a reference to it in place.
                 $current_page->_wireframe_controller = null;
             }
+            $this->view = null;
+            $this->controller = null;
+            $this->data = [];
         }
 
         // set current page
@@ -779,10 +781,14 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         $ext = $this->ext;
         $controller = $view->getController() ?: $this->getController($this->page);
 
+        // page data (for cache key)
+        $page_data = $this->page->data();
+
         // attempt to return prerendered value from cache
         $cache_key = implode(':', [
             'render',
             $this->page->id,
+            empty($page_data) ? '' : md5(json_encode($page_data)),
             $this->settings_hash,
             empty($data) ? '' : md5(json_encode($data)),
             $view->getTemplate(),
@@ -848,6 +854,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             $this->page = $stashed_context['page'];
             $this->view = $stashed_context['view'];
             $this->controller = $stashed_context['controller'];
+            $this->data = $stashed_context['data'];
             if ($this->page && $this->controller) {
                 $this->page->_wireframe_controller = $this->controller;
             }
