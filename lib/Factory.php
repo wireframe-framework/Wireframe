@@ -14,7 +14,7 @@ use function ProcessWire\wire;
 /**
  * Factory class for Wireframe
  *
- * @version 0.3.1
+ * @version 0.3.2
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -226,31 +226,41 @@ class Factory {
             $page->_wireframe_filename = $args['parent']->template->altFilename;
         }
         if (empty($page->template->altFilename) || $page->template->altFilename != $page->_wireframe_filename) {
-            // due to the way PageRender works (calling Page::output(true) internally), a template file check occurs
-            // even if the filename argument is used; we detect this situation in order to avoid unnecessary errors.
-            $page_has_no_file = empty($page->template->altFilename) && (empty($page->template->filename) || !is_file($page->template->filename));
-            $page->addHookBefore('render', function(HookEvent $event) use ($args, $page_has_no_file) {
-                if (!empty($event->object->_wireframe_filename)) {
-                    $options = $event->arguments[0] ?? [];
-                    if (empty($options['filename'])) {
-                        $options['filename'] = $event->object->_wireframe_filename . $args['ext'];
-                        $event->arguments(0, $options);
-                    }
-                    if ($page_has_no_file) {
-                        $event->object->template->_altFilename = $event->object->template->altFilename;
-                        $event->object->template->altFilename = $event->object->_wireframe_filename;
-                    }
-                }
-            });
-            if ((!empty($args['wireframe']) && !empty($args['parent'])) || $page_has_no_file) {
-                $page->addHookAfter('render', function(HookEvent $event) use ($args, $page_has_no_file) {
-                    if (!empty($event->object->_wireframe_page)) {
-                        $args['wireframe']->page = $args['parent'];
-                    }
-                    if ($page_has_no_file) {
-                        $event->object->template->altFilename = $event->object->template->_altFilename;
+
+            // check if Page has hookable render method
+            // note: this may need further adjustments to support other Page type objects
+            $page_has_hookable_render_method = !$page instanceof \ProcessWire\RepeaterMatrixPage;
+
+            if ($page_has_hookable_render_method) {
+
+                // due to the way PageRender works (calling Page::output(true) internally), a template file check occurs
+                // even if the filename argument is used; we detect this situation in order to avoid unnecessary errors.
+                $page_has_no_file = empty($page->template->altFilename) && (empty($page->template->filename) || !is_file($page->template->filename));
+
+                $page->addHookBefore('render', function(HookEvent $event) use ($args, $page_has_no_file) {
+                    if (!empty($event->object->_wireframe_filename)) {
+                        $options = $event->arguments[0] ?? [];
+                        if (empty($options['filename'])) {
+                            $options['filename'] = $event->object->_wireframe_filename . $args['ext'];
+                            $event->arguments(0, $options);
+                        }
+                        if ($page_has_no_file) {
+                            $event->object->template->_altFilename = $event->object->template->altFilename;
+                            $event->object->template->altFilename = $event->object->_wireframe_filename;
+                        }
                     }
                 });
+
+                if ((!empty($args['wireframe']) && !empty($args['parent'])) || $page_has_no_file) {
+                    $page->addHookAfter('render', function(HookEvent $event) use ($args, $page_has_no_file) {
+                        if (!empty($event->object->_wireframe_page)) {
+                            $args['wireframe']->page = $args['parent'];
+                        }
+                        if ($page_has_no_file) {
+                            $event->object->template->altFilename = $event->object->template->_altFilename;
+                        }
+                    });
+                }
             }
         }
 
