@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.27.1] - 2023-10-12
+
+### Changed
+- Improve compatibility with RepeaterMatrix module by disabling unsupported render hook(s).
+- Improve performance of some file operations by applying GLOB_NOSORT.
+
 ## [0.27.0] - 2022-09-26
 
 ### Changed
