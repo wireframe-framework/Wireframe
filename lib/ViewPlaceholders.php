@@ -127,7 +127,7 @@ class ViewPlaceholders {
         // view files usable as placeholders
         $files_path = $this->view->getViewData('views_path') . $this->view->getViewData('template');
         if (\is_dir($files_path)) {
-            foreach (\glob($files_path. '/*') as $file) {
+            foreach (\glob($files_path . '/*', \GLOB_NOSORT) as $file) {
                 $name = \basename($file);
                 $ext_pos = \strpos($name, ".");
                 if ($ext_pos === 0 || $ext_pos === false) continue;

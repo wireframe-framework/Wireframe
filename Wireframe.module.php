@@ -14,7 +14,7 @@ namespace ProcessWire;
  * @method static string|Page|NullPage page($source, $args = []) Static getter (factory) method for Pages.
  * @method static string|null partial(string $partial_name, array $args = []) Static getter (factory) method for Partials.
  *
- * @version 0.27.0
+ * @version 0.27.1
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -1067,7 +1067,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             $files = $this->cache[$cache_key] ?? [];
         }
         if (!$use_cache || empty($files)) {
-            foreach (\glob($path . '*') as $file) {
+            foreach (\glob($path . '*', \GLOB_NOSORT) as $file) {
                 $name = \basename($file);
                 if (\strpos($name, ".") === 0) continue;
                 if (\is_dir($file)) {

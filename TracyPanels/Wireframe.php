@@ -291,7 +291,7 @@ class WireframePanel extends BasePanel {
         // Component
         $available_components = array_map(function($component) {
             return basename($component, '.php');
-        }, glob($this->wireframe->getConfig()['paths']['components'] . '*.php'));
+        }, \glob($this->wireframe->getConfig()['paths']['components'] . '*.php', \GLOB_NOSORT));
         $out .= $this->renderInput('Component', 'component', 'select', 'components', $available_components);
 
         // Partial
