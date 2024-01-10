@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.0] - 2024-01-10
+
+### Added
+- Page::renderView() now accepts an array of options as second argument, behaving same as Page::render() when passed an array of options.
+
 ## [0.27.1] - 2023-10-12
 
 ### Changed
