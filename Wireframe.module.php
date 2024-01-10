@@ -14,7 +14,7 @@ namespace ProcessWire;
  * @method static string|Page|NullPage page($source, $args = []) Static getter (factory) method for Pages.
  * @method static string|null partial(string $partial_name, array $args = []) Static getter (factory) method for Partials.
  *
- * @version 0.28.0
+ * @version 0.29.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -853,6 +853,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             $stashed_context = array_pop($this->stash);
             $this->page = $stashed_context['page'];
             $this->view = $stashed_context['view'];
+            $this->wire('view', $this->view);
             $this->controller = $stashed_context['controller'];
             $this->data = $stashed_context['data'];
             if ($this->page && $this->controller) {

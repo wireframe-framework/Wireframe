@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.0] - 2024-01-10
+
+### Added
+- New PartialView class that extends TemplateFile core class.
+
+### Fixed
+- Fixed an issue where rendering page within page did not properly restore the $view API variable to the state it was in before rendering said page.
+
 ## [0.28.0] - 2024-01-10
 
 ### Added

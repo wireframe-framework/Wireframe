@@ -21,6 +21,13 @@ class Partial extends \ProcessWire\Wire {
     protected $filenames = [];
 
     /**
+     * Partial View
+     *
+     * @var PartialView
+     */
+    protected $partial_view;
+
+    /**
      * Constructor
      *
      * @param array $filenames Partial filenames as an assoc array (ext => filename).
@@ -72,10 +79,12 @@ class Partial extends \ProcessWire\Wire {
         if (empty($filename)) {
             return '';
         }
-        $template = $this->wire(new \ProcessWire\TemplateFile());
-        $template->setFilename($filename);
-        $template->data($args);
-        return $template->render() ?: '';
+        if (!$this->partial_view) {
+            $this->partial_view = $this->wire(new PartialView());
+        }
+        $this->partial_view->setFilename($filename);
+        $this->partial_view->data($args);
+        return $this->partial_view->render() ?: '';
     }
 
     /**
