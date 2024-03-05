@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.1] - 2024-03-05
+
+### Fixed
+- PHP deprecation warning from passing null to basename().
+
 ## [0.29.0] - 2024-01-10
 
 ### Added

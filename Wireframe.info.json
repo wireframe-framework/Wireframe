@@ -1,7 +1,7 @@
 {
     "title": "Wireframe",
     "summary": "Wireframe is an output framework for ProcessWire CMS/CMF.",
-    "version": "0.29.0",
+    "version": "0.29.1",
     "author": "Teppo Koivula",
     "href": "https://wireframe-framework.com",
     "requires": [

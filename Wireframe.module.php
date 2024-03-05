@@ -14,7 +14,7 @@ namespace ProcessWire;
  * @method static string|Page|NullPage page($source, $args = []) Static getter (factory) method for Pages.
  * @method static string|null partial(string $partial_name, array $args = []) Static getter (factory) method for Partials.
  *
- * @version 0.29.0
+ * @version 0.29.1
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -826,7 +826,9 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
                 $view->setContext('view');
                 $output = $view->render();
             }
-            if ($filename = basename($view->getLayout())) {
+            $layout = $view->getLayout();
+            $filename = $layout ? basename($layout) : null;
+            if ($filename) {
                 // layouts make it possible to define a common base structure for multiple otherwise separate template
                 // and view files (DRY)
                 $layout_filename = $paths->layouts . $filename . $ext;
