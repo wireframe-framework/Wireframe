@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.2] - 2024-05-30
+
+### Fixed
+- PHP 8.2 deprecation errors resulting from dynamic ViewData properties.
+
 ## [0.29.1] - 2024-03-05
 
 ### Fixed

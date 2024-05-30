@@ -9,7 +9,7 @@ namespace Wireframe;
  *
  * @internal This class is only intended for use within the Wireframe internals.
  *
- * @version 0.1.0
+ * @version 0.1.1
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -21,6 +21,13 @@ final class ViewData {
      * @var Controller|null
      */
     public $controller;
+
+    /**
+     * Component instance
+     *
+     * @var Component|null
+     */
+    public $component;
 
     /**
      * View file name
@@ -49,6 +56,20 @@ final class ViewData {
      * @var string
      */
     public $views_path;
+
+    /**
+     * Path to the layouts directory
+     *
+     * @var string
+     */
+    public $layouts_path;
+
+    /**
+     * Rendering context
+     *
+     * @var string
+     */
+    public $context;
 
     /**
      * The extension for view, layout, and partial files
