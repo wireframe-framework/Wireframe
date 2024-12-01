@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.0] - 2024-12-01
+
+### Added
+- New method Wireframe::createDirectories() for adding Wireframe directories in code.
+
 ## [0.29.2] - 2024-05-30
 
 ### Fixed

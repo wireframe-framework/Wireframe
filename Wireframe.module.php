@@ -14,7 +14,7 @@ namespace ProcessWire;
  * @method static string|Page|NullPage page($source, $args = []) Static getter (factory) method for Pages.
  * @method static string|null partial(string $partial_name, array $args = []) Static getter (factory) method for Partials.
  *
- * @version 0.29.2
+ * @version 0.30.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -1143,6 +1143,88 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             return $this->wire(new $controller_class($page, $this->view));
         }
         return null;
+    }
+
+    /**
+     * Create directories
+     *
+     * This method is used for creating directories used by Wireframe. It's called from the module configuration screen,
+     * but can also be called in code if needed.
+     *
+     * @param array|null $keys Optional array of keys to create directories for, leave blank to create all directories.
+     * @return array Array of existing directories.
+     *
+     * @throws WireException if no directories are found.
+     * @throws WireException if an invalid path key is provided.
+     * @throws WireException if a directory can't be created.
+     */
+    public function createDirectories(?array $keys = null): array {
+
+        $paths = $this->getDirectoryPaths();
+        if (empty($paths)) {
+            throw new WireException(
+                $this->_('No directories found, possible configuration error. Please check your site config.')
+            );
+        }
+
+        $keys = $keys ?? array_keys((array) $paths);
+        $dirs = [];
+
+        foreach ($keys as $key) {
+            $path = $paths->$key ?? null;
+            if ($path === null) {
+                throw new WireException(sprintf(
+                    $this->_('Invalid path key: %s'),
+                    $key
+                ));
+            }
+            if (substr($path, 0, 2) === '@ ') {
+                $path = substr($path, 2);
+            }
+            if (\is_dir($path)) {
+                $dirs[$key] = $path;
+            } else {
+                $parent_dir = \dirname($path);
+                if (\is_writable($parent_dir)) {
+                    \ProcessWire\wireMkdir($path);
+                    if (\is_dir($path)) {
+                        $dirs[$key] = $path;
+                    }
+                } else {
+                    throw new WireException(sprintf(
+                        $this->_('Unable to create directory: %s (parent directory not writable)'),
+                        $path
+                    ));
+                }
+            }
+        }
+
+        return $dirs;
+    }
+
+    /**
+     * Get paths for the create directories feature
+     *
+     * @return \stdClass
+     */
+    protected function getDirectoryPaths(): \stdClass {
+
+        // get paths object
+        $paths = $this->paths;
+
+        // append relative URLs
+        $urls = $this->getConfig()['urls'] ?? [];
+        if (!empty($urls)) {
+            foreach ($urls as $key => $url) {
+                if (strpos($url, '/') !== 0) {
+                    // not a local path, skip
+                    continue;
+                }
+                $paths->$key = '@ ' . rtrim($this->wire('config')->paths->root, '/') . $url;
+            }
+        }
+
+        return $paths;
     }
 
 }

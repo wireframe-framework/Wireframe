@@ -9,7 +9,7 @@ use \ProcessWire\Wireframe;
 /**
  * Configuration helper for the Wireframe module
  *
- * @version 0.3.1
+ * @version 0.3.2
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -87,7 +87,7 @@ class Config extends \ProcessWire\Wire {
     protected function processCreateDirectoriesField(InputfieldCheckboxes $field): InputfieldCheckboxes {
 
         // get an array of paths and bail out early if the paths array is empty
-        $paths = $this->getPaths();
+        $paths = $this->wireframe->getDirectoryPaths();
         if (empty($paths)) {
             $field->notes = $this->_('No directories found, possible configuration error. Please check your site config.');
             return $field;
@@ -123,7 +123,7 @@ class Config extends \ProcessWire\Wire {
                     if (\is_array($this->wire('input')->post->create_directories) && \in_array($key, $this->wire('input')->post->create_directories)) {
 
                         // attempt to create a directory
-                        $path_created = \ProcessWire\wireMkDir($real_path);
+                        $path_created = \ProcessWire\wireMkdir($real_path);
 
                         if ($path_created) {
 
@@ -160,31 +160,6 @@ class Config extends \ProcessWire\Wire {
         }
 
         return $field;
-    }
-
-    /**
-     * Get paths for the create directories feature
-     *
-     * @return \stdClass
-     */
-    protected function getPaths(): \stdClass {
-
-        // get paths object from Wireframe
-        $paths = $this->wireframe->paths;
-
-        // append relative URLs
-        $urls = $this->wireframe->getConfig()['urls'] ?? [];
-        if (!empty($urls)) {
-            foreach ($urls as $key => $url) {
-                if (strpos($url, '/') !== 0) {
-                    // not a local path, skip
-                    continue;
-                }
-                $paths->$key = '@ ' . rtrim($this->wire('config')->paths->root, '/') . $url;
-            }
-        }
-
-        return $paths;
     }
 
 }
