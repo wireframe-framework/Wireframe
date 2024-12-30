@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.0] - 2024-12-31
+
+### Added
+- Support for setting a view prefix with `$wireframe->setViewPrefix(string $view_prefix)`. This is a string that will be prepended to the filename when rendering a view and can be used (for an example) if a separate theme is required for a specific part of the site. For security reasons multiple dots are not allowed, as traversing the directory tree up might result in unexpected issues.
+- New methods Wireframe::getDefaultView() and Wireframe::getDefaultLayout() for getting default view and layout names. For now these will always be "default".
+
 ## [0.30.0] - 2024-12-01
 
 ### Added

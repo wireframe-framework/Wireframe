@@ -14,7 +14,7 @@ namespace ProcessWire;
  * @method static string|Page|NullPage page($source, $args = []) Static getter (factory) method for Pages.
  * @method static string|null partial(string $partial_name, array $args = []) Static getter (factory) method for Partials.
  *
- * @version 0.30.0
+ * @version 0.31.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -354,6 +354,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             // 'view_namespaces' => [
             //     'sublayouts' => $this->wire('config')->paths->templates . 'sublayouts/',
             // ],
+            'view_prefix' => '',
             'paths' => [
                 'lib' => $this->wire('config')->paths->templates . "lib/",
                 'views' => $this->wire('config')->paths->templates . "views/",
@@ -622,7 +623,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
 
         // initialize the View object (note: view file is set in the Wireframe::___setView() method)
         $this->view = $this->wire(new \Wireframe\View);
-        $this->view->setLayout($page_layout === null ? 'default' : $page_layout);
+        $this->view->setLayout($page_layout === null ? $this->getDefaultLayout() : $page_layout);
         $this->view->setTemplate($this->page->getViewTemplate());
         $this->view->setViewsPath($this->paths->views);
         $this->view->setLayoutsPath($this->paths->layouts);
@@ -677,12 +678,12 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             return $this;
         }
 
-        // priority for different sources: 1) View object, 2) Page object, 3) GET param, 4) "default"
+        // priority for different sources: 1) View object, 2) Page object, 3) GET param, 4) configurd default value
         $this->view->setView(basename(
             $this->view->getView()
                 ?: ($this->page->getView()
                     ?: ($this->getViewFromInput()
-                        ?: 'default'
+                        ?: $this->getDefaultView()
                     )
                 )
         ));
@@ -1225,6 +1226,55 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         }
 
         return $paths;
+    }
+
+    /**
+     * Get default view
+     *
+     * This method was added primarily with future additions in mind, as it's possible that the default view name may be
+     * made configurable or otherwise dynamic in the future.
+     *
+     * @return string
+     */
+    public function getDefaultView(): string {
+        return 'default';
+    }
+
+    /**
+     * Get default layout
+     *
+     * This method was added primarily with future additions in mind, as it's possible that the default layout name may be
+     * made configurable or otherwise dynamic in the future.
+     *
+     * @return string
+     */
+    public function getDefaultLayout(): string {
+        return 'default';
+    }
+
+    /**
+     * Get view prefix
+     *
+     * @return string
+     */
+    public function getViewPrefix(): string {
+        return $this->config['view_prefix'] ?? '';
+    }
+
+    /**
+     * Set view prefix
+     *
+     * @param string $view_prefix
+     */
+    public function setViewPrefix(string $view_prefix): void {
+        if ($view_prefix !== '' && strpos($view_prefix, '..') !== false) {
+            // remove consecutive dots from view prefix to prevent directory traversal (just in case)
+            $view_prefix = preg_replace('/\.{2,}/', '.', $view_prefix);
+        }
+        $this->config['view_prefix'] = $view_prefix;
+        if ($this->view) {
+            $this->view->setView($this->view->getView());
+        }
     }
 
 }

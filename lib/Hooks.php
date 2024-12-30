@@ -252,7 +252,7 @@ class Hooks extends \ProcessWire\Wire {
      * @param HookEvent $event
      */
     protected function isCacheablePage(HookEvent $event) {
-        if (!isset($event->arguments[0]['allowCache']) && $event->object->_wireframe_view && $event->object->_wireframe_view != 'default') {
+        if (!isset($event->arguments[0]['allowCache']) && $event->object->_wireframe_view && $event->object->_wireframe_view != $this->wireframe->getDefaultView()) {
             $event->arguments(0, array_merge([
                 'allowCache' => false,
             ], $event->arguments[0] ?? []));

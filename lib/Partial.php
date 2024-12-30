@@ -5,7 +5,7 @@ namespace Wireframe;
 /**
  * Wireframe Partial
  *
- * @version 0.2.0
+ * @version 0.3.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -26,6 +26,16 @@ class Partial extends \ProcessWire\Wire {
      * @var PartialView
      */
     protected $partial_view;
+
+    /**
+     * A local instance of the Wireframe module
+     *
+     * Note: at least for now this gets populated automatically when needed, so it's not necessarily set at all times;
+     * this may change in the future in case we need to access Wireframe module in more places.
+     *
+     * @var \ProcessWire\Wireframe|null
+     */
+    protected $_wireframe = null;
 
     /**
      * Constructor
@@ -65,8 +75,15 @@ class Partial extends \ProcessWire\Wire {
             $ext = ltrim($renderer->getExt(), '.');
             $view_file = $this->filenames[$ext] ?? null;
             if (!empty($view_file) && \is_file($view_file)) {
+                $view_prefix = $this->getViewPrefix();
+                $view_file_with_prefix = $view_prefix == ''
+                    ? ''
+                    : \dirname($view_file) . '/' . $view_prefix . \basename($view_file);
                 /** @noinspection PhpUndefinedMethodInspection */
-                $partials_path = $this->wire('modules')->get('Wireframe')->getViewPaths()['partial'] ?? null;
+                if ($view_file_with_prefix != '' && \is_file($view_file_with_prefix)) {
+                    $view_file = $view_file_with_prefix;
+                }
+                $partials_path = $this->getPartialsPath();
                 if ($partials_path !== null && strpos($view_file, $partials_path) === 0) {
                     $view_file = substr($view_file, \strlen($partials_path));
                 }
@@ -75,14 +92,21 @@ class Partial extends \ProcessWire\Wire {
         }
 
         // fall back to built-in template file rendering
-        $filename = $this->filenames[$this->wire('config')->templateExtension] ?? null;
-        if (empty($filename)) {
+        $fallback_filename = $this->filenames[$this->wire('config')->templateExtension] ?? null;
+        if (empty($fallback_filename)) {
             return '';
+        }
+        $view_prefix = $this->getViewPrefix();
+        if ($view_prefix != '') {
+            $fallback_filename_with_prefix = \dirname($fallback_filename) . '/' . $view_prefix . \basename($fallback_filename);
+            if (\is_file($view_file)) {
+                $fallback_filename = $fallback_filename_with_prefix;
+            }
         }
         if (!$this->partial_view) {
             $this->partial_view = $this->wire(new PartialView());
         }
-        $this->partial_view->setFilename($filename);
+        $this->partial_view->setFilename($fallback_filename);
         $this->partial_view->data($args);
         return $this->partial_view->render() ?: '';
     }
@@ -107,6 +131,34 @@ class Partial extends \ProcessWire\Wire {
         $ext = $ext ?: $this->wire('config')->templateExtension;
         $filename = $this->filenames[$ext] ?? (array_values($this->filenames)[0] ?? '');
         return $with_ext ? $filename : substr($filename, 0, -strlen($ext)-1);
+    }
+
+    /**
+     * Get partials path
+     *
+     * @return string|null
+     *
+     * @internal
+     */
+    protected function getPartialsPath(): ?string {
+        if ($this->_wireframe === null) {
+            $this->_wireframe = $this->wire('modules')->get('Wireframe');
+        }
+        return $this->_wireframe->getViewPaths()['partial'] ?? null;
+    }
+
+    /**
+     * Get view prefix
+     *
+     * @return string View prefix
+     *
+     * @internal
+     */
+    protected function getViewPrefix(): string {
+        if ($this->_wireframe === null) {
+            $this->_wireframe = $this->wire('modules')->get('Wireframe');
+        }
+        return $this->_wireframe->getViewPrefix();
     }
 
     /**

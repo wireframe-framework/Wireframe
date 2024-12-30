@@ -11,7 +11,7 @@ namespace Wireframe;
  * @property ViewPlaceholders|null $placeholders ViewPlaceholders object.
  * @property Partials|null $partials Object containing partial paths.
  *
- * @version 0.9.0
+ * @version 0.10.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -25,6 +25,16 @@ class View extends \ProcessWire\TemplateFile {
      * @var ViewData
      */
     protected $_wireframe_view_data;
+
+    /**
+     * A local instance of the Wireframe module
+     *
+     * Note: at least for now this gets populated automatically when needed, so it's not necessarily set at all times;
+     * this may change in the future in case we need to access Wireframe module in more places.
+     *
+     * @var \ProcessWire\Wireframe|null
+     */
+    protected $_wireframe = null;
 
     /**
      * Partials object
@@ -288,17 +298,18 @@ class View extends \ProcessWire\TemplateFile {
         $page = $this->getViewData('page');
         $view = $this->getViewData('view');
         $view_filename = $this->getViewFilename();
+        $default_view = $this->getDefaultView();
 
         // if we're trying to use non-existing, non-default view file, fall back to default
-        if ($view != 'default' && !is_file($view_filename)) {
-            return $this->setView('default');
+        if ($view != $default_view && !\is_file($view_filename)) {
+            return $this->setView($default_view);
         }
 
         // set (template file) filename and handle page caching
-        if ($view != 'default' || \is_file($view_filename)) {
+        if ($view != $default_view || \is_file($view_filename)) {
             $this->setFilename($view_filename);
             if ($page->_wireframe_context != 'placeholder') {
-                if ($view != 'default' && !$this->allow_cache) {
+                if ($view != $default_view && !$this->allow_cache) {
                     // not using the default view, disable page cache
                     $this->wire('session')->PageRenderNoCachePage = $page->id;
                 } else if ($this->wire('session')->PageRenderNoCachePage === $page->id) {
@@ -398,6 +409,20 @@ class View extends \ProcessWire\TemplateFile {
     }
 
     /**
+     * Get view prefix
+     *
+     * @return string View prefix
+     *
+     * @internal
+     */
+    public function getViewPrefix(): string {
+        if ($this->_wireframe === null) {
+            $this->_wireframe = $this->wire('modules')->get('Wireframe');
+        }
+        return $this->_wireframe->getViewPrefix();
+    }
+
+    /**
      * Getter for complete view file path
      *
      * This method is used internally by setView() to define the TemplateFile filename.
@@ -417,14 +442,23 @@ class View extends \ProcessWire\TemplateFile {
         $views_path = $this->getViewData('views_path');
         $template = $this->getViewData('template');
         $view = $view ?: $this->getViewData('view');
+        $view_prefix = $this->getViewPrefix();
         $ext = $ext ?: $this->getViewData('ext');
 
         // validate filename and fall back to default file extension (.php) if necessary
-        $filename = $views_path . $template . '/' . $view . $ext;
+        $filename = $views_path . $template . '/' . $view_prefix . $view . $ext;
+        if (!\is_file($filename)) {
+            $filename = $views_path . $template . '/' . $view . $ext;
+        }
         if ($this->getViewData('ext') != '.php' && !\is_file($filename)) {
-            $fallback_filename = $views_path . $template . '/' . $view . '.php';
+            $fallback_filename = $views_path . $template . '/' . $view_prefix . $view . '.php';
             if (\is_file($fallback_filename)) {
                 $filename = $fallback_filename;
+            } else if ($view_prefix != '') {
+                $fallback_filename_without_prefix = $views_path . $template . '/' . $view . $ext;
+                if (\is_file($fallback_filename_without_prefix)) {
+                    $filename = $fallback_filename_without_prefix;
+                }
             }
         }
 
@@ -581,6 +615,18 @@ class View extends \ProcessWire\TemplateFile {
             'placeholders' => $this->placeholders,
             'partials' => $this->partials,
         ]);
+    }
+
+    /**
+     * Get default view
+     *
+     * @return string
+     */
+    protected function getDefaultView(): string {
+        if ($this->_wireframe === null) {
+            $this->_wireframe = $this->wire('modules')->get('Wireframe');
+        }
+        return $this->_wireframe->getDefaultView();
     }
 
 }
