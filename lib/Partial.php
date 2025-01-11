@@ -99,7 +99,7 @@ class Partial extends \ProcessWire\Wire {
         $view_prefix = $this->getViewPrefix();
         if ($view_prefix != '') {
             $fallback_filename_with_prefix = \dirname($fallback_filename) . '/' . $view_prefix . \basename($fallback_filename);
-            if (\is_file($view_file)) {
+            if (\is_file($fallback_filename_with_prefix)) {
                 $fallback_filename = $fallback_filename_with_prefix;
             }
         }
