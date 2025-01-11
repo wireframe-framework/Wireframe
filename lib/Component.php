@@ -93,7 +93,7 @@ abstract class Component extends \ProcessWire\WireData {
             $view_root = \dirname((new \ReflectionClass($this))->getFileName());
             $view_file = (strpos($view, '/') ? '' : '/' . $this->className())
                 . '/'
-                . ($view_prefix == '' ? $view : ltrim($view_prefix, '/'));
+                . ($view_prefix == '' ? $view : ltrim($view_prefix, '/') . $view);
             $view_file_without_prefix = $view_prefix == ''
                 ? ''
                 : (strpos($view, '/') ? '' : '/' . $this->className()) . '/' . $view;
