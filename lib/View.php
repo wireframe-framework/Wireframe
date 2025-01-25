@@ -454,19 +454,25 @@ class View extends \ProcessWire\TemplateFile {
         $views_path = $this->getViewData('views_path');
         $template = $this->getViewData('template');
         $view = $view ?: $this->getViewData('view');
-        $view_prefix = $this->getViewPrefix();
         $ext = $ext ?: $this->getViewData('ext');
+
+        // view prefix
+        $view_prefix = $this->getViewPrefix();
+        $view_prefix_is_strict = $view_prefix != '' && strpos($view_prefix, '!') === 0;
+        if ($view_prefix_is_strict) {
+            $view_prefix = substr($view_prefix, 1);
+        }
 
         // validate filename and fall back to default file extension (.php) if necessary
         $filename = $views_path . $template . '/' . $view_prefix . $view . $ext;
-        if (!\is_file($filename)) {
+        if (!\is_file($filename) && !$view_prefix_is_strict) {
             $filename = $views_path . $template . '/' . $view . $ext;
         }
         if ($this->getViewData('ext') != '.php' && !\is_file($filename)) {
             $fallback_filename = $views_path . $template . '/' . $view_prefix . $view . '.php';
             if (\is_file($fallback_filename)) {
                 $filename = $fallback_filename;
-            } else if ($view_prefix != '') {
+            } else if (!$view_prefix_is_strict && $view_prefix != '') {
                 $fallback_filename_without_prefix = $views_path . $template . '/' . $view . $ext;
                 if (\is_file($fallback_filename_without_prefix)) {
                     $filename = $fallback_filename_without_prefix;

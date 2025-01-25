@@ -68,26 +68,49 @@ class Partial extends \ProcessWire\Wire {
             $args = $args[0];
         }
 
+        // view prefix
+        $view_prefix = $this->getViewPrefix();
+        $view_prefix_is_strict = $view_prefix != '' && strpos($view_prefix, '!') === 0;
+        if ($view_prefix_is_strict) {
+            $view_prefix = substr($view_prefix, 1);
+        }
+
         // attempt to render markup using a renderer
         $renderer = $this->getRenderer();
         if ($renderer) {
-            /** @noinspection PhpUndefinedMethodInspection */
+
+            /**
+             * @noinspection PhpUndefinedMethodInspection
+             * @disregard P1013 as it's a false positive; renderers are expected to have getExt() method
+             */
             $ext = ltrim($renderer->getExt(), '.');
             $view_file = $this->filenames[$ext] ?? null;
             if (!empty($view_file) && \is_file($view_file)) {
-                $view_prefix = $this->getViewPrefix();
-                $view_file_with_prefix = $view_prefix == ''
-                    ? ''
-                    : \dirname($view_file) . '/' . $view_prefix . \basename($view_file);
-                /** @noinspection PhpUndefinedMethodInspection */
-                if ($view_file_with_prefix != '' && \is_file($view_file_with_prefix)) {
-                    $view_file = $view_file_with_prefix;
+
+                if ($view_prefix != '') {
+                    $view_file_with_prefix = \dirname($view_file) . '/' . $view_prefix . \basename($view_file);
+                    if (\is_file($view_file_with_prefix)) {
+                        $view_file = $view_file_with_prefix;
+                    } else if ($view_prefix_is_strict) {
+                        // note: if view prefix is strict and the file with prefix isn't found, we behave exactly as if
+                        // we would in case we had no file suitable for this renderer at all
+                        $view_file = null;
+                    }
                 }
-                $partials_path = $this->getPartialsPath();
-                if ($partials_path !== null && strpos($view_file, $partials_path) === 0) {
-                    $view_file = substr($view_file, \strlen($partials_path));
+
+                if (!empty($view_file)) {
+
+                    $partials_path = $this->getPartialsPath();
+                    if ($partials_path !== null && strpos($view_file, $partials_path) === 0) {
+                        $view_file = substr($view_file, \strlen($partials_path));
+                    }
+
+                    /**
+                     * @noinspection PhpUndefinedMethodInspection
+                     * @disregard P1013 as it's a false positive; renderers are expected to have render() method
+                     */
+                    return $renderer->render('partial', $view_file, $args);
                 }
-                return $renderer->render('partial', $view_file, $args);
             }
         }
 
@@ -96,18 +119,22 @@ class Partial extends \ProcessWire\Wire {
         if (empty($fallback_filename)) {
             return '';
         }
-        $view_prefix = $this->getViewPrefix();
+
         if ($view_prefix != '') {
             $fallback_filename_with_prefix = \dirname($fallback_filename) . '/' . $view_prefix . \basename($fallback_filename);
             if (\is_file($fallback_filename_with_prefix)) {
                 $fallback_filename = $fallback_filename_with_prefix;
+            } else if ($view_prefix_is_strict) {
+                return '';
             }
         }
+
         if (!$this->partial_view) {
             $this->partial_view = $this->wire(new PartialView());
         }
         $this->partial_view->setFilename($fallback_filename);
         $this->partial_view->data($args);
+
         return $this->partial_view->render() ?: '';
     }
 

@@ -1274,7 +1274,13 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      * @return string
      */
     public function getViewPrefix(): string {
-        return $this->config['view_prefix'] ?? '';
+        $view_prefix = $this->config['view_prefix'] ?? '';
+        if ($view_prefix == '!') {
+            // just in case, prevent using a lone exclamation mark as a view prefix; it's a reserved character that
+            // states that only the prefixed view should be rendered (e.g. not falling back to the unprefixed view)
+            $view_prefix = '';
+        }
+        return $view_prefix;
     }
 
     /**

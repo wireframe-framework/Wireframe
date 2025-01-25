@@ -88,8 +88,14 @@ abstract class Component extends \ProcessWire\WireData {
         $view = $view ?? $this->getView();
         if (!empty($view)) {
 
-            // view data
+            // view prefix
             $view_prefix = $this->getViewPrefix();
+            $view_prefix_is_strict = $view_prefix != '' && strpos($view_prefix, '!') === 0;
+            if ($view_prefix_is_strict) {
+                $view_prefix = substr($view_prefix, 1);
+            }
+
+            // view data
             $view_root = \dirname((new \ReflectionClass($this))->getFileName());
             $view_file = (strpos($view, '/') ? '' : '/' . $this->className())
                 . '/'
@@ -101,13 +107,22 @@ abstract class Component extends \ProcessWire\WireData {
             // attempt to render markup using a renderer
             $renderer = $this->getRenderer();
             if ($renderer) {
-                /** @noinspection PhpUndefinedMethodInspection */
+                /**
+                 * @noinspection PhpUndefinedMethodInspection
+                 * @disregard P1013 as it's a false positive; renderers are expected to have getExt() method
+                 */
                 $view_ext = '.' . ltrim($renderer->getExt(), '.');
                 if (\is_file($view_root . $view_file . $view_ext)) {
-                    /** @noinspection PhpUndefinedMethodInspection */
+                    /**
+                     * @noinspection PhpUndefinedMethodInspection
+                     * @disregard P1013 as it's a false positive; renderers are expected to have getExt() method
+                     */
                     return $renderer->render('component', ltrim($view_file, '/') . $view_ext, $this->getData());
-                } else if ($view_file_without_prefix != '' && \is_file($view_root . $view_file_without_prefix . $view_ext)) {
-                    /** @noinspection PhpUndefinedMethodInspection */
+                } else if (!$view_prefix_is_strict && $view_file_without_prefix != '' && \is_file($view_root . $view_file_without_prefix . $view_ext)) {
+                    /**
+                     * @noinspection PhpUndefinedMethodInspection
+                     * @disregard P1013 as it's a false positive; renderers are expected to have getExt() method
+                     */
                     return $renderer->render('component', ltrim($view_file_without_prefix, '/') . $view_ext, $this->getData());
                 }
             }
@@ -116,7 +131,7 @@ abstract class Component extends \ProcessWire\WireData {
             $fallback_filename = \is_file($view_root . $view_file . '.php')
                 ? $view_root . $view_file . '.php'
                 : (
-                    $view_file_without_prefix != '' && \is_file($view_root . $view_file_without_prefix . '.php')
+                    !$view_prefix_is_strict && $view_file_without_prefix != '' && \is_file($view_root . $view_file_without_prefix . '.php')
                         ? $view_root . $view_file_without_prefix . '.php'
                         : null
                 );
