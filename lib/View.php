@@ -73,20 +73,32 @@ class View extends \ProcessWire\TemplateFile {
 
         // attempt to render markup using a renderer
         $renderer = $this->getRenderer();
-        /** @noinspection PhpUndefinedMethodInspection */
+        /**
+         * @noinspection PhpUndefinedMethodInspection
+         * @disregard P1013 as it's a false positive; renderers are expected to have getExt() method
+         */
         if ($renderer && substr($this->filename, -\strlen($renderer->getExt())) === $renderer->getExt()) {
+
             // since the filename we have stored locally matches the extension expected by the renderer, we can assume
             // that this renderer can be used to render said file
             $view_path = $this->getViewData('context') === 'layout' ? 'layouts_path' : 'views_path';
             $view_file = substr($this->filename, \strlen($this->getViewData($view_path)));
+
             // note: $globals is inherited from parent class TemplateFile, where it's marked as DEPRECATED; this may
             // need some attention in the near(ish) future
             $view_context = array_merge($this->getArray(), self::$globals);
-            /** @noinspection PhpUndefinedMethodInspection */
+
+            /**
+             * @noinspection PhpUndefinedMethodInspection
+             * @disregard P1013 as it's a false positive; renderers are expected to have render() method
+             */
             $out = $renderer->render($this->getViewData('context'), $view_file, $view_context);
+
+            // unset page if it was set earlier
             if ($set_page) {
                 unset($this->page);
             }
+
             return $out;
         }
 

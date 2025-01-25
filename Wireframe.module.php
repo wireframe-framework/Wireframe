@@ -458,14 +458,26 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         $needs_init = !empty($settings);
         if ($renderer === null) {
             $this->renderer = null;
-            if ($this->view) $this->view->setRenderer(null);
+            if ($this->view) {
+                $this->view->setRenderer(null);
+            }
         } else if (\is_string($renderer)) {
             $renderer = $this->wire('modules')->get($renderer);
             $needs_init = true;
         }
         if ($renderer instanceof Module) {
-            if ($needs_init) $renderer->init($settings);
+            if ($needs_init) {
+                /**
+                 * @noinspection PhpUndefinedMethodInspection
+                 * @disregard P1013 as it's a false positive; renderers are expected to have init() method
+                 */
+                $renderer->init($settings);
+            }
             $this->renderer = $renderer;
+            /**
+             * @noinspection PhpUndefinedMethodInspection
+             * @disregard P1013 as it's a false positive; renderers are expected to have getExt() method
+             */
             $this->setExt($renderer->getExt());
             if ($this->view && $this->view->getRenderer() != $renderer) {
                 $this->view->setRenderer($renderer);
@@ -678,7 +690,8 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             return $this;
         }
 
-        // priority for different sources: 1) View object, 2) Page object, 3) GET param, 4) configurd default value
+        // priority for different sources: 1) View object, 2) Page object, 3) GET param, 4) return value from the getDefaultView
+        // method, which (as of this writing) is always "default"
         $this->view->setView(basename(
             $this->view->getView()
                 ?: ($this->page->getView()
@@ -1254,6 +1267,9 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
 
     /**
      * Get view prefix
+     *
+     * View prefix is used for adding a prefix to view names, which can be useful for e.g. creating different themes, or
+     * serving different content based on user role(s).
      *
      * @return string
      */
