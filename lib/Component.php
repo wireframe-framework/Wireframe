@@ -31,6 +31,13 @@ abstract class Component extends \ProcessWire\WireData {
     private $view = 'default';
 
     /**
+     * Local instance of the Wireframe module
+     *
+     * @var \ProcessWire\Wireframe|null
+     */
+    private $_wireframe = null;
+
+    /**
      * PHP magic getter method
      *
      * Note: __get() is only called when trying to access a non-existent or non-local and non-public property.
@@ -81,26 +88,57 @@ abstract class Component extends \ProcessWire\WireData {
         $view = $view ?? $this->getView();
         if (!empty($view)) {
 
-            // view file root path and view file
+            // view prefix
+            $view_prefix = $this->getViewPrefix();
+            $view_prefix_is_strict = $view_prefix != '' && strpos($view_prefix, '!') === 0;
+            if ($view_prefix_is_strict) {
+                $view_prefix = substr($view_prefix, 1);
+            }
+
+            // view data
             $view_root = \dirname((new \ReflectionClass($this))->getFileName());
-            $view_file = (strpos($view, '/') ? '' : '/' . $this->className()) . '/' . $view;
+            $view_file = (strpos($view, '/') ? '' : '/' . $this->className())
+                . '/'
+                . ($view_prefix == '' ? $view : ltrim($view_prefix, '/') . $view);
+            $view_file_without_prefix = $view_prefix == ''
+                ? ''
+                : (strpos($view, '/') ? '' : '/' . $this->className()) . '/' . $view;
 
             // attempt to render markup using a renderer
             $renderer = $this->getRenderer();
             if ($renderer) {
-                /** @noinspection PhpUndefinedMethodInspection */
+                /**
+                 * @noinspection PhpUndefinedMethodInspection
+                 * @disregard P1013 as it's a false positive; renderers are expected to have getExt() method
+                 */
                 $view_ext = '.' . ltrim($renderer->getExt(), '.');
                 if (\is_file($view_root . $view_file . $view_ext)) {
-                    /** @noinspection PhpUndefinedMethodInspection */
+                    /**
+                     * @noinspection PhpUndefinedMethodInspection
+                     * @disregard P1013 as it's a false positive; renderers are expected to have getExt() method
+                     */
                     return $renderer->render('component', ltrim($view_file, '/') . $view_ext, $this->getData());
+                } else if (!$view_prefix_is_strict && $view_file_without_prefix != '' && \is_file($view_root . $view_file_without_prefix . $view_ext)) {
+                    /**
+                     * @noinspection PhpUndefinedMethodInspection
+                     * @disregard P1013 as it's a false positive; renderers are expected to have getExt() method
+                     */
+                    return $renderer->render('component', ltrim($view_file_without_prefix, '/') . $view_ext, $this->getData());
                 }
             }
 
             // fall back to built-in PHP template renderer
-            if (\is_file($view_root . $view_file . '.php')) {
+            $fallback_filename = \is_file($view_root . $view_file . '.php')
+                ? $view_root . $view_file . '.php'
+                : (
+                    !$view_prefix_is_strict && $view_file_without_prefix != '' && \is_file($view_root . $view_file_without_prefix . '.php')
+                        ? $view_root . $view_file_without_prefix . '.php'
+                        : null
+                );
+            if ($fallback_filename !== null) {
                 $component_view = $this->wire(new ComponentView($this));
                 $component_view->data($this->getData());
-                $component_view->setFilename($view_root . $view_file . '.php');
+                $component_view->setFilename($fallback_filename);
                 return $component_view->render();
             }
         }
@@ -138,6 +176,18 @@ abstract class Component extends \ProcessWire\WireData {
      */
     final public function getView(): string {
         return $this->view;
+    }
+
+    /**
+     * Get view prefix for the Component
+     *
+     * @return string View prefix.
+     */
+    final protected function getViewPrefix(): string {
+        if ($this->_wireframe === null) {
+            $this->_wireframe = $this->wire('modules')->get('Wireframe');
+        }
+        return $this->_wireframe->getViewPrefix();
     }
 
     /**

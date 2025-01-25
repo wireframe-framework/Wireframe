@@ -14,7 +14,7 @@ namespace ProcessWire;
  * @method static string|Page|NullPage page($source, $args = []) Static getter (factory) method for Pages.
  * @method static string|null partial(string $partial_name, array $args = []) Static getter (factory) method for Partials.
  *
- * @version 0.30.0
+ * @version 0.31.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -354,6 +354,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             // 'view_namespaces' => [
             //     'sublayouts' => $this->wire('config')->paths->templates . 'sublayouts/',
             // ],
+            'view_prefix' => '',
             'paths' => [
                 'lib' => $this->wire('config')->paths->templates . "lib/",
                 'views' => $this->wire('config')->paths->templates . "views/",
@@ -457,14 +458,26 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         $needs_init = !empty($settings);
         if ($renderer === null) {
             $this->renderer = null;
-            if ($this->view) $this->view->setRenderer(null);
+            if ($this->view) {
+                $this->view->setRenderer(null);
+            }
         } else if (\is_string($renderer)) {
             $renderer = $this->wire('modules')->get($renderer);
             $needs_init = true;
         }
         if ($renderer instanceof Module) {
-            if ($needs_init) $renderer->init($settings);
+            if ($needs_init) {
+                /**
+                 * @noinspection PhpUndefinedMethodInspection
+                 * @disregard P1013 as it's a false positive; renderers are expected to have init() method
+                 */
+                $renderer->init($settings);
+            }
             $this->renderer = $renderer;
+            /**
+             * @noinspection PhpUndefinedMethodInspection
+             * @disregard P1013 as it's a false positive; renderers are expected to have getExt() method
+             */
             $this->setExt($renderer->getExt());
             if ($this->view && $this->view->getRenderer() != $renderer) {
                 $this->view->setRenderer($renderer);
@@ -622,7 +635,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
 
         // initialize the View object (note: view file is set in the Wireframe::___setView() method)
         $this->view = $this->wire(new \Wireframe\View);
-        $this->view->setLayout($page_layout === null ? 'default' : $page_layout);
+        $this->view->setLayout($page_layout === null ? $this->getDefaultLayout() : $page_layout);
         $this->view->setTemplate($this->page->getViewTemplate());
         $this->view->setViewsPath($this->paths->views);
         $this->view->setLayoutsPath($this->paths->layouts);
@@ -677,12 +690,13 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
             return $this;
         }
 
-        // priority for different sources: 1) View object, 2) Page object, 3) GET param, 4) "default"
+        // priority for different sources: 1) View object, 2) Page object, 3) GET param, 4) return value from the getDefaultView
+        // method, which (as of this writing) is always "default"
         $this->view->setView(basename(
             $this->view->getView()
                 ?: ($this->page->getView()
                     ?: ($this->getViewFromInput()
-                        ?: 'default'
+                        ?: $this->getDefaultView()
                     )
                 )
         ));
@@ -1225,6 +1239,64 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         }
 
         return $paths;
+    }
+
+    /**
+     * Get default view
+     *
+     * This method was added primarily with future additions in mind, as it's possible that the default view name may be
+     * made configurable or otherwise dynamic in the future.
+     *
+     * @return string
+     */
+    public function getDefaultView(): string {
+        return 'default';
+    }
+
+    /**
+     * Get default layout
+     *
+     * This method was added primarily with future additions in mind, as it's possible that the default layout name may be
+     * made configurable or otherwise dynamic in the future.
+     *
+     * @return string
+     */
+    public function getDefaultLayout(): string {
+        return 'default';
+    }
+
+    /**
+     * Get view prefix
+     *
+     * View prefix is used for adding a prefix to view names, which can be useful for e.g. creating different themes, or
+     * serving different content based on user role(s).
+     *
+     * @return string
+     */
+    public function getViewPrefix(): string {
+        $view_prefix = $this->config['view_prefix'] ?? '';
+        if ($view_prefix == '!') {
+            // just in case, prevent using a lone exclamation mark as a view prefix; it's a reserved character that
+            // states that only the prefixed view should be rendered (e.g. not falling back to the unprefixed view)
+            $view_prefix = '';
+        }
+        return $view_prefix;
+    }
+
+    /**
+     * Set view prefix
+     *
+     * @param string $view_prefix
+     */
+    public function setViewPrefix(string $view_prefix): void {
+        if ($view_prefix !== '' && strpos($view_prefix, '..') !== false) {
+            // remove consecutive dots from view prefix to prevent directory traversal (just in case)
+            $view_prefix = preg_replace('/\.{2,}/', '.', $view_prefix);
+        }
+        $this->config['view_prefix'] = $view_prefix;
+        if ($this->view) {
+            $this->view->setView($this->view->getView());
+        }
     }
 
 }
