@@ -13,8 +13,9 @@ namespace ProcessWire;
  * @method static \Wireframe\Component component(string $component_name, array $args = []) Static getter (factory) method for Components.
  * @method static string|Page|NullPage page($source, $args = []) Static getter (factory) method for Pages.
  * @method static string|null partial(string $partial_name, array $args = []) Static getter (factory) method for Partials.
+ * @method static string blocks($items, array $options = []) Static getter (factory) method for Blocks.
  *
- * @version 0.31.0
+ * @version 0.32.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -361,6 +362,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
                 'layouts' => $this->wire('config')->paths->templates . "layouts/",
                 'partials' => $this->wire('config')->paths->templates . "partials/",
                 'resources' => $this->wire('config')->paths->templates . "resources/",
+                'blocks' => $this->wire('config')->paths->templates . "blocks/",
                 'components' => $this->wire('config')->paths->templates . "components/",
                 'controllers' => $this->wire('config')->paths->templates . "controllers/",
             ],
@@ -502,6 +504,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         // declare our namespaces
         $namespaces = [
             'Wireframe' => $this->wire('config')->paths->Wireframe . 'lib/',
+            'Wireframe\Block' => $this->paths->blocks,
             'Wireframe\Component' => $this->paths->components,
             'Wireframe\Controller' => $this->paths->controllers,
             'Wireframe\Lib' => $this->paths->lib,
@@ -1055,6 +1058,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      */
     public static function __callStatic($method, $arguments) {
         switch ($method) {
+            case 'blocks':
             case 'component':
             case 'page':
             case 'partial':

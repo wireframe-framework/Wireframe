@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- New Block class and BlockView class for rendering content blocks with an approach similar to Components.
+- New `Wireframe::blocks($items, $options)` factory method for rendering collections of blocks.
+- New `blocks` path configuration for storing Block classes and view files.
+- New `Wireframe\Block` namespace for autoloading Block classes from templates/blocks/.
+
 ## [0.31.0] - 2024-12-31
 
 ### Added

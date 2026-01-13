@@ -353,4 +353,132 @@ class Factory {
         return \is_array($args) ? $partial->render($args) : $partial;
     }
 
+    /**
+     * Static getter (factory) method for Blocks
+     *
+     * This method renders a collection of RepeaterMatrix items as content blocks. Each block type
+     * can have its own Block class in templates/blocks/, with view files for different variants.
+     *
+     * Basic usage:
+     *
+     * ```
+     * <?= Wireframe::blocks($page->content_blocks) ?>
+     * ```
+     *
+     * With options:
+     *
+     * ```
+     * <?= Wireframe::blocks($page->content_blocks, [
+     *     'wrapper' => 'div.content-blocks',
+     *     'context' => 'column',
+     * ]) ?>
+     * ```
+     *
+     * @param \ProcessWire\RepeaterMatrixPageArray|\ProcessWire\WireArray|array $items Collection of RepeaterMatrix items.
+     * @param array $options Optional settings:
+     *                       - wrapper [string|null]: Wrapper element with optional class (e.g., 'div.content-blocks'), null for no wrapper
+     *                       - context [string]: Context identifier passed to blocks (e.g., 'column', 'sidebar')
+     *                       - view [string]: Default view file to use for all blocks
+     * @return string Rendered blocks markup.
+     */
+    public static function blocks($items, array $options = []): string {
+
+        // make sure that basic Wireframe features have been initialized
+        if (!Wireframe::isInitialized(wire()->instanceID)) {
+            wire()->modules->get('Wireframe')->initOnce();
+        }
+
+        // parse options
+        $options = array_merge([
+            'wrapper' => 'div.content-blocks',
+            'context' => null,
+            'view' => null,
+        ], $options);
+
+        // render blocks
+        $output = [];
+        foreach ($items as $item) {
+            $block = self::block($item, $options);
+            if ($block !== null) {
+                // Block class or view found, use Block rendering
+                $rendered = $block->render();
+            } else {
+                // No Block class or view, fall back to native ProcessWire rendering
+                $rendered = $item->render();
+            }
+            if (!empty($rendered)) {
+                $output[] = $rendered;
+            }
+        }
+
+        // bail out early if no output
+        if (empty($output)) {
+            return '';
+        }
+
+        // join output
+        $markup = implode('', $output);
+
+        // wrap output if wrapper is defined
+        if ($options['wrapper']) {
+            $wrapper_parts = explode('.', $options['wrapper'], 2);
+            $wrapper_tag = $wrapper_parts[0] ?: 'div';
+            $wrapper_class = $wrapper_parts[1] ?? '';
+            $markup = '<' . $wrapper_tag . ($wrapper_class ? ' class="' . wire('sanitizer')->entities1($wrapper_class) . '"' : '') . '>'
+                . $markup
+                . '</' . $wrapper_tag . '>';
+        }
+
+        return $markup;
+    }
+
+    /**
+     * Get or create a Block instance for a RepeaterMatrix item
+     *
+     * This method attempts to find a Block class for the given RepeaterMatrix item.
+     * If a matching Block class exists, it returns an instance of that class.
+     * If no Block class is found but a view file exists, it creates a generic Block instance.
+     * If neither exists, it returns null (fallback to native rendering).
+     *
+     * @param \ProcessWire\RepeaterMatrixPage $item RepeaterMatrix item.
+     * @param array $options Optional settings from blocks() method.
+     * @return Block|null Block instance or null if no Block class or view found.
+     */
+    protected static function block(\ProcessWire\RepeaterMatrixPage $item, array $options = []): ?Block {
+
+        // resolve block class name from matrix type
+        $matrix_type = $item->matrix('type');
+        $class_name = wire('sanitizer')->pascalCase($matrix_type);
+        $block_class = '\Wireframe\Block\\' . $class_name;
+
+        // check if Block class exists
+        if (class_exists($block_class)) {
+            $block = wire(new $block_class($item));
+        } else {
+            // no Block class, check if view file exists
+            $blocks_path = wire('config')->paths->templates . 'blocks/';
+            $view = $options['view'] ?? 'default';
+            $view_file = $blocks_path . $class_name . '/' . $view . '.php';
+
+            if (!\is_file($view_file)) {
+                // no view file found, return null for native fallback
+                return null;
+            }
+
+            // create generic Block instance with block name set
+            $block = wire(new Block($item));
+            $block->setBlockName($class_name);
+        }
+
+        // apply options
+        if (!empty($options['view'])) {
+            $block->setView($options['view']);
+        }
+        if (!empty($options['context'])) {
+            $block->set('context', $options['context']);
+        }
+
+        return $block;
+    }
+
 }
