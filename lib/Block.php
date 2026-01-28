@@ -122,6 +122,20 @@ class Block extends \ProcessWire\WireData {
     protected function init(): void {}
 
     /**
+     * Get icon for the block type selector
+     *
+     * Override this in subclasses to provide a custom icon. Return value can be:
+     * - Path to SVG file (relative to block directory or absolute)
+     * - Raw SVG/HTML markup (must start with '<')
+     * - null to use default icon.svg from block directory
+     *
+     * @return string|null
+     */
+    public static function getIcon(): ?string {
+        return null;
+    }
+
+    /**
      * PHP magic getter method
      *
      * @param string $name

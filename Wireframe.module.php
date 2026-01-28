@@ -15,7 +15,7 @@ namespace ProcessWire;
  * @method static string|null partial(string $partial_name, array $args = []) Static getter (factory) method for Partials.
  * @method static string blocks($items, array $options = []) Static getter (factory) method for Blocks.
  *
- * @version 0.32.0
+ * @version 0.33.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -113,6 +113,145 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      * @var array
      */
     protected $create_directories = [];
+
+    /**
+     * Init method
+     *
+     * This method is called when the module is loaded. Since Wireframe autoloads
+     * only in admin context, this sets up admin-specific hooks.
+     */
+    public function init() {
+        // add Wireframe Blocks option to Repeater Matrix field config
+        if ($this->wire()->modules->isInstalled('FieldtypeRepeaterMatrix')) {
+            $this->addHookAfter('InputfieldRepeaterMatrix::getConfigInputfields', $this, 'addRepeaterMatrixBlocksOption');
+            $this->addHookAfter('InputfieldRepeaterMatrix::getAddMatrixTypes', $this, 'getRepeaterMatrixBlocksImages');
+            $this->addHookBefore('InputfieldRepeaterMatrix::renderAddMatrix', $this, 'setRepeaterMatrixAddType');
+            $this->addHookAfter('InputfieldRepeaterMatrix::renderAddMatrixCustom', $this, 'renderRepeaterMatrixCustom');
+        }
+    }
+
+    /**
+     * Add "Wireframe Blocks" option to Repeater Matrix config
+     *
+     * @param HookEvent $event
+     */
+    protected function addRepeaterMatrixBlocksOption(HookEvent $event) {
+        $inputfields = $event->return;
+        $addTypeField = $inputfields->getChildByName('addType');
+        if (!$addTypeField) {
+            return;
+        }
+
+        $addTypeField->addOption(
+            'wireframe_blocks',
+            $this->_('Wireframe Blocks') . ' ' .
+            '[span.detail] ' . $this->_('(click preview images defined by blocks)') . ' [/span]'
+        );
+    }
+
+    /**
+     * Populate images from Wireframe block directories
+     *
+     * @param HookEvent $event
+     */
+    protected function getRepeaterMatrixBlocksImages(HookEvent $event) {
+        $inputfield = $event->object;
+        if ($inputfield->addType !== 'wireframe_blocks') {
+            return;
+        }
+
+        // make sure Wireframe paths are set
+        if (!$this->paths) {
+            $this->setConfig();
+        }
+
+        $sanitizer = $this->wire()->sanitizer;
+        $config = $this->wire()->config;
+        $types = $event->return;
+
+        foreach ($types as $key => $type) {
+            $block_name = $sanitizer->pascalCase($type['name']);
+            $block_class = "\\Wireframe\\Block\\{$block_name}";
+            $block_dir = $this->paths->blocks . $block_name . '/';
+            $block_url = $config->urls->blocks . $block_name . '/';
+
+            // check for programmatic icon from Block class
+            $icon = null;
+            if (class_exists($block_class) && method_exists($block_class, 'getIcon')) {
+                $icon = $block_class::getIcon();
+            }
+
+            if ($icon !== null) {
+                if (strpos($icon, '<') === 0) {
+                    // raw markup
+                    $types[$key]['image'] = $icon;
+                } elseif (strpos($icon, '/') === 0) {
+                    // path (relative to site root)
+                    $types[$key]['image'] = $icon;
+                } else {
+                    // relative path
+                    $icon_path = $block_dir . $icon;
+                    if (is_file($icon_path)) {
+                        $types[$key]['image'] = $block_url . $icon;
+                    }
+                }
+            } else {
+                // fall back to icon.svg in block directory
+                $icon_path = $block_dir . 'icon.svg';
+                if (is_file($icon_path)) {
+                    $types[$key]['image'] = $block_url . 'icon.svg';
+                }
+            }
+        }
+
+        $event->return = $types;
+    }
+
+    /**
+     * Set addType to Custom mode for Wireframe Blocks rendering
+     *
+     * @param HookEvent $event
+     */
+    protected function setRepeaterMatrixAddType(HookEvent $event) {
+        $inputfield = $event->object;
+        if ($inputfield->addType === 'wireframe_blocks') {
+            $inputfield->set('_wireframeBlocksAddType', 'wireframe_blocks');
+            $inputfield->addType = 3; // InputfieldRepeaterMatrix::addTypeCustom
+        }
+    }
+
+    /**
+     * Render custom markup for Wireframe Blocks matrix type selector
+     *
+     * @param HookEvent $event
+     */
+    protected function renderRepeaterMatrixCustom(HookEvent $event) {
+        $inputfield = $event->object;
+        if ($inputfield->get('_wireframeBlocksAddType') !== 'wireframe_blocks') {
+            return;
+        }
+
+        $types = $event->arguments(0);
+        $inputfield = $event->object;
+        $sanitizer = $this->wire()->sanitizer;
+        $style = $sanitizer->entities($inputfield->imageStyle);
+        $showText = (int) $inputfield->imageText;
+        $out = '';
+
+        foreach ($types as $type) {
+            $id = $type['attrs']['id'];
+            $label = $type['typeLabel']; // already entity-encoded by RM
+            $image = isset($type['image']) ? $type['image'] : '';
+
+            $imageMarkup = $image ? "<img src='{$sanitizer->entities($image)}' alt='{$label}' />" : '';
+            if ($showText) {
+                $imageMarkup .= "<span>{$label}</span>";
+            }
+            $out .= "<a href='#{$id}' class='InputfieldRepeaterMatrixAddImage' style='{$style}'>{$imageMarkup}</a>";
+        }
+
+        $event->return = $out;
+    }
 
     /**
      * Return inputfields necessary to configure the module
@@ -309,6 +448,15 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         // set or update wireframe paths
         if ($set_paths) {
             $this->setPaths();
+        }
+
+        // set blocks URL (derived from path if not explicitly configured)
+        if (!isset($config_merged['urls']['blocks'])) {
+            $this->wire('config')->urls->set('blocks', str_replace(
+                $this->wire('config')->paths->templates,
+                $this->wire('config')->urls->templates,
+                $this->paths->blocks
+            ));
         }
 
         return $this;

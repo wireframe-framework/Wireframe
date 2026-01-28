@@ -10,7 +10,7 @@ namespace ProcessWire;
  *
  * @method WireframeAPI init(?string $path = null, array $args = []) Init API
  *
- * @version 0.2.1
+ * @version 0.3.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -42,32 +42,29 @@ class WireframeAPI extends WireData implements Module, ConfigurableModule {
     /**
      * API root path
      *
-     * This value is used by the Wireframe API Hooks module to provide automatic API endpoint.
-     * Note that this endpoint is only intended for Tracy Debugger Wireframe panel and requires
-     * superuser access.
+     * This value is used to provide automatic API endpoint. Note that this endpoint
+     * is only intended for Tracy Debugger Wireframe panel and requires superuser access.
      *
      * @var string|null
      */
     protected $api_root = null;
 
     /**
-     * Constructor
+     * Is multibyte support enabled?
      *
-     * @throws WireException if config settings contain unrecognized properties.
+     * @var bool
      */
-    public function __construct() {
+    protected $is_mb = false;
 
-        // populate the default endpoints
-        $this->available_endpoints = [
-            'components' => 'components',
-            'pages' => 'pages',
-            'partials' => 'partials',
-        ];
+    /**
+     * Module init method
+     */
+    public function init() {
 
-        // populate the default config data
+        // populate config data from site config
         $config = array_merge(
             $this->getConfigDefaults(),
-            \is_array($this->config->wireframeAPI) ? $this->config->wireframeAPI : []
+            \is_array($this->wire()->config->wireframeAPI) ? $this->wire()->config->wireframeAPI : []
         );
         foreach ($config as $key => $value) {
             switch ($key) {
@@ -80,12 +77,94 @@ class WireframeAPI extends WireData implements Module, ConfigurableModule {
                     break;
 
                 default:
-                    throw new WireException(sprintf(
-                        'Unable to set value for unrecognized property "%s"',
+                    $this->wire()->log->warning(sprintf(
+                        'WireframeAPI: unable to set value for unrecognized property "%s"',
                         $key
                     ));
             }
         }
+
+        // hook into page not found event to provide endpoint for API
+        if ($this->wire()->user->isSuperuser()) {
+            $this->addHookBefore('ProcessPageView::pageNotFound', $this, 'interceptAPIRequest');
+        }
+    }
+
+    /**
+     * Intercept API requests
+     *
+     * @param HookEvent $event
+     *
+     * @throws WireException if required config::http404PageID doesn't exist
+     */
+    protected function interceptAPIRequest(HookEvent $event) {
+        // params from event
+        $page = $event->arguments[0];
+        $url = $event->arguments[1];
+
+        // get API root
+        $api_root = $this->getAPIRoot();
+        if (empty($api_root)) {
+            return;
+        }
+
+        // check if multibyte encoding is enabled
+        $this->is_mb = function_exists('mb_strpos');
+
+        // compare API root with current request
+        if ($this->is_mb && mb_strpos($url, $api_root) !== 0 || !$this->is_mb && strpos($url, $api_root) !== 0) {
+            return;
+        }
+
+        // set page
+        if (($page === null || !$page->id) && $this->config->http404PageID) {
+            $page = $this->pages->get($this->config->http404PageID);
+            if (!$page->id) {
+                throw new WireException("config::http404PageID does not exist - please check your config");
+            }
+        }
+        $this->wire('page', $page);
+
+        // set system ready state
+        $event->object->ready();
+
+        // handle API request
+        $event->return = $this->renderAPIResponse($url);
+        $event->replace = true;
+    }
+
+    /**
+     * Render API response
+     *
+     * @param string $url
+     * @return string
+     */
+    protected function renderAPIResponse(string $url): string {
+        // params for API query
+        $args = $this->input->get('args') ? json_decode($this->input->get('args'), true) : [];
+        if ($args === null) {
+            $args = [];
+        }
+        $root = $this->getAPIRoot();
+        $path = $this->is_mb ? mb_substr($url, mb_strlen($root)) : substr($url, strlen($root));
+
+        // init API, render and return API response
+        $this->init($path, $args);
+        $this->sendHeaders();
+        return $this->render();
+    }
+
+    /**
+     * Constructor
+     */
+    public function __construct() {
+
+        // populate the default endpoints
+        $this->available_endpoints = [
+            'components' => 'components',
+            'pages' => 'pages',
+            'partials' => 'partials',
+        ];
     }
 
     /**
@@ -166,7 +245,7 @@ class WireframeAPI extends WireData implements Module, ConfigurableModule {
         $field->name = 'api_root';
         $field->label = $this->_('API root path');
         $field->description = $this->_('Define the base path for the API.');
-        $field->notes = $this->_('Accessing the path defined here requires the Wireframe Hooks module and is currently only available for superusers.')
+        $field->notes = $this->_('Accessing the path defined here is currently only available for superusers.')
             . ' *' . $this->_('This setting is primarily intended for the API debugger found from the Wireframe Tracy panel.') . '*';
         $field->value = $data[$field->name];
         if (isset($config[$field->name])) {
