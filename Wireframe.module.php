@@ -115,12 +115,12 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
     protected $create_directories = [];
 
     /**
-     * Init method
+     * Ready method
      *
-     * This method is called when the module is loaded. Since Wireframe autoloads
+     * This method is called when ProcessWire is ready. Since Wireframe autoloads
      * only in admin context, this sets up admin-specific hooks.
      */
-    public function init() {
+    public function ready() {
         // add Wireframe Blocks option to Repeater Matrix field config
         if ($this->wire()->modules->isInstalled('FieldtypeRepeaterMatrix')) {
             $this->addHookAfter('InputfieldRepeaterMatrix::getConfigInputfields', $this, 'addRepeaterMatrixBlocksOption');
