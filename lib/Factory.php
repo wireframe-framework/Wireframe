@@ -360,6 +360,53 @@ class Factory {
     }
 
     /**
+     * Default debug renderer for blocks (HTML comments)
+     *
+     * @param array $data Debug data with keys: type, block_name, block_id, render_time, content, total_time, count
+     * @return string Rendered debug output
+     */
+    protected static function debugBlocksDefault(array $data): string {
+        if ($data['type'] === 'block') {
+            return sprintf(
+                "<!-- BLOCK [%s] id=%d rendered in %.2fms -->\n%s\n<!-- /BLOCK [%s] -->\n",
+                $data['block_name'],
+                $data['block_id'],
+                $data['render_time'],
+                $data['content'],
+                $data['block_name']
+            );
+        }
+        // type === 'total'
+        return sprintf("<!-- BLOCKS TOTAL: %.2fms (%d blocks) -->\n", $data['total_time'], $data['count']);
+    }
+
+    /**
+     * Visible debug renderer for blocks (colored banners)
+     *
+     * @param array $data Debug data with keys: type, block_name, block_id, render_time, content, total_time, count
+     * @return string Rendered debug output
+     */
+    public static function debugBlocksVisible(array $data): string {
+        if ($data['type'] === 'block') {
+            $color = $data['render_time'] > 100 ? '#c00' : ($data['render_time'] > 50 ? '#f80' : '#080');
+            return sprintf(
+                '<div style="position:relative"><div style="position:absolute;top:0;left:0;right:0;background:%s;color:#fff;font:12px/1.5 monospace;padding:2px 8px;z-index:9999">%s #%d: %.2fms</div>%s</div>',
+                $color,
+                $data['block_name'],
+                $data['block_id'],
+                $data['render_time'],
+                $data['content']
+            );
+        }
+        // type === 'total'
+        return sprintf(
+            '<div style="background:#333;color:#fff;font:14px/1.5 monospace;padding:8px 16px;margin:8px 0">BLOCKS TOTAL: %.2fms (%d blocks)</div>',
+            $data['total_time'],
+            $data['count']
+        );
+    }
+
+    /**
      * Static getter (factory) method for Blocks
      *
      * This method renders a collection of RepeaterMatrix items as content blocks. Each block type
@@ -380,11 +427,17 @@ class Factory {
      * ]) ?>
      * ```
      *
+     * Debug options:
+     * - true: HTML comments (default renderer)
+     * - 'visible': Use Factory::debugBlocksVisible for colored banners
+     * - callable: Custom renderer receiving array with type, block_name, block_id, render_time, content, total_time, count
+     *
      * @param \ProcessWire\RepeaterMatrixPageArray|\ProcessWire\WireArray|array $items Collection of RepeaterMatrix items.
      * @param array $options Optional settings:
      *                       - wrapper [string|null]: Wrapper element with optional class (e.g., 'div.content-blocks'), null for no wrapper
      *                       - context [string]: Context identifier passed to blocks (e.g., 'column', 'sidebar')
      *                       - view [string]: Default view file to use for all blocks
+     *                       - debug [bool|string|callable]: Enable timing debug output (default: from $config->wireframe['debug']['blocks'])
      * @return string Rendered blocks markup.
      */
     public static function blocks($items, array $options = []): string {
@@ -399,12 +452,32 @@ class Factory {
             'wrapper' => 'div.content-blocks',
             'context' => null,
             'view' => null,
+            'debug' => wire('config')->wireframe['debug']['blocks'] ?? false,
         ], $options);
+
+        // resolve debug renderer
+        $debug_renderer = null;
+        if ($options['debug']) {
+            if ($options['debug'] === 'visible') {
+                $debug_renderer = [self::class, 'debugBlocksVisible'];
+            } elseif (\is_callable($options['debug'])) {
+                $debug_renderer = $options['debug'];
+            } else {
+                $debug_renderer = [self::class, 'debugBlocksDefault'];
+            }
+        }
 
         // render blocks
         $output = [];
+        $total_time = 0;
         foreach ($items as $item) {
             $block = self::block($item, $options);
+
+            // track render time if debug is enabled
+            if ($debug_renderer) {
+                $start_time = microtime(true);
+            }
+
             if ($block !== null) {
                 // Block class or view found, use Block rendering
                 $rendered = $block->render();
@@ -412,6 +485,20 @@ class Factory {
                 // No Block class or view, fall back to native ProcessWire rendering
                 $rendered = $item->render();
             }
+
+            // add debug timing output
+            if ($debug_renderer) {
+                $render_time = (microtime(true) - $start_time) * 1000;
+                $total_time += $render_time;
+                $rendered = $debug_renderer([
+                    'type' => 'block',
+                    'block_name' => $item->matrix('type') ?? 'unknown',
+                    'block_id' => $item->id,
+                    'render_time' => $render_time,
+                    'content' => $rendered,
+                ]);
+            }
+
             if (!empty($rendered)) {
                 $output[] = $rendered;
             }
@@ -424,6 +511,15 @@ class Factory {
 
         // join output
         $markup = implode('', $output);
+
+        // add total time debug output
+        if ($debug_renderer && $total_time > 0) {
+            $markup = $debug_renderer([
+                'type' => 'total',
+                'total_time' => $total_time,
+                'count' => count($output),
+            ]) . $markup;
+        }
 
         // wrap output if wrapper is defined
         if ($options['wrapper']) {
