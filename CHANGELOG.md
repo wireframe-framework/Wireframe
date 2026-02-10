@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- New `Controller::forward($page, $data)` method for delegating rendering to another page's controller and view without an HTTP redirect.
 - New Block class and BlockView class for rendering content blocks with an approach similar to Components.
 - New `Wireframe::blocks($items, $options)` factory method for rendering collections of blocks.
 - New `blocks` path configuration for storing Block classes and view files.

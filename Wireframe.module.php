@@ -792,7 +792,12 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
         $this->view->setLayoutsPath($this->paths->layouts);
         $this->view->setExt($this->ext);
         $this->view->setPage($this->page);
-        $this->view->setData($settings['data'] ?? $this->data);
+        $view_data = $settings['data'] ?? $this->data;
+        // Merge in data from forwarded request if present
+        if (!empty($this->page->_wireframe_forward_data)) {
+            $view_data = array_merge($view_data, $this->page->_wireframe_forward_data);
+        }
+        $this->view->setData($view_data);
         $this->view->setPartials($this->findPartials($this->paths->partials));
         $this->view->setPlaceholders(new \Wireframe\ViewPlaceholders($this->view));
         $this->view->setRenderer($this->renderer);

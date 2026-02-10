@@ -212,6 +212,7 @@ class Factory {
                 'view' => 'default',
                 'viewTemplate' => null,
                 'render' => false,
+                'data' => [],
             ], $args);
         } else {
             throw new WireException(sprintf(
@@ -268,6 +269,11 @@ class Factory {
         if ($args['layout'] != 'default') $page->setLayout($args['layout']);
         if ($args['view'] != 'default') $page->setView($args['view']);
         if ($args['viewTemplate'] != null) $page->setViewTemplate($args['viewTemplate']);
+
+        // pass data to Wireframe view
+        if (!empty($args['data'])) {
+            $page->_wireframe_forward_data = $args['data'];
+        }
 
         return $args['render'] ? $page->render() : $page;
     }

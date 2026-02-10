@@ -88,6 +88,24 @@ abstract class Controller extends \ProcessWire\Wire {
     }
 
     /**
+     * Forward rendering to another page
+     *
+     * Delegates rendering to the specified page's controller and view, without an HTTP redirect.
+     * The URL remains unchanged. Use this when a single URL should render different pages based
+     * on URL segments or other conditions.
+     *
+     * @param \ProcessWire\Page $page Page to forward to
+     * @param array $data Optional data to pass to the forwarded page's view
+     * @return string Rendered output
+     */
+    protected function forward(\ProcessWire\Page $page, array $data = []): string {
+        return \Wireframe\Factory::page($page, [
+            'render' => true,
+            'data' => $data,
+        ]);
+    }
+
+    /**
      * Render JSON method
      *
      * By default this method returns nothing (null). If you want a Controller to return values for
