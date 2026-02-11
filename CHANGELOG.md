@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New `blocks` path configuration for storing Block classes and view files.
 - New `Wireframe\Block` namespace for autoloading Block classes from templates/blocks/.
 
+### Fixed
+- Fixed an issue where temporary template modifications in `Factory::page()` could be persisted to the database when ProcessWire auto-saves templates due to file modification detection. Now uses the non-persistent `filename` property instead of `altFilename`.
+
 ## [0.31.0] - 2024-12-31
 
 ### Added

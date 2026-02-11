@@ -246,8 +246,8 @@ class Factory {
                             $event->arguments(0, $options);
                         }
                         if ($page_has_no_file) {
-                            $event->object->template->_altFilename = $event->object->template->altFilename;
-                            $event->object->template->altFilename = $event->object->_wireframe_filename;
+                            // Set filename directly; this is a protected property that won't be persisted (like altFilename potentially could be)
+                            $event->object->template->filename = $event->wire()->config->paths->templates . $event->object->_wireframe_filename . $args['ext'];
                         }
                     }
                 });
@@ -258,7 +258,8 @@ class Factory {
                             $args['wireframe']->page = $args['parent'];
                         }
                         if ($page_has_no_file) {
-                            $event->object->template->altFilename = $event->object->template->_altFilename;
+                            // Reset filename to allow recomputation on next access
+                            $event->object->template->filename = '';
                         }
                     });
                 }
