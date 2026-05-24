@@ -13,7 +13,7 @@ namespace Wireframe;
  * In aforementioned use case you should override the getData() method and return the data you want
  * the render process to have access to.
  *
- * @version 0.4.0
+ * @version 0.5.0
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -38,6 +38,45 @@ abstract class Component extends \ProcessWire\WireData {
     private $_wireframe = null;
 
     /**
+     * Cache rendered output of this component.
+     *
+     * Set to enable persistent caching of the markup returned by render(). Accepted values:
+     * - false (default): no caching
+     * - int: TTL in seconds (passed to WireCache::save)
+     * - string: WireCache expire constant name ('expireSave', 'expireNever', 'expireDaily', etc.)
+     *           or a selector string accepted by WireCache
+     *
+     * Components opting into render-output caching MUST NOT register scripts or styles via
+     * $config->scripts->add() / $config->styles->add() inside render(): those calls would only
+     * fire on cache miss. Move asset registration into a separate, always-running hook.
+     *
+     * @var int|string|bool
+     */
+    protected $render_cache = false;
+
+    /**
+     * Whether the rendered cache key should vary by current page id.
+     *
+     * Most components produce identical markup regardless of the current page; default is false.
+     * Enable for components whose output depends on page-specific context (breadcrumbs, etc.).
+     *
+     * @var bool
+     */
+    protected $render_cache_vary_by_page = false;
+
+    /**
+     * Whether the rendered cache key should vary by user roles, groups and language.
+     *
+     * Default is true: output is assumed to be access-controlled and locale-aware. Set to false
+     * for components whose output is identical for every visitor regardless of role or language.
+     * Note: this varies by audience (roles + groups + language), not by individual user ID —
+     * users with the same roles/groups/language share a cache entry.
+     *
+     * @var bool
+     */
+    protected $render_cache_vary_by_user = true;
+
+    /**
      * PHP magic getter method
      *
      * Note: __get() is only called when trying to access a non-existent or non-local and non-public property.
@@ -52,10 +91,86 @@ abstract class Component extends \ProcessWire\WireData {
     /**
      * Render markup for the Component
      *
+     * If $render_cache is set, the rendered markup is cached using WireCache. The cache key is
+     * built by getRenderCacheKey() from the component's class name, its data (constructor args
+     * stored as WireData), and optionally the current page and user context.
+     *
      * @return string Rendered Component markup.
      */
     public function ___render(): string {
-        return $this->renderView();
+        if (!$this->render_cache) {
+            return $this->renderView();
+        }
+        return $this->wire('cache')->get(
+            $this->getRenderCacheKey(),
+            $this->resolveRenderCacheExpire(),
+            function() {
+                return $this->renderView();
+            }
+        );
+    }
+
+    /**
+     * Build the cache key used for rendered output caching.
+     *
+     * Hook this method to customize the key shape per component or globally. Default key
+     * incorporates the component class name, a hash of getRenderCacheArgs(), and (when enabled
+     * via class properties) user roles/groups/language and current page id.
+     *
+     * @return string
+     */
+    protected function ___getRenderCacheKey(): string {
+        $class_short = substr(strrchr(static::class, '\\'), 1) ?: static::class;
+        $parts = [
+            'Wireframe/RenderCache',
+            $class_short,
+            md5(serialize($this->getRenderCacheArgs())),
+        ];
+        if ($this->render_cache_vary_by_user) {
+            $user = $this->wire('user');
+            $parts[] = $user->roles->implode('+', 'id');
+            $parts[] = $user->user_groups
+                ? $user->user_groups->implode('+', 'id')
+                : '';
+            $parts[] = (string) $user->language;
+        }
+        if ($this->render_cache_vary_by_page) {
+            $parts[] = (string) $this->wire('page')->id;
+        }
+        return implode('/', $parts);
+    }
+
+    /**
+     * Get the args used to identify this component instance for cache-key purposes.
+     *
+     * Defaults to getData() (the WireData backing array). Override in components that store
+     * identity in private/protected properties or that need to normalize complex args (Pages,
+     * Pagefiles) into stable scalars before hashing.
+     *
+     * @return array
+     */
+    protected function ___getRenderCacheArgs(): array {
+        return $this->getData();
+    }
+
+    /**
+     * Resolve the WireCache expire value for rendered output caching.
+     *
+     * @return int|string
+     */
+    private function resolveRenderCacheExpire() {
+        if (\is_int($this->render_cache)) {
+            return $this->render_cache;
+        }
+        if (\is_string($this->render_cache)) {
+            $constant = '\\ProcessWire\\WireCache::' . $this->render_cache;
+            if (\defined($constant)) {
+                return \constant($constant);
+            }
+            // Pass through other string values (selectors, etc.) to WireCache as-is.
+            return $this->render_cache;
+        }
+        return \ProcessWire\WireCache::expireSave;
     }
 
     /**

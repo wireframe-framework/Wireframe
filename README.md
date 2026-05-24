@@ -47,6 +47,32 @@ Note: you don't actually have to route *all* your templates through Wireframe. I
 use other output strategies for some of your templates, that will work just fine: just skip step 4
 for those templates.
 
+## Component output caching
+
+Components can opt into persistent caching of their rendered markup by setting the `$render_cache`
+property. The cached output is keyed by the component class, its args, and (by default) the
+visitor's roles, groups and language — so role-aware components stay correct without extra work.
+
+```php
+class Footer extends \Wireframe\Component {
+    // TTL in seconds, or a WireCache expire constant name like 'expireSave' / 'expireNever'.
+    protected $render_cache = 'expireSave';
+
+    // Set to true if output depends on the current page (default: false).
+    protected $render_cache_vary_by_page = false;
+
+    // Set to false if output is identical for every visitor (default: true).
+    protected $render_cache_vary_by_user = true;
+}
+```
+
+The cache key is built by `___getRenderCacheKey()` from `___getRenderCacheArgs()` (defaults to
+`getData()`); both methods are hookable for projects with non-standard requirements.
+
+**Important:** components opting into render caching must not register scripts or styles via
+`$config->scripts->add()` / `$config->styles->add()` inside `render()`, because those calls would
+only run on cache miss. Move asset registration into a separate hook that always runs.
+
 ## Resources
 
 - An introduction to Wireframe and output strategies in general: https://wireframe-framework.com/about/
