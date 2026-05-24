@@ -143,14 +143,17 @@ abstract class Component extends \ProcessWire\WireData {
     /**
      * Get the args used to identify this component instance for cache-key purposes.
      *
-     * Defaults to getData() (the WireData backing array). Override in components that store
-     * identity in private/protected properties or that need to normalize complex args (Pages,
-     * Pagefiles) into stable scalars before hashing.
+     * Defaults to getData() with the auto-injected `partials` key removed (the Partials object
+     * is an environment-provided service, not part of component identity). Override in components
+     * that store identity in private/protected properties or that need to normalize complex args
+     * (Pages, Pagefiles) into stable scalars before hashing.
      *
      * @return array
      */
     protected function ___getRenderCacheArgs(): array {
-        return $this->getData();
+        $args = $this->getData();
+        unset($args['partials']);
+        return $args;
     }
 
     /**
@@ -266,10 +269,19 @@ abstract class Component extends \ProcessWire\WireData {
      * Override this method if you want to have full control over the data that is used while rendering
      * the component. The method should return an associative array.
      *
+     * The default implementation also injects a `partials` key (lazily resolved from the active
+     * layout View) so that component views can use the same `<?= $partials->name() ?>` idiom as
+     * regular Wireframe views and layouts.
+     *
      * @return array Associative array of data.
      */
     public function getData(): array {
-        return parent::data(null, null);
+        $data = parent::data(null, null);
+        if (!\array_key_exists('partials', $data)) {
+            $wireframe = $this->wire('modules')->get('Wireframe');
+            $data['partials'] = $wireframe && $wireframe->view ? $wireframe->view->partials : null;
+        }
+        return $data;
     }
 
     /**

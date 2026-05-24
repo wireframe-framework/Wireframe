@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New `blocks` path configuration for storing Block classes and view files.
 - New `Wireframe\Block` namespace for autoloading Block classes from templates/blocks/.
 - Component render-output caching. Components can now opt into persistent caching of the markup returned by `render()` by setting the `$render_cache` property (TTL in seconds, or a WireCache expire constant name such as `'expireSave'`). Cache key automatically varies by class, args (via `getRenderCacheArgs()`), and — by default — user roles, groups and language; toggle with `$render_cache_vary_by_user` and `$render_cache_vary_by_page`. Both `___getRenderCacheKey()` and `___getRenderCacheArgs()` are hookable for customization. Components opting into render caching must move script/style registration out of `render()`, since those calls only fire on cache miss.
+- Component views now have access to the layout's `Partials` instance via the `$partials` variable, matching the existing layout/view idiom (e.g. `<?= $partials->newsletter_form() ?>`). The Partials reference is auto-injected by `Component::getData()` and excluded from render-cache key hashing.
 
 ### Fixed
 - Fixed an issue where temporary template modifications in `Factory::page()` could be persisted to the database when ProcessWire auto-saves templates due to file modification detection. Now uses the non-persistent `filename` property instead of `altFilename`.
