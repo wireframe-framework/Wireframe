@@ -84,7 +84,7 @@ abstract class Component extends \ProcessWire\WireData {
      *                          components directory.
      * @return string Rendered Component markup.
      */
-    public function ___renderView(string $view = null): string {
+    public function ___renderView(?string $view = null): string {
         $view = $view ?? $this->getView();
         if (!empty($view)) {
 

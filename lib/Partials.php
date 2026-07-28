@@ -167,7 +167,7 @@ class Partials extends \ProcessWire\WireArray {
      * @param bool $with_ext
      * @return array
      */
-    public function getFilenames(string $ext = null, bool $with_ext = true): array {
+    public function getFilenames(?string $ext = null, bool $with_ext = true): array {
         $filenames = [];
         foreach ($this->getArray() as $partial) {
             if ($partial instanceof Partials) {

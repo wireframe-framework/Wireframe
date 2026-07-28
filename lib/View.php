@@ -369,7 +369,7 @@ class View extends \ProcessWire\TemplateFile {
      * @param string|null $layouts_path Path to the layouts directory
      * @return View Self-reference
      */
-    public function setLayoutsPath(string $layouts_path = null): View {
+    public function setLayoutsPath(?string $layouts_path = null): View {
         if (!empty($layouts_path) && \is_dir($layouts_path)) {
             $layouts_path = rtrim($layouts_path, '/') . '/';
             $this->setViewData('layouts_path', $layouts_path);
@@ -448,7 +448,7 @@ class View extends \ProcessWire\TemplateFile {
      * @param string $ext Optional view file extension
      * @return string View file path
      */
-    public function getViewFilename(string $view = null, string $ext = null): string {
+    public function getViewFilename(?string $view = null, ?string $ext = null): string {
 
         // view data
         $views_path = $this->getViewData('views_path');

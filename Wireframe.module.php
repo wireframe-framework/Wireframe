@@ -14,7 +14,7 @@ namespace ProcessWire;
  * @method static string|Page|NullPage page($source, $args = []) Static getter (factory) method for Pages.
  * @method static string|null partial(string $partial_name, array $args = []) Static getter (factory) method for Partials.
  *
- * @version 0.31.0
+ * @version 0.31.1
  * @author Teppo Koivula <teppo@wireframe-framework.com>
  * @license Mozilla Public License v2.0 https://mozilla.org/MPL/2.0/
  */
@@ -261,7 +261,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      * @param null|int $instanceID ProcessWire instance ID. This parameter is optional but recommended.
      * @return bool True if initialized, false if not.
      */
-    public static function isInitialized(int $instanceID = null): bool {
+    public static function isInitialized(?int $instanceID = null): bool {
         return \in_array(
             $instanceID === null ? wire()->instanceID : $instanceID,
             static::$initialized
@@ -435,7 +435,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      * @param string|null $ext Extension string for overriding the default value.
      * @return Wireframe Self-reference.
      */
-    public function setExt(string $ext = null): Wireframe {
+    public function setExt(?string $ext = null): Wireframe {
         $this->ext = "." . ltrim($ext ?: $this->wire('config')->templateExtension, '.');
         // store ext in config for use in Factory::partial()
         $this->wire('config')->_wireframeTemplateExtension = $this->ext;
@@ -1077,7 +1077,7 @@ class Wireframe extends WireData implements Module, ConfigurableModule {
      * @param bool $use_cache Use cache? Defaults to `true`.
      * @return \Wireframe\Partials A container populated with Partials.
      */
-    protected function findPartials(string $path, string $ext = null, bool $use_cache = true): \Wireframe\Partials {
+    protected function findPartials(string $path, ?string $ext = null, bool $use_cache = true): \Wireframe\Partials {
         $files = [];
         if ($use_cache) {
             $cache_key = 'partials:' . $path . ':' . $ext;

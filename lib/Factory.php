@@ -286,7 +286,7 @@ class Factory {
      * @throws WireException if partials path is undefined.
      * @throws WireException if partials path is invalid.
      */
-    public static function partial(string $partial_name, array $args = null) {
+    public static function partial(string $partial_name, ?array $args = null) {
 
         // validate partial name
         if (strpos($partial_name, '..') !== false) {

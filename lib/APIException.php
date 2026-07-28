@@ -26,7 +26,7 @@ class APIException extends \Exception {
      * @param Exception|null $previous
      * @param int $http_response_code
      */
-    public function __construct($message = null, $code = 0, \Exception $previous = null, int $http_response_code = 500) {
+    public function __construct($message = null, $code = 0, ?\Exception $previous = null, int $http_response_code = 500) {
         $this->http_response_code = $http_response_code;
         parent::__construct($message, $code, $previous);
     }

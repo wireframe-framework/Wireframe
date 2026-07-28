@@ -83,7 +83,7 @@ trait MethodPropsTrait {
      * @param array $params Optional array of parameters to pass to the alias method. Optional, discarded unless using this method as a setter.
      * @return null|array Array if method alias was found or set, otherwise null
      */
-    final public function alias(string $alias, callable $callable = null, array $params = []): ?array {
+    final public function alias(string $alias, ?callable $callable = null, array $params = []): ?array {
         return $callable ? $this->setAlias($alias, $callable, $params) : $this->getAlias($alias);
     }
 

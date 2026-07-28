@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.1] - 2026-07-28
+
+### Fixed
+- PHP 8.4 deprecation warnings from implicitly nullable parameters. Parameters declared with a type and a `null` default (e.g. `string $view = null`) are now explicitly nullable (`?string $view = null`).
+
 ## [0.31.0] - 2024-12-31
 
 ### Added
