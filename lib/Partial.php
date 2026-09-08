@@ -133,7 +133,11 @@ class Partial extends \ProcessWire\Wire {
             $this->partial_view = $this->wire(new PartialView());
         }
         $this->partial_view->setFilename($fallback_filename);
-        $this->partial_view->data($args);
+
+        // note: second argument instructs WireData::data() to replace existing data instead of merging with it. since
+        // the PartialView instance is reused for subsequent renders of this Partial, merging could leak arguments from
+        // an earlier render into a later one that leaves them out.
+        $this->partial_view->data($args, true);
 
         return $this->partial_view->render() ?: '';
     }

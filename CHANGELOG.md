@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.2] - 2026-09-08
+
+### Fixed
+- Fixed an issue where arguments could potentially leak between renders of a single Partial (since 0.29.0). As the PartialView instance is reused, WireData::data() merged new arguments with those from an earlier render, so a later render omitting an argument could still receive the earlier value.
+
 ## [0.31.1] - 2026-07-28
 
 ### Fixed
